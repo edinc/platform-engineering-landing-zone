@@ -126,7 +126,7 @@ bundles, and runbooks that bootstrap and operate the platform.
 | # | Stage | Outcome / exit criteria | Stage file |
 |---|-------|-------------------------|------------|
 | 00 | Foundation & repo bootstrap | Repo layout, conventions, ADR template, IaC + policy CI test harness, lite contributor guide | [`stage-00-foundation.md`](./stages/stage-00-foundation.md) |
-| 01 | Bootstrap & secret zero | TF remote state, GH↔Azure OIDC federation, seed Key Vault, break-glass, DNS delegation; `make bootstrap` works | [`stage-01-bootstrap-secret-zero.md`](./stages/stage-01-bootstrap-secret-zero.md) |
+| 01 | Bootstrap & secret zero | TF remote state, GH↔Azure OIDC federation, seed Key Vault, break-glass, DNS delegation; the bootstrap workflow closes the loop via OIDC | [`stage-01-bootstrap-secret-zero.md`](./stages/stage-01-bootstrap-secret-zero.md) |
 | 02 | ALZ baseline & compliance baseline | Management groups, ALZ + CIS Foundations policy initiatives, central LA workspace, Defender baseline, tag policy (incl. `dataClassification`) | [`stage-02-alz-baseline.md`](./stages/stage-02-alz-baseline.md) |
 | 03 | Connectivity, identity, egress | Hub VNet, Firewall Premium, Private DNS, default-deny FQDN allowlist, exception workflow, Entra groups, PIM | [`stage-03-connectivity-identity-egress.md`](./stages/stage-03-connectivity-identity-egress.md) |
 | 04 | Platform shared services | AKS (private, Cilium, standard mode), ACR Premium + pull-through cache, Key Vault, Postgres Flexible (HA, PITR, CMK), ingress controller, DR design baked in | [`stage-04-platform-shared-services.md`](./stages/stage-04-platform-shared-services.md) |
@@ -238,7 +238,7 @@ platform-engineering-landing-zone/        ← this repo
 │   ├── azure/                            ← Azure Policy + initiatives
 │   └── kyverno/                          ← in-cluster policies
 └── scripts/
-    └── bootstrap/                        ← `make bootstrap`
+    └── bootstrap/                        ← `make bootstrap-init` (secret zero)
 ```
 
 A separate repository hosts the GitOps source-of-truth:
