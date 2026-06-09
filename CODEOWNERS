@@ -1,0 +1,27 @@
+# Effective CODEOWNERS for this user-owned repository.
+#
+# The route comments name the distinct reviewer groups intended for an
+# organization-owned repository. Because `edinc` is currently a user account,
+# the enforceable owner is the valid repository owner `@edinc`.
+
+* @edinc
+
+# Intended group: platform-infrastructure
+/infrastructure/ @edinc
+
+# Intended group: platform-security
+/policies/ @edinc
+
+# Intended group: platform-developer-experience
+/backstage/ @edinc
+/templates/ @edinc
+
+# Intended group: platform-docs
+/docs/ @edinc
+
+# Intended group: platform-architecture
+/plan/ @edinc
+
+# Intended group: platform-maintainers
+/.github/workflows/ @edinc
+/.github/rulesets/ @edinc

@@ -1,0 +1,4 @@
+stage: 06
+status: design-stub
+executable_location: .github/workflows/promote-image.yml
+description: Image promotion reusable workflow contract.

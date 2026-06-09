@@ -1,0 +1,14 @@
+terraform 1.9.8
+kubectl 1.31.3
+helm 3.16.3
+kustomize 5.5.0
+flux2 2.4.0
+cosign 2.4.1
+azure-cli 2.65.0
+gh 2.60.1
+node 20.18.1
+python 3.12.13
+tflint 0.54.0
+conftest 0.56.0
+kyverno 1.13.2
+kubeconform 0.6.7
