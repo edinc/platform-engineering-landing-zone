@@ -21,7 +21,7 @@ Next free number: **0054**
 | 0011 | Compliance baseline | Seeded in plan | Pending |
 | 0012 | Backstage hosting | Seeded in plan | Pending |
 | 0013 | Repository topology | Seeded in plan | Pending |
-| 0014 | Terraform state | Seeded in plan | Pending |
+| 0014 | Terraform state | Accepted | [`0014-terraform-state.md`](0014-terraform-state.md) |
 | 0015 | Internal API auth | Seeded in plan | Pending |
 | 0016 | Image promotion | Seeded in plan | Pending |
 | 0017 | DR posture | Seeded in plan | Pending |
@@ -31,8 +31,8 @@ Next free number: **0054**
 | 0021 | Pre-commit framework and local quality gates | Accepted | [`0021-pre-commit.md`](0021-pre-commit.md) |
 | 0022 | Conventional Commits and Release Please | Seeded in Stage 06 | Pending |
 | 0023 | SCM branching and GitHub Environments | Accepted | [`0023-scm-branching.md`](0023-scm-branching.md) |
-| 0024 | Break-glass procedure | Seeded in Stage 01 | Pending |
-| 0025 | OIDC federation policy | Seeded in Stage 01 | Pending |
+| 0024 | Break-glass procedure | Accepted | [`0024-break-glass.md`](0024-break-glass.md) |
+| 0025 | OIDC federation policy | Accepted | [`0025-oidc-federation.md`](0025-oidc-federation.md) |
 | 0026 | AVM module pinning and upgrade cadence | Seeded in Stage 02 | Pending |
 | 0027 | Policy exception workflow and approver matrix | Seeded in Stage 02 | Pending |
 | 0028 | Subscription topology | Seeded in Stage 02 | Pending |
@@ -55,7 +55,7 @@ Next free number: **0054**
 | 0045 | Game-day cadence and scope | Seeded in Stage 12 | Pending |
 | 0046 | Post-mortem retention and PII handling | Seeded in Stage 12 | Pending |
 | 0047 | Policy testing split | Accepted | [`0047-policy-testing-split.md`](0047-policy-testing-split.md) |
-| 0048 | Runner connectivity model | Seeded in Stage 01 | Pending |
+| 0048 | Runner connectivity model | Accepted | [`0048-runner-connectivity.md`](0048-runner-connectivity.md) |
 | 0049 | DDoS protection posture | Seeded in Stage 03 | Pending |
 | 0050 | ACA managed environment substrate | Seeded in Stage 04 | Pending |
 | 0051 | Cross-repo GitHub writes | Seeded in Stage 05 | Pending |
