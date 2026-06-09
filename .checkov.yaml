@@ -1,0 +1,5 @@
+quiet: true
+framework:
+  - terraform
+skip-path:
+  - .terraform
