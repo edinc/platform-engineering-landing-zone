@@ -23,9 +23,14 @@ resource "terraform_data" "mg_guard" {
 
   lifecycle {
     precondition {
+      # Filter out root nodes (parent == null) with the `if` clause BEFORE the
+      # body runs so contains() is never handed a null parent. Terraform 1.9
+      # raises "argument must not be null" for contains(list, null) instead of
+      # returning false, and the `||` short-circuit does not protect the right
+      # operand during this known-value evaluation.
       condition = alltrue([
-        for k, v in local.management_groups :
-        v.parent == null || contains(keys(local.management_groups), v.parent)
+        for k, v in local.management_groups : contains(keys(local.management_groups), v.parent)
+        if v.parent != null
       ])
       error_message = "A management group in local.management_groups names a parent key that does not exist."
     }
