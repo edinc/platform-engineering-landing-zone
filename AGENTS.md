@@ -9,6 +9,7 @@ If instructions conflict, prefer the stricter rule that best prevents regression
 ## Development workflow
 
 - Start by understanding the relevant stage in `plan/stages/` and the source-of-truth roadmap in `plan/plan.md`.
+- Create or switch to a task-specific feature branch before starting implementation work. Do not implement directly on `main` unless the user explicitly instructs otherwise.
 - Keep changes small, focused, and aligned to the current stage boundaries.
 - Reuse existing patterns before adding new abstractions, workflows, modules, or conventions.
 - Preserve public contracts, Terraform outputs, policy behavior, workflow interfaces, and documented acceptance criteria unless the requested change explicitly updates them.
