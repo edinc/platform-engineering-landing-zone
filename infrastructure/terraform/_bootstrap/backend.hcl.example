@@ -1,0 +1,14 @@
+# Backend configuration for the _bootstrap stack's OWN state.
+#
+# Copy to backend.hcl (gitignored) and pass with:
+#   terraform init -backend-config=backend.hcl
+#
+# bootstrap-init.sh prints these exact values, and the bootstrap workflow
+# generates this file from GitHub Actions variables at run time. State access is
+# Entra-ID-only (use_azuread_auth = true); there are no storage account keys.
+
+resource_group_name  = "rg-pe-tfstate-weu"
+storage_account_name = "stpetfweuab12" # stpetf<location_short><name_suffix>
+container_name       = "bootstrap"
+key                  = "bootstrap.tfstate"
+use_azuread_auth     = true

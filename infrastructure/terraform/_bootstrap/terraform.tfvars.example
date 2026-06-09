@@ -1,0 +1,59 @@
+# Copy to terraform.tfvars (gitignored) or pass with -var-file. In CI the
+# bootstrap workflow supplies these via TF_VAR_* environment variables sourced
+# from GitHub Actions variables (not secrets) — see .github/workflows/bootstrap.yml.
+
+# --- Required identifiers -----------------------------------------------------
+subscription_id = "00000000-0000-0000-0000-000000000000"
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+
+# Globally unique, short, and STABLE. Used in the state storage account and seed
+# Key Vault names (which are soft-delete/purge protected — do not change once set).
+name_suffix = "ab12"
+
+# --- Location -----------------------------------------------------------------
+location       = "westeurope"
+location_short = "weu"
+
+# --- Repository ---------------------------------------------------------------
+github_owner = "edinc"
+github_repo  = "platform-engineering-landing-zone"
+
+# --- Network (Phase 1) --------------------------------------------------------
+# Break-glass operator egress ranges allowed through the state account and Key
+# Vault firewalls. The GitHub-hosted runner egress IP is added just-in-time by
+# the bootstrap workflow, so it does NOT need to be listed here. Private
+# Endpoints replace this allowlist in Stage 03 (ADR-0048).
+# NOTE: use a BARE IP for a single host (e.g. "203.0.113.10"), never "/32" — the
+# storage firewall normalizes /32 to a bare IP and Terraform would then show a
+# permanent diff. Use CIDR notation only for real ranges (/0–/30).
+allowed_ip_cidrs = [
+  # "203.0.113.10",
+]
+
+# --- Key Vault ----------------------------------------------------------------
+# Use "premium" + key_type = "RSA-HSM" for HSM-backed CMK protection. With the
+# default "standard" SKU the key_type must stay "RSA" (software-protected).
+# soft_delete_retention_days is IMMUTABLE on the Key Vault — it MUST equal the
+# value bootstrap-init.sh used (--soft-delete-days, default 90); a mismatch plans
+# a vault recreate that purge protection blocks, hard-failing the first apply.
+key_vault_sku              = "standard"
+key_type                   = "RSA"
+soft_delete_retention_days = 90
+
+# --- Break-glass monitoring (acceptance criterion 3) --------------------------
+# UPNs of the two cloud-only break-glass accounts (ADR-0024). Leave empty until
+# the accounts exist; the sign-in alert rule is created only when this is set.
+break_glass_upns = [
+  # "breakglass-1@contoso.onmicrosoft.com",
+  # "breakglass-2@contoso.onmicrosoft.com",
+]
+
+alert_email_receivers = [
+  # "platform-oncall@example.com",
+]
+
+log_analytics_retention_days = 30
+
+# --- Tagging ------------------------------------------------------------------
+cost_center = "cc-platform"
+extra_tags  = {}
