@@ -1,0 +1,4 @@
+stage: 06
+status: design-stub
+executable_location: .github/workflows/helm-publish.yml
+description: Helm chart publishing reusable workflow contract.

@@ -1,0 +1,23 @@
+{
+  "format_version": "1.2",
+  "resource_changes": [
+    {
+      "address": "azurerm_resource_group.example",
+      "mode": "managed",
+      "type": "azurerm_resource_group",
+      "name": "example",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "name": "rg-platform-demo",
+          "location": "westeurope",
+          "tags": {
+            "env": "demo",
+            "owner": "platform-team",
+            "managedBy": "terraform"
+          }
+        }
+      }
+    }
+  ]
+}

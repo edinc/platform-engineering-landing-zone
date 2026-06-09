@@ -1,0 +1,17 @@
+name: require-standard-labels
+policies:
+  - ../require-standard-labels.yaml
+resources:
+  - resources/pod-with-labels.yaml
+  - resources/pod-missing-labels.yaml
+results:
+  - policy: require-standard-labels
+    rule: require-app-kubernetes-labels
+    resource: pod-with-labels
+    kind: Pod
+    result: pass
+  - policy: require-standard-labels
+    rule: require-app-kubernetes-labels
+    resource: pod-missing-labels
+    kind: Pod
+    result: fail

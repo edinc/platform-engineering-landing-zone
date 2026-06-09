@@ -1,0 +1,32 @@
+name: Foundation CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Stage 00 quality gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Bootstrap local quality tools
+        run: make bootstrap
+
+      - name: Run Stage 00 quality gates
+        run: make lint validate policy-test-rego policy-test-kyverno

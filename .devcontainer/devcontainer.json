@@ -1,0 +1,21 @@
+{
+  "name": "Platform Engineering Landing Zone",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "postCreateCommand": "mise install && make bootstrap",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.vscode-github-actions",
+        "HashiCorp.terraform",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-azureterraform"
+      ]
+    }
+  }
+}

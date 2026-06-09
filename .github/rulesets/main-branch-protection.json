@@ -1,0 +1,33 @@
+{
+  "name": "main branch protection",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["~DEFAULT_BRANCH"],
+      "exclude": []
+    }
+  },
+  "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "required_status_checks": [
+          {
+            "context": "Stage 00 quality gates"
+          },
+          {
+            "context": "Node.js 20 pnpm stub (20.x)"
+          }
+        ]
+      }
+    }
+  ]
+}

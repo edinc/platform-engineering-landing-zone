@@ -1,0 +1,38 @@
+# macOS and editor state
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Node / Backstage
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local tool caches and generated credentials
+.tools/
+.cache/
+*.kubeconfig
+kubeconfig*
+*.pem
+*.key
+*.pfx
+*.p12
