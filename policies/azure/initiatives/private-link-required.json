@@ -1,0 +1,56 @@
+{
+  "name": "pe-private-link-required",
+  "displayName": "Platform Engineering - Private Link / no public network access",
+  "description": "Audits data services that expose public network access so they are reachable only through Private Link / Private Endpoints (retrofitted in Stage 03, ADR-0048). The Storage and PostgreSQL members honor the initiative effect (configurable to Deny once the grace period is over); the Key Vault and Container Registry members are audit-only built-ins with no Deny effect and stay audit-only regardless of the effect parameter. Effects default to Audit at Stage 02 (acceptance criterion 2). Built-in policy GUIDs are pinned and verified against the Azure/azure-policy repository.",
+  "policyType": "Custom",
+  "metadata": {
+    "version": "1.0.0",
+    "category": "Network",
+    "source": "policies/azure/initiatives/private-link-required.json",
+    "owner": "platform-engineering"
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "defaultValue": "Audit",
+      "allowedValues": ["Audit", "Deny", "Disabled"],
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Effect for the Storage and PostgreSQL public-network-access controls. Stays at Audit during the Stage 02 grace period; flip to Deny after the exemption inventory is drained (ADR-0011, ADR-0027). The Key Vault and Container Registry members are audit-only built-ins and ignore this parameter."
+      }
+    }
+  },
+  "policyDefinitionGroups": [
+    {
+      "name": "private-link",
+      "displayName": "Private Link / no public network access",
+      "description": "Data services must not expose public network access; use Private Endpoints."
+    }
+  ],
+  "policyDefinitions": [
+    {
+      "policyDefinitionReferenceId": "storagePublicNetworkAccessDisabled",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/b2982f36-99f2-4db5-8eff-283140c09693",
+      "parameters": { "effect": { "value": "[parameters('effect')]" } },
+      "groupNames": ["private-link"]
+    },
+    {
+      "policyDefinitionReferenceId": "postgresFlexiblePublicNetworkAccessDisabled",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/5e1de0e3-42cb-4ebc-a86d-61d0c619ca48",
+      "parameters": { "effect": { "value": "[parameters('effect')]" } },
+      "groupNames": ["private-link"]
+    },
+    {
+      "policyDefinitionReferenceId": "keyVaultPrivateLinkUsed",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/a6abeaec-4d90-4a02-805f-6b26c4d3fbe9",
+      "parameters": {},
+      "groupNames": ["private-link"]
+    },
+    {
+      "policyDefinitionReferenceId": "containerRegistryPrivateLinkUsed",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/e8eef0a8-67cf-4eb4-9386-14b0e78733d4",
+      "parameters": {},
+      "groupNames": ["private-link"]
+    }
+  ]
+}
