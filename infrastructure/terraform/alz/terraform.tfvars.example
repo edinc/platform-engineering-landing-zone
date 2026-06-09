@@ -1,0 +1,66 @@
+# Example inputs for the alz stack. Copy to terraform.tfvars (gitignored) and
+# fill in tenant-specific values. Never commit real subscription/tenant IDs.
+
+tenant_id                  = "00000000-0000-0000-0000-000000000000"
+management_subscription_id = "11111111-1111-1111-1111-111111111111"
+
+# Optional subscription placements (leave empty on brownfield tenants and move
+# subscriptions through a reviewed change - see brownfield runbook).
+# connectivity_subscription_id      = "22222222-2222-2222-2222-222222222222"
+# identity_subscription_id          = "33333333-3333-3333-3333-333333333333"
+# corp_subscription_id              = "44444444-4444-4444-4444-444444444444"
+# associate_management_subscription = true
+
+location       = "westeurope"
+location_short = "weu"
+name_suffix    = "ab12" # globally unique, stable; matches the cost storage account name
+
+# Region/MG naming.
+# management_group_prefix  = "mg-pe-"
+# root_management_group_id = "" # defaults to the Tenant Root Group
+
+# Tagging.
+cost_center = "cc-platform"
+github_owner = "edinc"
+github_repo  = "platform-engineering-landing-zone"
+
+# Compliance effects (Stage 02 grace period defaults).
+# cis_enforce          = false # evaluation-only; flip to true after exemptions are drained
+# tag_baseline_enforce = true  # Deny on missing mandatory tags (acceptance criterion 3)
+# private_link_effect  = "Audit"
+# aks_effect           = "Audit"
+
+# Defender for Cloud plan tiers (demo = Free; nonprod/prod = Standard).
+# defender_tiers = {
+#   virtual_machines = "Standard"
+#   containers       = "Standard"
+#   key_vaults       = "Standard"
+#   storage_accounts = "Standard"
+#   sql_servers      = "Standard"
+#   open_source_dbs  = "Standard"
+#   resource_manager = "Standard"
+#   apis             = "Standard"
+# }
+
+# Central logging retention.
+log_analytics_retention_days = 90
+
+# Optional platform-wide diagnostics DINE (policy-specific parameter schema).
+# diagnostics_policy_definition_id = "/providers/Microsoft.Authorization/policySetDefinitions/<diag-initiative-guid>"
+# diagnostics_policy_parameters = {
+#   logAnalytics = { value = "<central-workspace-id>" }
+# }
+
+# Cost Management exports.
+cost_export_recurrence_from = "2026-07-01T00:00:00Z"
+cost_export_recurrence_to   = "2030-07-01T00:00:00Z"
+cost_export_retention_days  = 365
+# cost_management_principal_id = "55555555-5555-5555-5555-555555555555"
+# cost_export_storage_ip_rules = ["203.0.113.10"]
+
+# Optional per-subscription budgets.
+# subscription_budgets = {
+#   management = { subscription_id = "11111111-1111-1111-1111-111111111111", amount = 500 }
+# }
+# budget_start_date     = "2026-07-01T00:00:00Z"
+# budget_contact_emails = ["platform-engineering@example.com"]
