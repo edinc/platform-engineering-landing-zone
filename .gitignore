@@ -36,3 +36,10 @@ kubeconfig*
 *.key
 *.pfx
 *.p12
+
+# Bootstrap / Terraform local inputs (never commit tenant-specific values)
+backend.hcl
+*.tfvars
+*.auto.tfvars
+!*.tfvars.example
+.env

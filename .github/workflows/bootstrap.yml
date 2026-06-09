@@ -1,0 +1,240 @@
+name: Bootstrap (Stage 01)
+
+# Manual, OIDC-authenticated Terraform for the _bootstrap stack (remote state,
+# seed Key Vault, state CMK, break-glass monitoring). There are NO long-lived
+# secrets: identity comes from a GitHub -> Entra ID federated credential scoped
+# to the 'bootstrap' environment. Configuration comes from environment
+# *variables*, not secrets (ADR-0025).
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Terraform action to run.
+        type: choice
+        default: plan
+        options:
+          - plan
+          - apply
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: bootstrap-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    name: Terraform ${{ inputs.action }}
+    runs-on: ubuntu-latest
+    environment: bootstrap
+    defaults:
+      run:
+        working-directory: infrastructure/terraform/_bootstrap
+    env:
+      # OIDC auth for both the azurerm provider and the azurerm backend.
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      # Stack inputs (TF_VAR_*) sourced from environment variables.
+      TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+      TF_VAR_name_suffix: ${{ vars.BOOTSTRAP_NAME_SUFFIX }}
+      TF_VAR_location: ${{ vars.BOOTSTRAP_LOCATION }}
+      TF_VAR_location_short: ${{ vars.BOOTSTRAP_LOCATION_SHORT }}
+      # soft_delete_retention_days is immutable on the Key Vault, so it is a
+      # REQUIRED variable (validated below) and passed straight through rather than
+      # mapped conditionally — this keeps CI pinned to the value the vault was
+      # created with and avoids a silent fallback to the stack default forcing a
+      # vault recreate.
+      TF_VAR_soft_delete_retention_days: ${{ vars.BOOTSTRAP_SOFT_DELETE_DAYS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Validate required variables
+        run: |
+          missing=()
+          for v in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID \
+                   TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT TFSTATE_CONTAINER \
+                   BOOTSTRAP_NAME_SUFFIX BOOTSTRAP_LOCATION BOOTSTRAP_LOCATION_SHORT \
+                   BOOTSTRAP_SOFT_DELETE_DAYS; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables: ${missing[*]}. Run scripts/bootstrap/bootstrap-init.sh and set them on the 'bootstrap' environment."
+            exit 1
+          fi
+        env:
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+          TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+          TFSTATE_CONTAINER: ${{ vars.TFSTATE_CONTAINER }}
+          BOOTSTRAP_NAME_SUFFIX: ${{ vars.BOOTSTRAP_NAME_SUFFIX }}
+          BOOTSTRAP_LOCATION: ${{ vars.BOOTSTRAP_LOCATION }}
+          BOOTSTRAP_LOCATION_SHORT: ${{ vars.BOOTSTRAP_LOCATION_SHORT }}
+          BOOTSTRAP_SOFT_DELETE_DAYS: ${{ vars.BOOTSTRAP_SOFT_DELETE_DAYS }}
+
+      # Optional persistent stack inputs that Terraform OWNS and drift-detects
+      # (unlike the ephemeral runner IP). Without these, a CI apply would converge
+      # the state account / Key Vault firewalls to only the transient runner IP and
+      # never create break-glass alerting. Each maps to its TF_VAR_* only when the
+      # environment variable is set, so an unset (empty) value falls back to the
+      # stack default rather than failing list parsing. allowed_ip_cidrs is the
+      # standing operator allowlist; key_vault_sku / key_type must be mapped when
+      # the operator chose a premium HSM vault, because key_type is immutable on
+      # the CMK key. (soft_delete_retention_days is immutable and is handled as a
+      # required straight-through variable above.)
+      - name: Map persistent Terraform inputs
+        run: |
+          append_var() {
+            if [ -n "$2" ]; then
+              case "$2" in
+                *$'\n'*)
+                  echo "::error::Refusing to map $1: value contains a newline (possible \$GITHUB_ENV injection)."
+                  exit 1
+                  ;;
+              esac
+              echo "$1=$2" >> "$GITHUB_ENV"
+              echo "mapped $1"
+            fi
+          }
+          append_var TF_VAR_allowed_ip_cidrs "${ALLOWED_IP_CIDRS}"
+          append_var TF_VAR_break_glass_upns "${BREAK_GLASS_UPNS}"
+          append_var TF_VAR_alert_email_receivers "${ALERT_EMAIL_RECEIVERS}"
+          append_var TF_VAR_key_vault_sku "${KEY_VAULT_SKU}"
+          append_var TF_VAR_key_type "${KEY_TYPE}"
+        env:
+          ALLOWED_IP_CIDRS: ${{ vars.BOOTSTRAP_ALLOWED_IP_CIDRS }}
+          BREAK_GLASS_UPNS: ${{ vars.BOOTSTRAP_BREAK_GLASS_UPNS }}
+          ALERT_EMAIL_RECEIVERS: ${{ vars.BOOTSTRAP_ALERT_EMAIL_RECEIVERS }}
+          KEY_VAULT_SKU: ${{ vars.BOOTSTRAP_KEY_VAULT_SKU }}
+          KEY_TYPE: ${{ vars.BOOTSTRAP_KEY_TYPE }}
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # The state account and Key Vault deny by default once Terraform has set the
+      # Phase 1 firewall baseline, so the ephemeral runner egress IP must be
+      # allowlisted before 'terraform init' can reach remote state (ADR-0048). The
+      # same IP is passed to Terraform via TF_VAR_runner_ip_cidrs so the apply does
+      # not evict it from the firewalls mid-run; the cleanup step removes it after.
+      - name: Allowlist runner egress IP
+        id: runner_ip
+        run: |
+          RUNNER_IP="$(curl -fsS https://api.ipify.org)"
+          if [ -z "${RUNNER_IP}" ]; then
+            echo "::error::Could not determine the runner egress IP; aborting before terraform init."
+            exit 1
+          fi
+          # Validate the response is a single bare IPv4 address before writing it
+          # to $GITHUB_OUTPUT / $GITHUB_ENV (consumed by Terraform and later az
+          # calls), so a malformed or multi-line response cannot inject values.
+          if [[ ! "${RUNNER_IP}" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+            echo "::error::Unexpected runner egress IP response '${RUNNER_IP}'; expected a single IPv4 address."
+            exit 1
+          fi
+          echo "ip=${RUNNER_IP}" >> "$GITHUB_OUTPUT"
+          echo "TF_VAR_runner_ip_cidrs=[\"${RUNNER_IP}\"]" >> "$GITHUB_ENV"
+          echo "Runner egress IP: ${RUNNER_IP}"
+          az storage account network-rule add \
+            --resource-group "${TFSTATE_RESOURCE_GROUP}" \
+            --account-name "${TFSTATE_STORAGE_ACCOUNT}" \
+            --ip-address "${RUNNER_IP}" --output none
+          az keyvault network-rule add \
+            --name "${KEY_VAULT_NAME}" \
+            --ip-address "${RUNNER_IP}" --output none
+          echo "Waiting 45s for firewall propagation ..."
+          sleep 45
+        env:
+          TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+          TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+          KEY_VAULT_NAME: kv-pe-boot-${{ vars.BOOTSTRAP_LOCATION_SHORT }}-${{ vars.BOOTSTRAP_NAME_SUFFIX }}
+
+      - name: Write backend config
+        run: |
+          cat > backend.hcl <<EOF
+          resource_group_name  = "${TFSTATE_RESOURCE_GROUP}"
+          storage_account_name = "${TFSTATE_STORAGE_ACCOUNT}"
+          container_name       = "${TFSTATE_CONTAINER}"
+          key                  = "bootstrap.tfstate"
+          use_azuread_auth     = true
+          EOF
+        env:
+          TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+          TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+          TFSTATE_CONTAINER: ${{ vars.TFSTATE_CONTAINER }}
+
+      - name: Terraform init
+        run: mise exec -- terraform init -input=false -backend-config=backend.hcl
+
+      # Guard the destructive footgun: applying before the bootstrap-init.sh
+      # resources have been adopted (make bootstrap-import) makes Terraform try to
+      # CREATE the already-existing RG/SA/KV/container and fail with 409 Conflict.
+      - name: Verify adoption (import ran)
+        if: ${{ inputs.action == 'apply' }}
+        run: |
+          state="$(mise exec -- terraform state list)"
+          missing=()
+          for addr in \
+            'azurerm_resource_group.tfstate' \
+            'azurerm_storage_account.tfstate' \
+            'azurerm_storage_container.stage["bootstrap"]' \
+            'azurerm_key_vault.bootstrap'; do
+            if ! grep -qxF "$addr" <<<"$state"; then missing+=("$addr"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Bootstrap resources not adopted into Terraform state: ${missing[*]}. Run scripts/bootstrap/bootstrap-import.sh (make bootstrap-import) from a workstation before applying."
+            exit 1
+          fi
+
+      - name: Terraform plan
+        run: mise exec -- terraform plan -input=false -lock-timeout=120s -out=bootstrap.tfplan
+
+      - name: Terraform apply
+        if: ${{ inputs.action == 'apply' }}
+        run: mise exec -- terraform apply -input=false -lock-timeout=120s bootstrap.tfplan
+
+      # Always remove the ephemeral runner IP so transient addresses do not
+      # accumulate on the firewalls. This is fail-LOUD: GitHub-hosted runner IPs
+      # are shared Azure ranges, so a stale allowlist entry is a real exposure on
+      # the state account / Key Vault. If removal fails, mark the run failed so an
+      # operator prunes it manually (az network-rule remove is idempotent, so an
+      # already-absent rule does not fail here).
+      - name: Remove runner egress IP
+        if: ${{ always() && steps.runner_ip.outputs.ip != '' }}
+        run: |
+          rc=0
+          az storage account network-rule remove \
+            --resource-group "${TFSTATE_RESOURCE_GROUP}" \
+            --account-name "${TFSTATE_STORAGE_ACCOUNT}" \
+            --ip-address "${RUNNER_IP}" --output none || rc=1
+          az keyvault network-rule remove \
+            --name "${KEY_VAULT_NAME}" \
+            --ip-address "${RUNNER_IP}" --output none || rc=1
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::Failed to remove runner egress IP ${RUNNER_IP} from one or more firewalls; remove it manually to avoid a stale allowlist entry."
+            exit 1
+          fi
+        env:
+          TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+          TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+          KEY_VAULT_NAME: kv-pe-boot-${{ vars.BOOTSTRAP_LOCATION_SHORT }}-${{ vars.BOOTSTRAP_NAME_SUFFIX }}
+          RUNNER_IP: ${{ steps.runner_ip.outputs.ip }}

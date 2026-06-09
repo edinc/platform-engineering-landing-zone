@@ -6,10 +6,14 @@ export PATH := $(CURDIR)/.tools/venv/bin:$(PATH)
 MISE_EXEC := $(shell if command -v mise >/dev/null 2>&1; then printf 'mise exec --'; fi)
 
 TERRAFORM_DIRS := $(shell find infrastructure/terraform -type f -name '*.tf' -not -path '*/.terraform/*' -exec dirname {} \; 2>/dev/null | sort -u)
+BOOTSTRAP_DIR := infrastructure/terraform/_bootstrap
+# The _bootstrap stack uses a remote backend and import-based adoption, so it is
+# driven by the dedicated bootstrap-* targets rather than the generic plan/apply.
+PLANNABLE_TERRAFORM_DIRS := $(filter-out $(BOOTSTRAP_DIR),$(TERRAFORM_DIRS))
 HELM_CHART_DIRS := $(shell find . -type f -name 'Chart.yaml' -not -path './.git/*' -exec dirname {} \; 2>/dev/null | sort -u)
 K8S_MANIFESTS := $(shell find platform-gitops templates -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint policy-test-rego policy-test-kyverno plan apply docs
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint policy-test-rego policy-test-kyverno plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -104,19 +108,38 @@ policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
 policy-test-kyverno: ## Test Kyverno policies with kyverno test.
 	$(MISE_EXEC) kyverno test policies/kyverno/tests
 
-plan: ## Run Terraform plan for directories with .tf files; Stage 00 has none.
-	@if [ -z "$(TERRAFORM_DIRS)" ]; then \
-	  echo "No Terraform files found; Stage 01 introduces planable bootstrap stacks."; \
+plan: ## Run Terraform plan for planable stacks (excludes the _bootstrap stack).
+	@if [ -z "$(PLANNABLE_TERRAFORM_DIRS)" ]; then \
+	  echo "No planable Terraform stacks found; use 'make bootstrap-plan' for the _bootstrap stack."; \
 	else \
-	  for dir in $(TERRAFORM_DIRS); do \
+	  for dir in $(PLANNABLE_TERRAFORM_DIRS); do \
 	    echo "Planning Terraform in $$dir"; \
 	    (cd "$$dir" && $(MISE_EXEC) terraform init -input=false && $(MISE_EXEC) terraform plan -input=false); \
 	  done; \
 	fi
 
 apply: ## Deployment is intentionally blocked until deployable stacks exist.
-	@echo "Terraform apply is out of scope for Stage 00 and requires explicit stage-specific implementation."
+	@echo "Terraform apply is out of scope for the generic target; use 'make bootstrap-apply' for the _bootstrap stack."
 	@exit 1
+
+bootstrap-init: ## Secret zero: one-off az-CLI script (Global Admin) — state SA, seed KV, OIDC app. Pass flags via ARGS="--subscription-id ... --tenant-id ... --name-suffix ...".
+	bash scripts/bootstrap/bootstrap-init.sh $(ARGS)
+
+bootstrap-tf-init: ## Initialize the _bootstrap Terraform backend (needs backend.hcl).
+	@if [ ! -f "$(BOOTSTRAP_DIR)/backend.hcl" ]; then \
+	  echo "Create $(BOOTSTRAP_DIR)/backend.hcl from backend.hcl.example (or run scripts/bootstrap/bootstrap-init.sh) first."; \
+	  exit 1; \
+	fi
+	cd $(BOOTSTRAP_DIR) && $(MISE_EXEC) terraform init -input=false -backend-config=backend.hcl
+
+bootstrap-import: ## Adopt bootstrap-init.sh resources into Terraform state (first apply only).
+	$(MISE_EXEC) bash scripts/bootstrap/bootstrap-import.sh
+
+bootstrap-plan: ## Terraform plan for the _bootstrap stack.
+	cd $(BOOTSTRAP_DIR) && $(MISE_EXEC) terraform plan -input=false -lock-timeout=120s
+
+bootstrap-apply: ## Terraform apply for the _bootstrap stack.
+	cd $(BOOTSTRAP_DIR) && $(MISE_EXEC) terraform apply -input=false -lock-timeout=120s
 
 docs: ## List Markdown documentation included in the current stage.
 	@find README.md CONTRIBUTING.md docs plan -type f -name '*.md' | sort
