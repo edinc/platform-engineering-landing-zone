@@ -5,10 +5,12 @@
 # (shared_access_key_enabled = false), infrastructure (double) encryption,
 # default-deny firewall + AzureServices bypass so Cost Management can write,
 # blob versioning + soft delete. Phase 1 keeps a public endpoint behind the
-# firewall; Stage 03 retrofits a Private Endpoint (ADR-0048).
+# firewall; the Stage 03 connectivity stage retrofits a Private Endpoint, reusing
+# the Phase 1 -> Private Endpoint pattern from ADR-0048 (which set that pattern for
+# the Stage 01 state account / seed Key Vault).
 resource "azurerm_storage_account" "cost" {
-  #checkov:skip=CKV_AZURE_59:Phase 1 public endpoint with default-deny IP allowlist + AzureServices bypass for Cost Management; Private Endpoint retrofit in Stage 03 (ADR-0048).
-  #checkov:skip=CKV2_AZURE_33:No VNet exists in this stack; Private Endpoint is added in Stage 03 (ADR-0048).
+  #checkov:skip=CKV_AZURE_59:Phase 1 public endpoint with default-deny IP allowlist + AzureServices bypass for Cost Management; Private Endpoint retrofit in the Stage 03 connectivity stage (ADR-0048 phased-connectivity pattern).
+  #checkov:skip=CKV2_AZURE_33:No VNet exists in this stack; Private Endpoint is added in the Stage 03 connectivity stage (ADR-0048 phased-connectivity pattern).
   #checkov:skip=CKV_AZURE_33:Cost export account exposes the blob service only; the queue service is not used.
   #checkov:skip=CKV2_AZURE_1:Cost export data is platform-managed billing data protected by infrastructure (double) encryption; customer-managed key is a documented future enhancement, not required at Stage 02.
   #checkov:skip=CKV2_AZURE_21:Blob access is auditable via diagnostic settings added with the workspace; checkov cannot statically trace the interpolated blobServices target.

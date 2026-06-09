@@ -273,7 +273,7 @@ variable "cost_management_principal_id" {
 
 variable "cost_export_storage_ip_rules" {
   type        = list(string)
-  description = "Operator IP ranges allowed through the Cost Management export storage firewall (default-deny). Use bare IPs, not /32. Private Endpoint replaces this in Stage 03 (ADR-0048)."
+  description = "Operator IP ranges allowed through the Cost Management export storage firewall (default-deny). Use bare IPs, not /32. A Private Endpoint replaces this in the Stage 03 connectivity stage (ADR-0048 phased-connectivity pattern)."
   default     = []
 
   validation {
