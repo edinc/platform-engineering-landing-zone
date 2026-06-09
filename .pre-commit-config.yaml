@@ -1,0 +1,18 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b # v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args:
+          - --fix=lf
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: 55d0143972eec4905fdaea2f444f1e88218f9dce # v1.96.3
+    hooks:
+      - id: terraform_fmt
+        args:
+          - --args=-recursive
