@@ -1,0 +1,41 @@
+# Example inputs for the Stage 03 identity stack. Copy to terraform.tfvars
+# (gitignored) and fill tenant-specific values. Never commit real object IDs.
+
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+subscription_id = "33333333-3333-3333-3333-333333333333"
+environment     = "nonprod"
+
+platform_group_prefix = "pe"
+app_team_names        = ["payments", "orders"]
+
+# Group owners default to the Terraform principal. Set explicit owners for
+# production operations.
+# group_owners_object_ids = ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"]
+
+enable_platform_operator_role = true
+# platform_operator_role_name = "Platform Operator - nonprod"
+enable_default_assignments    = true
+pim_enabled                   = true
+pim_maximum_duration          = "PT8H"
+
+# Approval is required automatically for environment = "prod".
+pim_require_approval_for_prod = true
+pim_approval_group_key        = "platform_admins"
+
+# additional_active_role_assignments = {
+#   app_payments_rg_reader = {
+#     group_key            = "app_team_payments"
+#     scope                = "/subscriptions/55555555-5555-5555-5555-555555555555/resourceGroups/rg-payments-dev"
+#     role_definition_name = "Reader"
+#   }
+# }
+
+# additional_pim_eligible_role_assignments = {
+#   app_payments_rg_contributor = {
+#     group_key          = "app_team_payments"
+#     scope              = "/subscriptions/55555555-5555-5555-5555-555555555555/resourceGroups/rg-payments-dev"
+#     role_definition_id = "/subscriptions/55555555-5555-5555-5555-555555555555/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+#     justification      = "Time-bound app-team contributor eligibility."
+#     duration_hours     = 8
+#   }
+# }
