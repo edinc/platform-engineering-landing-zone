@@ -13,7 +13,7 @@ PLANNABLE_TERRAFORM_DIRS := $(filter-out $(BOOTSTRAP_DIR),$(TERRAFORM_DIRS))
 HELM_CHART_DIRS := $(shell find . -type f -name 'Chart.yaml' -not -path './.git/*' -exec dirname {} \; 2>/dev/null | sort -u)
 K8S_MANIFESTS := $(shell find platform-gitops templates -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint policy-test-rego policy-test-kyverno policy-test-azure plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -49,10 +49,12 @@ terraform-validate: ## Validate each Terraform directory that contains .tf files
 	@if [ -z "$(TERRAFORM_DIRS)" ]; then \
 	  echo "No Terraform files found; skipping terraform validate."; \
 	else \
+	  status=0; \
 	  for dir in $(TERRAFORM_DIRS); do \
 	    echo "Validating Terraform in $$dir"; \
-	    (cd "$$dir" && $(MISE_EXEC) terraform init -backend=false -input=false && $(MISE_EXEC) terraform validate); \
+	    (cd "$$dir" && $(MISE_EXEC) terraform init -backend=false -input=false && $(MISE_EXEC) terraform validate) || status=$$?; \
 	  done; \
+	  exit $$status; \
 	fi
 
 tflint: ## Run TFLint with the Azure ruleset for Terraform directories.
@@ -60,10 +62,12 @@ tflint: ## Run TFLint with the Azure ruleset for Terraform directories.
 	  echo "No Terraform files found; skipping tflint."; \
 	else \
 	  $(MISE_EXEC) tflint --init --config="$(CURDIR)/.tflint.hcl"; \
+	  status=0; \
 	  for dir in $(TERRAFORM_DIRS); do \
 	    echo "Running tflint in $$dir"; \
-	    (cd "$$dir" && $(MISE_EXEC) tflint --config="$(CURDIR)/.tflint.hcl"); \
+	    (cd "$$dir" && $(MISE_EXEC) tflint --config="$(CURDIR)/.tflint.hcl") || status=$$?; \
 	  done; \
+	  exit $$status; \
 	fi
 
 checkov: ## Run Checkov against Terraform code.
@@ -108,17 +112,22 @@ policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
 policy-test-kyverno: ## Test Kyverno policies with kyverno test.
 	$(MISE_EXEC) kyverno test policies/kyverno/tests
 
-policy-test-azure: ## Validate custom Azure Policy initiatives (Stage 02 acceptance criteria 3 and 8).
+policy-test-azure: policy-test-firewall ## Validate custom Azure Policy initiatives and Stage 03 Firewall allowlist.
 	$(PYTHON) scripts/policy/validate_azure_initiatives.py policies/azure/initiatives
+
+policy-test-firewall: ## Validate Stage 03 Azure Firewall egress allowlist.
+	$(PYTHON) scripts/policy/validate_firewall_allowlist.py policies/azure/firewall/allowlist.json
 
 plan: ## Run Terraform plan for planable stacks (excludes the _bootstrap stack).
 	@if [ -z "$(PLANNABLE_TERRAFORM_DIRS)" ]; then \
 	  echo "No planable Terraform stacks found; use 'make bootstrap-plan' for the _bootstrap stack."; \
 	else \
+	  status=0; \
 	  for dir in $(PLANNABLE_TERRAFORM_DIRS); do \
 	    echo "Planning Terraform in $$dir"; \
-	    (cd "$$dir" && $(MISE_EXEC) terraform init -input=false && $(MISE_EXEC) terraform plan -input=false); \
+	    (cd "$$dir" && $(MISE_EXEC) terraform init -input=false && $(MISE_EXEC) terraform plan -input=false) || status=$$?; \
 	  done; \
+	  exit $$status; \
 	fi
 
 apply: ## Deployment is intentionally blocked until deployable stacks exist.

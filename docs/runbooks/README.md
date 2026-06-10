@@ -8,3 +8,4 @@ catalog with incident response, restore drills, and DR procedures.
 | [`bootstrap.md`](bootstrap.md) | Bootstrap and secret zero onto an empty/brownfield subscription | 01 |
 | [`subscription-onboarding.md`](subscription-onboarding.md) | Existing-subscription onboarding/readiness against an external ALZ | 02 |
 | [`policy-exception.md`](policy-exception.md) | Time-bound policy exemption workflow (request -> approve -> apply -> audit) | 02 |
+| [`egress-exception.md`](egress-exception.md) | Time-bound outbound egress exception workflow for firewall and NetworkPolicy changes | 03 |
