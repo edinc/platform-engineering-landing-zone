@@ -45,7 +45,8 @@ primitives** that every golden path inherits — before any templates ship.
 
 ### FinOps
 
-- Cost Management exports → ADLS Gen2 (provisioned in Stage 02) consumed by:
+- Cost Management exports → existing ALZ-owned ADLS Gen2 container (export
+  configured in Stage 02) consumed by:
   - **Backstage Cost Insights** plugin (Stage 09), with a documented
     fallback in-house adapter in `backstage/plugins/cost-insights-azure/`
     if the community adapter regresses.
@@ -95,7 +96,7 @@ primitives** that every golden path inherits — before any templates ship.
 ## Dependencies
 
 - Stage 07 (Managed Prom/Grafana, OTel).
-- Stage 02 (Cost Management exports).
+- Stage 02 (Cost Management export configuration to an existing container).
 
 ## Decisions / ADRs
 

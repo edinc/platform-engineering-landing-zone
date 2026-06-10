@@ -30,7 +30,7 @@ responsible / accountable / consulted / informed roles. Excerpt:
 
 | Artifact | Owner | Notes |
 |----------|-------|-------|
-| Management groups, ALZ policy | Platform team | Stage 02 |
+| Management groups, ALZ policy | External ALZ/platform foundation owner | Existing prerequisite; Stage 02 only consumes/validates assumptions |
 | Hub VNet, Firewall, Private DNS | Platform team | Stage 03 |
 | AKS cluster | Platform team | Stage 04 |
 | ACR repo `<team>/*` | Owning app team | Vended |

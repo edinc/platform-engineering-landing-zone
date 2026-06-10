@@ -30,10 +30,11 @@ durably in Azure, with a documented break-glass path.
       access disabled; runner access via a self-hosted runner in the hub
       or via Azure DevOps / Microsoft-hosted runners with VNet integration
       (ADR-0048).
-  - Containers per stage: `bootstrap`, `alz`, `connectivity`, `identity`,
-    `platform`, `vending`, `cicd`, `gitops`, `observability`, `backstage`,
-    `onboarding`, `golden-paths`, `dr`, `envs-demo`, `envs-nonprod`,
-    `envs-prod`.
+  - Containers per stage: `bootstrap`, `alz` (legacy, retained to prevent
+    accidental state deletion), `subscription-baseline`,
+    `connectivity`, `identity`, `platform`, `vending`, `cicd`, `gitops`,
+    `observability`, `backstage`, `onboarding`, `golden-paths`, `dr`,
+    `envs-demo`, `envs-nonprod`, `envs-prod`.
 - **Seed Key Vault** `kv-pe-boot-<region>-<suffix>` for bootstrap-time secrets (HSM
   tier optional). Purge protection on. Phase-1 IP-firewalled; PE retrofit at
   Stage 03 (same two-phase model as state).
@@ -78,7 +79,8 @@ durably in Azure, with a documented break-glass path.
 
 ## Scope (out)
 
-- Management groups, policy, networking (Stage 02–03).
+- Subscription baseline and inherited ALZ policy alignment (Stage 02);
+  networking (Stage 03).
 - AKS or any workload infra (Stage 04+).
 
 ## Deliverables
@@ -89,8 +91,8 @@ durably in Azure, with a documented break-glass path.
     `variables.tf`, `outputs.tf`. Entra app registrations and federated
     credentials are created by `bootstrap-init.sh`, **not** Terraform (ADR-0025).
 - `scripts/bootstrap/bootstrap-init.sh` — the one-off pre-Terraform script.
-- `docs/runbooks/bootstrap.md` — step-by-step "from empty tenant to GH-Actions
-  applying Terraform".
+- `docs/runbooks/bootstrap.md` — step-by-step "from existing subscription to
+  GH-Actions applying Terraform".
 - `.github/workflows/bootstrap.yml` — workflow that runs the Terraform
   plan/apply **from GitHub Actions via OIDC** on demand (`workflow_dispatch`);
   the canonical loop-closing apply (`make bootstrap-apply` is the local
@@ -128,17 +130,18 @@ durably in Azure, with a documented break-glass path.
 | Bootstrap identities | Entra ID app registrations + federated creds |
 | Bootstrap secrets | Azure Key Vault (RBAC); same two-phase access posture |
 | Bootstrap automation | `az cli` + bash (one-off); Terraform after |
-| Break-glass | 2 cloud-only Entra accounts + PIM + Azure Monitor alert (Defender alert added Stage 02) |
+| Break-glass | 2 cloud-only Entra accounts + PIM + Azure Monitor alert (Defender subscription posture added Stage 02) |
 | Runner connectivity | ADR-0048 |
 
 ## Acceptance criteria
 
-1. From a fresh tenant, a Global Admin can run `bootstrap-init.sh` and obtain
-   a working OIDC app registration + state account in <30 minutes.
+1. From an existing Azure subscription, a Global Admin can run
+   `bootstrap-init.sh` and obtain a working OIDC app registration + state account
+   in <30 minutes.
 2. The bootstrap workflow runs Terraform apply from GitHub Actions via OIDC and
    re-applies the bootstrap infra idempotently (drift detection only).
-3. Break-glass activation is alerted in Azure Monitor (Stage 02 extends this
-   with Defender for Cloud alerting).
+3. Break-glass activation is alerted in Azure Monitor (Stage 02 configures
+   Defender for Cloud posture on onboarded subscriptions).
 4. **No long-lived secrets** exist in the repo or GitHub repo secrets after
    this stage.
 5. Documented Phase 2 retrofit plan exists and is referenced from Stage 03
@@ -159,5 +162,6 @@ durably in Azure, with a documented break-glass path.
 - **Bootstrap app-reg over-permissioning** — the deploy identity gets only
   Contributor + User Access Administrator + Storage/KV data-plane roles scoped
   to `rg-pe-tfstate-*`, and **no** Microsoft Graph permissions at all
-  (ADR-0025). Root management-group Contributor / Policy Contributor are
-  **opt-in** (`--grant-root-mg`) for later ALZ stages, not granted by default.
+  (ADR-0025). Root management-group Contributor / Policy Contributor are not
+  needed by Stage 02's subscription baseline and remain an explicit opt-in only
+  for future tenant-scope work.

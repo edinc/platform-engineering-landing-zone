@@ -1,0 +1,14 @@
+# Backend configuration for the demo env stack's state.
+#
+# Copy to backend.hcl (gitignored) and pass with:
+#   terraform init -backend-config=backend.hcl
+#
+# resource_group_name and storage_account_name come from the _bootstrap stack
+# outputs. The "envs-demo" container is provisioned by _bootstrap. State access
+# is Entra-ID-only (no storage keys).
+
+resource_group_name  = "rg-pe-tfstate-weu"
+storage_account_name = "stpetfweuab12" # stpetf<location_short><name_suffix> from _bootstrap
+container_name       = "envs-demo"
+key                  = "envs-demo.tfstate"
+use_azuread_auth     = true

@@ -1,0 +1,45 @@
+{
+  "name": "pe-aks-baseline",
+  "displayName": "Platform Engineering - AKS security baseline",
+  "description": "AKS security baseline guardrails: clusters must disable local accounts and use managed identities instead of service principals. Effects default to Audit at Stage 02 (acceptance criterion 2). This initiative INTENTIONALLY excludes the 'Deploy Azure Policy Add-on to Azure Kubernetes Service clusters' built-in (a8eff44f-8c92-45c3-a3fb-9880802d67a7), which would install the Gatekeeper-based AKS Policy add-on. Kyverno is the single in-cluster admission engine (ADR-0036, Stage 07). Adding that GUID to this file would break Stage 02 acceptance criterion 8 and is blocked by the policy-test-azure guard. Built-in policy GUIDs are pinned and verified against the Azure/azure-policy repository.",
+  "policyType": "Custom",
+  "metadata": {
+    "version": "1.0.0",
+    "category": "Kubernetes",
+    "source": "policies/azure/initiatives/aks-baseline.json",
+    "owner": "platform-engineering",
+    "excludesGatekeeperAddon": "a8eff44f-8c92-45c3-a3fb-9880802d67a7"
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "defaultValue": "Audit",
+      "allowedValues": ["Audit", "Disabled"],
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Effect for the AKS baseline controls. Capped at Audit/Disabled because the managed-identity built-in does not support Deny; cluster-level enforcement is handled in-cluster by Kyverno (ADR-0036)."
+      }
+    }
+  },
+  "policyDefinitionGroups": [
+    {
+      "name": "aks-baseline",
+      "displayName": "AKS security baseline",
+      "description": "Baseline identity and access controls for Azure Kubernetes Service clusters."
+    }
+  ],
+  "policyDefinitions": [
+    {
+      "policyDefinitionReferenceId": "aksLocalAccountsDisabled",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/993c2fcd-2b29-49d2-9eb0-df2c3a730c32",
+      "parameters": { "effect": { "value": "[parameters('effect')]" } },
+      "groupNames": ["aks-baseline"]
+    },
+    {
+      "policyDefinitionReferenceId": "aksManagedIdentitiesUsed",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/da6e2401-19da-4532-9141-fb8fbde08431",
+      "parameters": { "effect": { "value": "[parameters('effect')]" } },
+      "groupNames": ["aks-baseline"]
+    }
+  ]
+}

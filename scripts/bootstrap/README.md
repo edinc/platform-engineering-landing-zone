@@ -38,8 +38,10 @@ make bootstrap-apply
 
 Step 2 is also available as `make bootstrap-init ARGS="--subscription-id <sub> --tenant-id <tenant> --name-suffix <suffix>"`.
 
-Use `--dry-run` to preview `bootstrap-init.sh` without making changes, and
-`--grant-root-mg` only when later ALZ stages need root management group roles.
+Use `--dry-run` to preview `bootstrap-init.sh` without making changes. Stage 02
+no longer needs root management-group roles because it assumes an existing ALZ;
+`--grant-root-mg` is retained only for explicitly documented future tenant-scope
+work.
 
 ## Security notes
 
@@ -47,6 +49,7 @@ Use `--dry-run` to preview `bootstrap-init.sh` without making changes, and
   Later stages create their own identities; this script does not grant the SP
   `Application.ReadWrite.*`.
 - Role assignments are scoped to the state resource group and its storage
-  account / Key Vault, plus an optional, explicit root management group opt-in.
+  account / Key Vault, plus an optional, explicit root management group opt-in
+  that Stage 02 does not use.
 - The scripts print GitHub Actions **variables**, never secrets. OIDC means
   there is nothing sensitive to store in the repository or in GitHub secrets.

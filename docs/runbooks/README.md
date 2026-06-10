@@ -1,4 +1,10 @@
 # Runbooks
 
-Operational runbooks for the platform landing zone will live here. Stage 12
-expands this catalog with incident response, restore drills, and DR procedures.
+Operational runbooks for the platform landing zone. Stage 12 expands this
+catalog with incident response, restore drills, and DR procedures.
+
+| Runbook | Purpose | Stage |
+| --- | --- | --- |
+| [`bootstrap.md`](bootstrap.md) | Bootstrap and secret zero onto an empty/brownfield subscription | 01 |
+| [`subscription-onboarding.md`](subscription-onboarding.md) | Existing-subscription onboarding/readiness against an external ALZ | 02 |
+| [`policy-exception.md`](policy-exception.md) | Time-bound policy exemption workflow (request -> approve -> apply -> audit) | 02 |

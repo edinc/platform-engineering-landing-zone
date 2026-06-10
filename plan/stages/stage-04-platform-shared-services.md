@@ -154,7 +154,7 @@ In the `platform` subscription:
 
 ## Dependencies
 
-- Stage 02 (subscriptions, policy).
+- Stage 02 (subscription baseline and inherited ALZ policy readiness).
 - Stage 03 (hub, Private DNS, egress).
 
 ## Decisions / ADRs

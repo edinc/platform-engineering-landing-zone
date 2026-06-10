@@ -13,7 +13,7 @@ AI agents must also follow `AGENTS.md` for execution discipline, test coverage, 
 - Prefer Azure-native services and align designs with CAF, Azure Landing Zones, and Azure Well-Architected guidance.
 - Terraform is the primary IaC language. Use Azure Verified Modules where available and GA, with pinned versions. Treat Bicep as a documented future option unless a stage or ADR says otherwise.
 - GitOps is the default delivery model for Kubernetes state. Flux owns in-cluster desired state.
-- Keep clear ownership boundaries: Terraform owns ALZ and platform shared infrastructure; Flux owns Kubernetes resources; Azure Service Operator v2 owns workload-team Azure dependencies; Backstage initiates workflows but is not the source of truth.
+- Keep clear ownership boundaries: an existing ALZ owns management groups and tenant/MG-scoped policy; Terraform in this repo owns subscription-scoped baseline and platform shared infrastructure; Flux owns Kubernetes resources; Azure Service Operator v2 owns workload-team Azure dependencies; Backstage initiates workflows but is not the source of truth.
 - Design for three profiles: `demo`, `nonprod`, and `prod`, with cost-conscious defaults for `demo` and production-grade HA/security for `prod`.
 - Be brownfield-aware. Avoid assumptions that every tenant or subscription starts empty.
 
@@ -24,7 +24,7 @@ AI agents must also follow `AGENTS.md` for execution discipline, test coverage, 
 - Use Key Vault with RBAC and Private Link for secrets and certificates.
 - Use secure-by-default AKS patterns: private clusters, Workload Identity, Azure CNI Overlay with Cilium, Pod Security Admission, Kyverno, signed images, and default-deny network posture.
 - Kyverno is the single in-cluster admission engine. Do not enable the Azure Policy Gatekeeper add-on for AKS unless a future ADR explicitly changes that decision.
-- Preserve the compliance baseline: CIS Azure Foundations Benchmark v2, ALZ regulated initiatives, Defender for Cloud, required tags, central logging, diagnostics, and policy exception workflows.
+- Preserve the compliance baseline: inherited CIS/ALZ policy posture, Defender for Cloud, required tags, central logging/diagnostics integration, and policy exception workflows.
 
 ## Repository conventions
 
@@ -39,7 +39,7 @@ AI agents must also follow `AGENTS.md` for execution discipline, test coverage, 
 - For Terraform, prefer reusable modules under the planned `infrastructure/terraform/_modules/` layout and environment compositions under `infrastructure/terraform/envs/{demo,nonprod,prod}/`.
 - Keep provider versions, module versions, and tool versions pinned.
 - Validate Terraform with existing repository commands and CI patterns before considering infrastructure changes complete.
-- Preserve stage ordering: bootstrap and secret zero before ALZ baseline; connectivity and egress before platform shared services; vending before CI/CD; CI/CD before GitOps and Backstage.
+- Preserve stage ordering: bootstrap and secret zero before subscription baseline; connectivity and egress before platform shared services; vending before CI/CD; CI/CD before GitOps and Backstage.
 
 ## Policy and Kubernetes guidance
 
