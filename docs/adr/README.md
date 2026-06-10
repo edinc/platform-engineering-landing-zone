@@ -39,7 +39,7 @@ Next free number: **0054**
 | 0029 | Custom RBAC roles and group-only assignments | Accepted | [`0029-custom-roles.md`](0029-custom-roles.md) |
 | 0030 | Hub-and-spoke networking for MVP | Accepted | [`0030-hub-and-spoke.md`](0030-hub-and-spoke.md) |
 | 0031 | Default-deny egress and FQDN allowlist | Accepted | [`0031-default-deny-egress.md`](0031-default-deny-egress.md) |
-| 0032 | Platform eventing bus | Seeded in Stage 04 | Pending |
+| 0032 | Platform-internal eventing uses Azure Service Bus | Accepted | [`0032-platform-eventing.md`](0032-platform-eventing.md) |
 | 0033 | AKS namespace as workload-scope vending unit | Seeded in Stage 05 | Pending |
 | 0034 | Vending request schema | Seeded in Stage 05 | Pending |
 | 0035 | Dependency updater strategy | Seeded in Stage 06 | Pending |
@@ -57,7 +57,7 @@ Next free number: **0054**
 | 0047 | Policy testing split | Accepted | [`0047-policy-testing-split.md`](0047-policy-testing-split.md) |
 | 0048 | Runner connectivity model | Accepted | [`0048-runner-connectivity.md`](0048-runner-connectivity.md) |
 | 0049 | DDoS protection posture | Accepted | [`0049-ddos-protection.md`](0049-ddos-protection.md) |
-| 0050 | ACA managed environment substrate | Seeded in Stage 04 | Pending |
+| 0050 | ACA managed environment as a platform shared service | Accepted | [`0050-aca-managed-environment.md`](0050-aca-managed-environment.md) |
 | 0051 | Cross-repo GitHub writes | Seeded in Stage 05 | Pending |
 | 0052 | Backstage Postgres passwordless auth | Seeded in Stage 09 | Pending |
 | 0053 | ACA GitOps exception | Seeded in Stage 11 | Pending |

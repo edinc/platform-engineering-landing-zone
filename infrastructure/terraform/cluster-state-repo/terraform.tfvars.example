@@ -1,0 +1,13 @@
+# Example inputs for the Stage 04 cluster-state repository stack.
+
+github_owner          = "edinc"
+repository_name       = "platform-cluster-state"
+repository_visibility = "private"
+default_branch        = "main"
+
+codeowners = [
+  "* @edinc/platform-engineering",
+]
+
+# Stage 06 will add executable workflow checks and can then populate this list.
+required_status_checks = []

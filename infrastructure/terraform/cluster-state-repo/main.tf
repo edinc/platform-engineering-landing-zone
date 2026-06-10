@@ -1,0 +1,62 @@
+resource "github_repository" "cluster_state" {
+  #checkov:skip=CKV_GIT_3:Vulnerability alerts are enabled via github_repository_vulnerability_alerts because the inline argument is deprecated in provider v6.
+  name                   = var.repository_name
+  description            = "Flux source of truth for platform cluster state."
+  visibility             = var.repository_visibility
+  has_issues             = true
+  has_projects           = false
+  has_wiki               = false
+  delete_branch_on_merge = true
+  auto_init              = true
+}
+
+resource "github_repository_vulnerability_alerts" "cluster_state" {
+  repository = github_repository.cluster_state.name
+}
+
+resource "github_branch_default" "cluster_state" {
+  repository = github_repository.cluster_state.name
+  branch     = var.default_branch
+}
+
+resource "github_repository_file" "seed" {
+  for_each = local.seed_files
+
+  repository          = github_repository.cluster_state.name
+  branch              = github_branch_default.cluster_state.branch
+  file                = each.key
+  content             = each.value
+  commit_message      = "chore: seed platform cluster state layout"
+  overwrite_on_create = true
+
+  lifecycle {
+    ignore_changes = [
+      content,
+      commit_message,
+    ]
+  }
+}
+
+resource "github_branch_protection" "main" {
+  repository_id  = github_repository.cluster_state.node_id
+  pattern        = var.default_branch
+  enforce_admins = true
+
+  required_pull_request_reviews {
+    required_approving_review_count = 2
+    require_code_owner_reviews      = true
+  }
+
+  require_signed_commits = true
+
+  dynamic "required_status_checks" {
+    for_each = length(var.required_status_checks) > 0 ? [var.required_status_checks] : []
+
+    content {
+      strict   = true
+      contexts = required_status_checks.value
+    }
+  }
+
+  depends_on = [github_repository_file.seed]
+}
