@@ -27,7 +27,8 @@ Related decisions: [ADR-0011](../adr/0011-compliance-baseline.md) (baseline),
 
 ### 1. Request (as code)
 
-Add an exemption resource in the IaC PR, scoped as narrowly as possible. Prefer
+Open the exemption request in the ALZ-owned policy repository or change process.
+Add an exemption resource in that IaC PR, scoped as narrowly as possible. Prefer
 resource scope over resource group over subscription; never exempt an entire MG.
 
 ```hcl
@@ -64,8 +65,8 @@ self-approve subscription-scope or `Deny`-effect exemptions.
 
 ### 3. Apply
 
-Merge through the normal IaC pipeline. The exemption is now in Terraform state
-and visible in the Azure control plane. Confirm it is active:
+Merge through the ALZ owner's normal IaC pipeline. The exemption is now in the
+ALZ policy state and visible in the Azure control plane. Confirm it is active:
 
 ```bash
 az policy exemption list --scope "<scope>" -o table

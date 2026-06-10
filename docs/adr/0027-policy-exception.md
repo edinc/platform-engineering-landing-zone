@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 02 - ALZ baseline and compliance baseline
+- Stage: Stage 02 - subscription baseline and compliance alignment
 
 ## Context
 
@@ -17,10 +17,11 @@ primitive.
 
 ## Decision
 
-**Policy non-compliance is handled through time-bound Azure Policy exemptions,
-requested and approved as code, never by weakening or unassigning an initiative.**
+**Policy non-compliance is handled through time-bound Azure Policy exemptions in
+the external ALZ policy workflow, requested and approved as code, never by
+weakening or unassigning an initiative.**
 
-1. **Mechanism.** Use `azurerm_resource_policy_exemption` /
+1. **Mechanism.** The ALZ owner uses `azurerm_resource_policy_exemption` /
    `azurerm_subscription_policy_exemption` (or MG-scoped equivalents) with:
    - `exemption_category = "Waiver"` (accepted non-compliance) or `"Mitigated"`
      (compensating control exists);
@@ -30,13 +31,15 @@ requested and approved as code, never by weakening or unassigning an initiative.
      never the whole MG hierarchy).
 
 2. **Workflow.** Request -> review -> approve -> apply -> audit:
-   - **Request:** a PR adds the exemption resource with justification, scope,
-     and expiry, or fills the exception template in the runbook.
+   - **Request:** a PR or change request in the ALZ-owned policy repository adds
+     the exemption resource with justification, scope, and expiry, or fills the
+     exception template in the runbook.
    - **Approve:** per the approver matrix below.
-   - **Apply:** merged through the normal IaC pipeline; the exemption is now in
-     state and auditable.
-   - **Audit:** exemptions are reviewed before expiry; the brownfield-discovery
-     script and Defender/Policy compliance reports surface active exemptions.
+   - **Apply:** merged through the ALZ owner's normal IaC pipeline; the exemption
+     is now in the ALZ policy state and auditable.
+   - **Audit:** exemptions are reviewed before expiry; the subscription
+     readiness-discovery script and Defender/Policy compliance reports surface
+     active exemptions.
 
 3. **Approver matrix.**
 
@@ -54,7 +57,8 @@ requested and approved as code, never by weakening or unassigning an initiative.
 ## Consequences
 
 - Every deviation from the baseline is explicit, scoped, time-bound, and
-  attributable in git history and in the Azure control plane.
+  attributable in ALZ-owner git history/change records and in the Azure control
+  plane.
 - Controls are never globally weakened to accommodate one team; blast radius of
   an exception is bounded by scope.
 - The brownfield onramp has a sanctioned escape hatch, which keeps audit-first

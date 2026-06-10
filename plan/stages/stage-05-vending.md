@@ -7,9 +7,11 @@ provisioned — by *infrastructure as code first*, *Backstage scaffolder second*
 
 ## Scope (in)
 
-- Adopt **`Azure/lz-vending`** Terraform module (Microsoft-maintained) as the
-  primary subscription/landing-zone vending mechanism.
-- Compose `lz-vending` for two archetypes:
+- Integrate with the organization's existing subscription vending mechanism.
+  **`Azure/lz-vending`** remains the preferred Terraform option when this repo
+  owns vending, but the platform must also support externally-created
+  subscriptions that are handed to Stage 02 for onboarding.
+- Compose vending/onboarding flows for two archetypes:
   - **Workload subscription (corp/online)** — full subscription with peering,
     RBAC, budget (incl. action group for 80%/100% thresholds), tag baseline,
     diagnostic settings. Requires an **Enrollment Account** (EA) or **MCA
@@ -27,7 +29,8 @@ provisioned — by *infrastructure as code first*, *Backstage scaffolder second*
   `actions/create-github-app-token` pattern.
 - **Vending API surface** (foundational for Stage 06+09):
   - A GitHub Action workflow `vend-subscription.yml` that takes an input YAML
-    request, runs `lz-vending` Terraform, and opens a PR with the change.
+    request and either runs the pinned vending composition or opens an
+    onboarding PR against an externally-created subscription.
   - A GitHub Action workflow `vend-namespace.yml` that does the same for an
     AKS namespace, using the **GitHub App token** to push a branch + open
     a PR to `platform-cluster-state` (Flux Kustomization). The Terraform
@@ -56,7 +59,9 @@ provisioned — by *infrastructure as code first*, *Backstage scaffolder second*
 ## Deliverables
 
 - `infrastructure/terraform/vending/`
-  - `subscription/` — `lz-vending` composition.
+  - `subscription/` — pinned vending composition when this repo owns vending.
+  - `onboarding/` — request schema and wiring for externally-created
+    subscriptions that then run the Stage 02 subscription baseline.
   - `aks-namespace/` — Terraform module producing Flux Kustomization manifests
     that the workflow then commits to `platform-cluster-state` via the
     `platform-vending-bot` GitHub App.
@@ -73,15 +78,18 @@ provisioned — by *infrastructure as code first*, *Backstage scaffolder second*
 
 ## Dependencies
 
-- Stage 02 (MG/policy), Stage 03 (hub for peering, Entra groups), Stage 04
-  (platform cluster for namespace vending + `platform-cluster-state` repo).
+- Stage 02 (subscription baseline/readiness), Stage 03 (hub for peering, Entra
+  groups), Stage 04 (platform cluster for namespace vending +
+  `platform-cluster-state` repo), plus the external ALZ/vending process when
+  this repo does not create subscriptions.
 - **Stage 07** is needed for the **reconciliation half** of namespace
   vending (Flux must be installed to reconcile the Kustomization). This
   stage's acceptance is therefore split — see below.
 
 ## Decisions / ADRs
 
-- **ADR-0008** Subscription vending = `Azure/lz-vending`.
+- **ADR-0008** Subscription vending = existing ALZ vending integration, with
+  `Azure/lz-vending` preferred when this repo owns the Terraform composition.
 - **ADR-0033** AKS namespace = workload-scope vending unit; subscriptions used
   only for blast-radius / billing isolation that namespaces cannot provide.
 - **ADR-0034** Vending request schema is the platform's first public contract;
@@ -94,7 +102,7 @@ provisioned — by *infrastructure as code first*, *Backstage scaffolder second*
 
 | Concern | Choice |
 |---------|--------|
-| Subscription vending | `Azure/lz-vending` (Terraform) |
+| Subscription vending | Existing ALZ vending integration; `Azure/lz-vending` when repo-owned |
 | Workflow orchestration | GitHub Actions |
 | Cross-repo manifest writes | `gh` CLI + `actions/create-github-app-token` (`platform-vending-bot`) |
 | Schema validation | JSON Schema + `ajv-cli` |
@@ -122,7 +130,8 @@ provisioned — by *infrastructure as code first*, *Backstage scaffolder second*
 
 ## Risks
 
-- **`lz-vending` upstream churn** → pin version; track release notes.
+- **Vending integration drift** → pin `lz-vending` when used, and document the
+  external ALZ request/approval contract when vending happens outside this repo.
 - **PR-driven vending feels slow** for developers → mitigate with Backstage
   scaffolder UX (Stage 11) and a target SLA of "PR open → merged < 1 working
   day" for routine requests.

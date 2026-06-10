@@ -33,9 +33,9 @@ Next free number: **0054**
 | 0023 | SCM branching and GitHub Environments | Accepted | [`0023-scm-branching.md`](0023-scm-branching.md) |
 | 0024 | Break-glass procedure | Accepted | [`0024-break-glass.md`](0024-break-glass.md) |
 | 0025 | OIDC federation policy | Accepted | [`0025-oidc-federation.md`](0025-oidc-federation.md) |
-| 0026 | AVM module pinning and upgrade cadence | Accepted | [`0026-avm-modules.md`](0026-avm-modules.md) |
+| 0026 | AVM module pinning and subscription-baseline composition | Accepted | [`0026-avm-modules.md`](0026-avm-modules.md) |
 | 0027 | Policy exception workflow and approver matrix | Accepted | [`0027-policy-exception.md`](0027-policy-exception.md) |
-| 0028 | Subscription topology | Accepted | [`0028-subscription-topology.md`](0028-subscription-topology.md) |
+| 0028 | Subscription topology and ALZ ownership boundary | Accepted | [`0028-subscription-topology.md`](0028-subscription-topology.md) |
 | 0029 | Custom RBAC roles and group-only assignments | Seeded in Stage 03 | Pending |
 | 0030 | Hub-and-spoke networking for MVP | Seeded in Stage 03 | Pending |
 | 0031 | Default-deny egress and FQDN allowlist | Seeded in Stage 03 | Pending |

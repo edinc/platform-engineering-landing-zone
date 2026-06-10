@@ -23,9 +23,11 @@ storage account (`stpetf<loc><suffix>`) in a dedicated resource group
 (`rg-pe-tfstate-<loc>`):
 
 - **One blob container per stage** plus per-profile environment containers
-  (`bootstrap`, `alz`, `connectivity`, ... `envs-demo`, `envs-nonprod`,
-  `envs-prod`). Each stage's state key lives in its own container for blast-radius
-  isolation and least-privilege scoping.
+  (`bootstrap`, legacy `alz`, `subscription-baseline`, `connectivity`, ...
+  `envs-demo`, `envs-nonprod`, `envs-prod`). Each stage's state key lives in its
+  own container for blast-radius isolation and least-privilege scoping. The
+  legacy `alz` container is retained so existing bootstrap deployments cannot
+  accidentally delete a state container during the Stage 02 rename.
 - **Locking** uses native blob leases (the AzureRM backend default). Terragrunt
   is not used.
 - **Resilience**: RA-GRS replication, blob versioning, soft delete, and change
@@ -38,6 +40,8 @@ storage account (`stpetf<loc><suffix>`) in a dedicated resource group
   `storage_use_azuread`). There are no storage account keys to leak or rotate.
 - Backend settings are supplied at init time with `-backend-config=backend.hcl`,
   so no tenant-specific values are committed.
+- State containers have `prevent_destroy = true`; removal requires an explicit,
+  reviewed state-migration change after confirming no live state blobs remain.
 
 The state account is created by `bootstrap-init.sh` and then **adopted** into
 Terraform via a scripted `make bootstrap-import` (alongside its resource group,

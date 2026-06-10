@@ -40,7 +40,7 @@ GITHUB_REPO="platform-engineering-landing-zone"
 ENVIRONMENT="bootstrap"
 KEY_VAULT_SKU="standard"
 SOFT_DELETE_DAYS="90"
-GRANT_ROOT_MG="false"   # opt-in: Contributor + Resource Policy Contributor at root MG
+GRANT_ROOT_MG="false"   # opt-in: future tenant-scope work only; Stage 02 does not need it
 DRY_RUN="false"
 
 usage() {
@@ -61,8 +61,9 @@ Options:
   --key-vault-sku <sku>      standard|premium (default: standard).
   --soft-delete-days <n>     Key Vault soft-delete retention (default: 90).
   --grant-root-mg            Also grant the deploy identity Contributor + Resource Policy
-                             Contributor at the tenant root management group (for later ALZ
-                             stages). Off by default; requires root MG owner/UAA.
+                             Contributor at the tenant root management group. Stage 02 does
+                             not need this; keep it for explicitly documented future
+                             tenant-scope work. Off by default; requires root MG owner/UAA.
   --dry-run                  Print what would happen without changing anything.
   -h, --help                 Show this help.
 USAGE
@@ -415,7 +416,7 @@ if [[ "$GRANT_ROOT_MG" == "true" ]]; then
   assign_role "Contributor"                    "$ROOT_MG_ID"
   assign_role "Resource Policy Contributor"    "$ROOT_MG_ID"
 else
-  log "Skipping root management group roles (enable with --grant-root-mg when ALZ stages need them)."
+  log "Skipping root management group roles (Stage 02 does not need them; enable --grant-root-mg only for explicitly documented future tenant-scope work)."
 fi
 
 # --------------------------------------------------------------------------- #

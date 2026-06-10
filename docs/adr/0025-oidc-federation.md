@@ -56,16 +56,17 @@ Microsoft Graph permissions.**
    - `Key Vault Crypto Officer` and `Key Vault Secrets Officer` on the seed vault.
 
    Root management group roles (`Contributor`, `Resource Policy Contributor`) are
-   an explicit, off-by-default opt-in (`--grant-root-mg`) for later ALZ stages,
-   never tenant-wide `Graph.*` or `Owner` at subscription scope.
+   an explicit, off-by-default opt-in (`--grant-root-mg`) for future
+   tenant-scope work, not required by Stage 02, and never tenant-wide `Graph.*`
+   or `Owner` at subscription scope.
 
 5. **Later stages own their identities.** Each later stage provisions its own
    federated identity and scopes through the same admin-run pattern; the bootstrap
    identity is not a factory for other identities. Stage 01 deliberately ships only
    the single `sp-pe-bootstrap-<loc>` app; generalizing `bootstrap-init.sh` into a
    reusable per-stage identity helper (parameterized app name, environment subject,
-   and role set) is an explicit **Stage 02 deliverable**, so later stages do not
-   reuse the bootstrap identity or hand it broader root-management-group roles.
+   and role set) is a future hardening item, so later stages do not reuse the
+   bootstrap identity or hand it broader root-management-group roles.
 
 ## Consequences
 
