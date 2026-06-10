@@ -1,0 +1,43 @@
+# Example inputs for the Stage 04 platform stack. Copy to terraform.tfvars
+# (gitignored) and fill tenant-specific values. Never commit real secrets.
+
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+subscription_id = "44444444-4444-4444-4444-444444444444"
+
+profile         = "nonprod"
+location        = "westeurope"
+paired_location = "northeurope"
+location_short  = "weu"
+name_suffix     = "pe04"
+
+log_analytics_workspace_id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-monitoring/providers/Microsoft.OperationalInsights/workspaces/log-platform-weu"
+firewall_private_ip_address = "10.20.1.4"
+
+availability_zones = ["1", "2", "3"]
+
+private_dns_zone_ids = {
+  "privatelink.azurecr.io"                  = "/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-pe-nonprod-connectivity-weu/providers/Microsoft.Network/privateDnsZones/privatelink.azurecr.io"
+  "privatelink.vaultcore.azure.net"         = "/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-pe-nonprod-connectivity-weu/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net"
+  "privatelink.postgres.database.azure.com" = "/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-pe-nonprod-connectivity-weu/providers/Microsoft.Network/privateDnsZones/privatelink.postgres.database.azure.com"
+  "privatelink.servicebus.windows.net"      = "/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-pe-nonprod-connectivity-weu/providers/Microsoft.Network/privateDnsZones/privatelink.servicebus.windows.net"
+  "privatelink.westeurope.azmk8s.io"        = "/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-pe-nonprod-connectivity-weu/providers/Microsoft.Network/privateDnsZones/privatelink.westeurope.azmk8s.io"
+}
+
+private_dns_zone_subscription_id = "33333333-3333-3333-3333-333333333333"
+
+aks_admin_group_object_ids = [
+  "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+]
+
+enable_aks_defender       = true
+enable_managed_prometheus = false
+
+# PostgreSQL is disabled by default until a secret source is wired. Supply this
+# out-of-band, for example via TF_VAR_postgres_administrator_password.
+# enable_postgres                  = true
+# postgres_administrator_password = "REPLACE_WITH_SECRET_FROM_KEY_VAULT"
+
+owner        = "platform-engineering"
+cost_center  = "cc-platform"
+github_owner = "edinc"
+github_repo  = "platform-engineering-landing-zone"
