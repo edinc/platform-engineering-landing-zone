@@ -1,0 +1,6 @@
+# Copy to backend.hcl (gitignored) and fill values from the Stage 01 _bootstrap outputs.
+resource_group_name  = "rg-pe-bootstrap-weu"
+storage_account_name = "stpebootweu0000"
+container_name       = "identity"
+key                  = "nonprod/identity.tfstate"
+use_azuread_auth     = true

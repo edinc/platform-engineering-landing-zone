@@ -36,9 +36,9 @@ Next free number: **0054**
 | 0026 | AVM module pinning and subscription-baseline composition | Accepted | [`0026-avm-modules.md`](0026-avm-modules.md) |
 | 0027 | Policy exception workflow and approver matrix | Accepted | [`0027-policy-exception.md`](0027-policy-exception.md) |
 | 0028 | Subscription topology and ALZ ownership boundary | Accepted | [`0028-subscription-topology.md`](0028-subscription-topology.md) |
-| 0029 | Custom RBAC roles and group-only assignments | Seeded in Stage 03 | Pending |
-| 0030 | Hub-and-spoke networking for MVP | Seeded in Stage 03 | Pending |
-| 0031 | Default-deny egress and FQDN allowlist | Seeded in Stage 03 | Pending |
+| 0029 | Custom RBAC roles and group-only assignments | Accepted | [`0029-custom-roles.md`](0029-custom-roles.md) |
+| 0030 | Hub-and-spoke networking for MVP | Accepted | [`0030-hub-and-spoke.md`](0030-hub-and-spoke.md) |
+| 0031 | Default-deny egress and FQDN allowlist | Accepted | [`0031-default-deny-egress.md`](0031-default-deny-egress.md) |
 | 0032 | Platform eventing bus | Seeded in Stage 04 | Pending |
 | 0033 | AKS namespace as workload-scope vending unit | Seeded in Stage 05 | Pending |
 | 0034 | Vending request schema | Seeded in Stage 05 | Pending |
@@ -56,7 +56,7 @@ Next free number: **0054**
 | 0046 | Post-mortem retention and PII handling | Seeded in Stage 12 | Pending |
 | 0047 | Policy testing split | Accepted | [`0047-policy-testing-split.md`](0047-policy-testing-split.md) |
 | 0048 | Runner connectivity model | Accepted | [`0048-runner-connectivity.md`](0048-runner-connectivity.md) |
-| 0049 | DDoS protection posture | Seeded in Stage 03 | Pending |
+| 0049 | DDoS protection posture | Accepted | [`0049-ddos-protection.md`](0049-ddos-protection.md) |
 | 0050 | ACA managed environment substrate | Seeded in Stage 04 | Pending |
 | 0051 | Cross-repo GitHub writes | Seeded in Stage 05 | Pending |
 | 0052 | Backstage Postgres passwordless auth | Seeded in Stage 09 | Pending |
