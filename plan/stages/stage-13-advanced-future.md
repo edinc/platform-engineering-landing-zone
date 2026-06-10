@@ -96,7 +96,7 @@ dropped — while keeping the MVP focused.
 ### K — Microsoft Sentinel
 
 - **Why**: SIEM/SOAR for security-incident response.
-- **What**: Sentinel workspace, ALZ-aligned data connectors, baseline
+- **What**: Sentinel workspace, existing-ALZ-aligned data connectors, baseline
   analytics rules, playbooks.
 - **Trigger**: Compliance scope expansion (e.g., SOC 2, PCI), OR security
   team capacity to operate it.

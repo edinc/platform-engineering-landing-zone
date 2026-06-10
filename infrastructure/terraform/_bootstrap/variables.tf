@@ -68,6 +68,7 @@ variable "state_containers" {
   default = [
     "bootstrap",
     "alz",
+    "subscription-baseline",
     "connectivity",
     "identity",
     "platform",

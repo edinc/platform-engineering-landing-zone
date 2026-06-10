@@ -47,7 +47,8 @@ bootstrap-init.sh        make bootstrap-import        bootstrap workflow
 
 Useful flags: `--location` / `--location-short` (default `westeurope` / `weu`),
 `--key-vault-sku premium` (only if you will use an HSM-backed CMK),
-`--grant-root-mg` (opt-in root management group roles for later ALZ stages),
+`--grant-root-mg` (legacy opt-in root management group roles for explicitly
+documented future tenant-scope work; Stage 02 does not need it),
 `--dry-run` (preview without changes).
 
 The script is **idempotent** — re-run it safely. It prints the GitHub Actions
@@ -100,6 +101,12 @@ just-in-time runner IP during each run, leaving **no standing human break-glass
 path** to the state account / Key Vault data plane until you add one.
 
 There are no secrets to store — that is the point of OIDC (acceptance criterion 4).
+
+> Stage 02 was renamed from the previous `alz` stack to
+> `subscription-baseline`. The bootstrap stack now keeps both the legacy `alz`
+> container and the new `subscription-baseline` container, with state-container
+> deletion protected by Terraform `prevent_destroy`. Remove `alz` only through a
+> reviewed state-migration change after confirming no live state blobs remain.
 
 > **Restrict the environment before the first apply.** The OIDC federated
 > credential subject is `environment:bootstrap` only, so branch safety depends

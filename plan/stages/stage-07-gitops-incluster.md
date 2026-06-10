@@ -53,9 +53,9 @@ and wired together.
 
 ### Policy
 
-- **Kyverno** is the **only** in-cluster admission engine. The Stage 02
-  `aks-baseline` initiative explicitly does **not** install the Azure
-  Policy for AKS add-on (Gatekeeper) — this avoids dual-admission
+- **Kyverno** is the **only** in-cluster admission engine. The optional/reference
+  `aks-baseline` initiative validated in Stage 02 explicitly does **not** install
+  the Azure Policy for AKS add-on (Gatekeeper) — this avoids dual-admission
   conflicts and resource pressure.
 - Kyverno with policy bundle from `policies/kyverno/`:
   - Verify cosign signatures (mandatory in nonprod/prod).
@@ -185,9 +185,8 @@ and wired together.
    Insights shows them.
 6. KEDA is installed and a smoke-test ScaledObject scales a sample
    deployment based on a Service Bus queue length.
-7. The `aks-baseline` initiative (Stage 02) is confirmed to have the AKS
-   Policy add-on disabled; only Kyverno appears in cluster admission
-   webhooks.
+7. The optional/reference `aks-baseline` policy pack is confirmed by CI to omit
+   the AKS Policy add-on; only Kyverno appears in cluster admission webhooks.
 
 ## Risks
 

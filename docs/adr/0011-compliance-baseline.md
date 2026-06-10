@@ -2,91 +2,90 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 02 - ALZ baseline and compliance baseline
+- Stage: Stage 02 - subscription baseline and compliance alignment
 
 ## Context
 
-The landing zone needs a named, auditable compliance baseline that can be
-asserted against every subscription, plus a rollout model that does not break
-existing (brownfield) resources on day one. Stage 02 acceptance criteria require
-CIS Foundations v2 plus ALZ initiatives, mostly at `Audit`/`DeployIfNotExists`,
-with exactly one pre-approved `Deny` (mandatory tags), and a documented path to
-tighten effects later (acceptance criteria 2 and 3).
+The platform must align every onboarded subscription with the organization's
+Azure compliance baseline, but this repository no longer creates the Azure
+Landing Zone itself. Management groups, tenant/MG-scoped policy assignments, and
+central shared services are assumed to exist before Stage 02 runs.
 
-The chosen ALZ composition is a native `azurerm` build rather than a packaged ALZ
-module (ADR-0026), so "ALZ initiatives" here means a curated set of built-in
-policies and custom initiatives we assign ourselves.
+The repo still needs clear, testable guarantees:
+
+- subscription onboarding must not weaken inherited ALZ/CIS controls;
+- every subscription must receive the platform's subscription-scoped hardening
+  where this repo has responsibility;
+- policy definitions used by the platform must remain reviewable and validated,
+  even when assignment is performed by the external ALZ owner.
 
 ## Decision
 
-**Compliance baseline = CIS Microsoft Azure Foundations Benchmark v2 (built-in
-initiative) assigned at the `alz` management group, plus three custom initiatives
-(`tag-baseline`, `private-link-required`, `aks-baseline`), with audit-first
-effects and a single pre-approved `Deny`.**
+**Compliance baseline = inherited organizational ALZ/CIS controls plus
+subscription-scoped hardening by this repo.**
 
-1. **CIS v2** (`06f19060-9e68-4070-92ca-f15cc126059e`) is assigned at `alz`. It is
-   **evaluation-only** by default (`cis_enforce = false`, assignment
-   `enforce = false` / DoNotEnforce). Compliance is still evaluated and scored;
-   no broad denies are introduced during the tenant grace period. The assignment
-   carries a SystemAssigned identity so it can be flipped to enforced later
-   without recreation; the initiative's remediation roles are granted to that
-   identity as part of enabling enforcement.
+1. **Inherited controls.** The existing ALZ is responsible for tenant and
+   management-group policy assignments such as CIS Microsoft Azure Foundations
+   Benchmark v2, regulated initiatives, tag enforcement, private-link posture,
+   and other broad governance effects. Stage 02 verifies and documents those
+   assumptions; it does not create or mutate them.
 
-2. **Custom initiatives** are defined as JSON in
-   `policies/azure/initiatives/` (the source of truth) and rendered into
-   `azurerm_policy_set_definition` resources:
-   - `tag-baseline` - **Deny** on missing mandatory tags, on both resources and
-     resource groups. This is the only `Deny` at Stage 02 (criterion 3).
-   - `private-link-required` - **Audit** for public network access on Storage,
-     Key Vault, Container Registry, and PostgreSQL flexible servers. The Storage
-     and PostgreSQL members are configurable to **Deny**; the Key Vault and
-     Container Registry members are audit-only built-ins (no `Deny` effect) and
-     stay audit-only.
-   - `aks-baseline` - **Audit** for disabled local accounts and managed
-     identities; it deliberately excludes the AKS Policy (Gatekeeper) add-on
-     (ADR-0036, criterion 8).
+2. **Subscription-scoped hardening.** The Stage 02 Terraform stack configures
+   controls that are naturally scoped to a subscription:
+   - Microsoft Defender for Cloud plan pricing;
+   - subscription Activity Log diagnostics to an existing central Log Analytics
+     workspace;
+   - optional subscription budget;
+   - optional Cost Management export to an existing platform/ALZ storage
+     container.
 
-3. **Audit-first rollout.** Every effect except the tag `Deny` defaults to
-   `Audit`/`DeployIfNotExists`. Effects move to `Deny` only after the exemption
-   inventory is drained, through the policy-exception workflow (ADR-0027).
+3. **Reference policy pack.** Custom initiatives remain under
+   `policies/azure/initiatives/` as an optional/reference policy pack for ALZ
+   administrators:
+   - `tag-baseline` - Deny missing mandatory tags on resources and resource
+     groups.
+   - `private-link-required` - Audit public network access for selected data
+     services; Storage/PostgreSQL can be tightened to Deny by the ALZ owner.
+   - `aks-baseline` - Audit AKS identity controls and deliberately exclude the
+     AKS Policy (Gatekeeper) add-on.
 
-4. **Static enforcement of the criteria.** Because Terraform `check {}` blocks
-   only run at plan/apply, a credential-free guard
-   (`scripts/policy/validate_azure_initiatives.py`, `make policy-test-azure`)
-   asserts criteria 3 and 8 in CI against the initiative JSON.
+4. **Static enforcement of platform invariants.** `make policy-test-azure`
+   validates the reference policy pack in credential-free CI: pinned built-in
+   GUIDs, mandatory tag coverage, no Gatekeeper add-on, no AKS Deny effect, and
+   Audit default for private-link.
 
-The built-in policy GUIDs are pinned in `locals.tf` and the initiative JSON, and
-verified against the canonical `Azure/azure-policy` repository.
+5. **Exception handling.** Deviations from inherited policy are handled through
+   scoped, time-bound Azure Policy exemptions owned by the external ALZ process
+   and documented through ADR-0027/runbooks. This repo must not weaken or remove
+   shared assignments to accommodate one subscription.
 
 ## Consequences
 
-- A subscription's posture is measurable against CIS v2 from day one without the
-  risk of denying existing workloads.
-- The only thing that can block a deployment at Stage 02 is a missing mandatory
-  tag, which is already enforced in CI by the Rego gate (ADR-0047), so the
-  control-plane `Deny` and the plan-time gate agree.
-- Tightening effects is a deliberate, reviewed change, not a default, which keeps
-  the brownfield onramp safe (see the brownfield runbook).
-- Enabling CIS enforcement later requires granting remediation roles to the
-  assignment identity; this is documented rather than pre-provisioned to avoid
-  standing privilege while the initiative is evaluation-only.
+- Stage 02 becomes much simpler: it can onboard one existing subscription at a
+  time without requiring tenant root or management-group permissions.
+- The ALZ owner remains accountable for broad policy posture; this repo remains
+  accountable for subscription readiness and hardening.
+- The policy JSON remains useful and testable, but it is no longer coupled to
+  the Stage 02 Terraform apply.
+- Compliance drift must be detected through readiness discovery and inherited
+  policy/compliance reports, not through this stack creating assignments.
 
 ## Alternatives considered
 
 | Alternative | Reason not chosen |
 |-------------|-------------------|
-| Assign CIS v2 with default (enforced) effects immediately | Introduces broad denies across a brownfield tenant; violates the audit-first criterion and risks blocking existing resources. |
-| Microsoft cloud security benchmark (MCSB) only | CIS v2 is the named baseline in the stage spec; MCSB is enabled implicitly via Defender and can be layered later. |
-| Put effects only in the assignments, not the initiatives | Loses a reusable, named initiative as the unit of governance and makes the tag/private-link/aks intent harder to audit. |
-| Rely solely on Terraform `check {}` for criteria 3/8 | `check {}` does not run under `terraform validate`, so CI would not catch a regression; the Python guard closes that gap. |
+| Continue creating management groups and MG-scoped policy here | Too much tenant-wide responsibility for the user's current need; duplicates an ALZ that is assumed to already exist. |
+| Delete all Azure Policy initiative files | Loses a useful, validated reference pack and removes CI coverage for tag/Gatekeeper invariants. |
+| Assign policies at subscription scope from this stack | Risks conflicting with inherited ALZ assignments and splits governance ownership. |
+| Rely only on documentation for tag/Gatekeeper rules | CI would no longer catch accidental weakening of the reference policy pack. |
 
 ## References
 
-- [`plan/stages/stage-02-alz-baseline.md`](../../plan/stages/stage-02-alz-baseline.md)
-- [`infrastructure/terraform/alz/assignments.tf`](../../infrastructure/terraform/alz/assignments.tf)
+- [`plan/stages/stage-02-subscription-baseline.md`](../../plan/stages/stage-02-subscription-baseline.md)
+- [`infrastructure/terraform/subscription-baseline/`](../../infrastructure/terraform/subscription-baseline/)
 - [`policies/azure/initiatives/`](../../policies/azure/initiatives/)
 - [`scripts/policy/validate_azure_initiatives.py`](../../scripts/policy/validate_azure_initiatives.py)
-- [ADR-0026: AVM module pinning and the ALZ composition choice](0026-avm-modules.md)
+- [ADR-0026: AVM module pinning and the subscription-baseline composition choice](0026-avm-modules.md)
 - [ADR-0027: Policy exception workflow and approver matrix](0027-policy-exception.md)
 - [ADR-0036: Kyverno as single in-cluster policy engine](README.md)
 - [ADR-0047: Policy testing split](0047-policy-testing-split.md)

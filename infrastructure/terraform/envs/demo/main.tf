@@ -1,8 +1,8 @@
 locals {
   # Mandatory tag taxonomy (plan.md section 10). Every resource in the demo
   # composition carries the full set, so a `terraform plan` here is compliant
-  # with both the Rego tag gate (policies/rego) and the alz tag-baseline Deny
-  # initiative (acceptance criterion 6). env = demo for the demo profile.
+  # with both the Rego tag gate (policies/rego) and any inherited/reference
+  # tag-baseline policy (acceptance criterion 6). env = demo for the demo profile.
   tags = merge(
     {
       env                = "demo"

@@ -65,6 +65,10 @@ resource "azurerm_storage_container" "stage" {
   name                  = each.value
   storage_account_id    = azurerm_storage_account.tfstate.id
   container_access_type = "private"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Encrypt the state account with the customer-managed key once RBAC has

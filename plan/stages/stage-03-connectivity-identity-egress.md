@@ -18,7 +18,8 @@ documented exception workflow.
   Azure layer). For the demo profile, fine-grained egress restrictions are
   enforced **inside the cluster** via Cilium FQDN-aware NetworkPolicies
   (see below). This trade-off is documented in ADR-0031.
-- Firewall policies (parent at MG, child per LZ): default-deny outbound,
+- Firewall policies (parent/child hierarchy owned by the existing ALZ or this
+  connectivity stack, child per platform/workload subscription): default-deny outbound,
   FQDN allowlist for: Azure Resource Manager, ACR endpoints, Microsoft
   Container Registry, ghcr.io, GitHub API, npmjs, pypi, Docker Hub, Ubuntu
   archive, **Sigstore** (`rekor.sigstore.dev`, `fulcio.sigstore.dev`,
@@ -55,7 +56,9 @@ documented exception workflow.
   - `pe-platform-admins`, `pe-platform-operators`, `pe-platform-readers`.
   - `pe-app-team-<name>` (template).
 - **PIM** activation policy: max 8h, MFA required, approval required for prod.
-- **RBAC role assignments** at MG and subscription scope use groups, not users.
+- **RBAC role assignments** at subscription/resource-group scope use groups, not
+  users; MG-scope assignments remain with the external ALZ owner unless a later
+  ADR explicitly brings them into this repo.
 - **Custom roles** documented in `docs/adr/0029-custom-roles.md`:
   e.g., `Platform Operator` (subset of Contributor without IAM mutation).
 - **Workload Identity** — *trust topology only* is documented here (one
@@ -88,14 +91,14 @@ documented exception workflow.
 - `infrastructure/terraform/connectivity/` — hub VNet, Firewall, NAT GW,
   Private DNS zones, UDRs, peering placeholders.
 - `infrastructure/terraform/identity/` — Entra groups, PIM policies, custom
-  roles, RBAC assignments at MG/sub.
+  roles, RBAC assignments at subscription/resource-group scope.
 - `policies/azure/firewall/allowlist.json` — curated FQDN allowlist.
 - `docs/runbooks/egress-exception.md`.
 - `docs/adr/0029-custom-roles.md`.
 
 ## Dependencies
 
-- Stage 02 (subscriptions, policy).
+- Stage 02 (subscription baseline and inherited ALZ policy readiness).
 
 ## Decisions / ADRs
 
@@ -129,8 +132,9 @@ documented exception workflow.
 4. Every PaaS service has a Private DNS zone resolvable from the hub and
    spokes; Azure Monitor data flows through AMPLS without traversing the
    public internet.
-5. All RBAC at sub/MG is via groups; user-direct assignments fail a periodic
-   audit query.
+5. All RBAC created by this repo at subscription/resource-group scope is via
+   groups; user-direct assignments fail a periodic audit query. Any MG-scope
+   assignment is handled by the external ALZ owner.
 6. PIM activation produces an Azure Monitor alert (Sentinel routing added
    later if Sentinel is triggered — ADR-0046 / Stage 13).
 7. Stage 01 Phase-2 retrofit complete: state account + seed KV are
