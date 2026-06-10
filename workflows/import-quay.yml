@@ -1,0 +1,15 @@
+stage: 04
+status: design-stub
+executable_location: .github/workflows/import-quay.yml
+description: >
+  Reusable workflow contract for importing quay.io images into the platform ACR
+  with az acr import. ACR Artifact Cache does not support quay.io, so Stage 06
+  turns this contract into an executable workflow_call.
+inputs:
+  acr_name: Target Azure Container Registry name.
+  source_image: Fully qualified quay.io source image.
+  target_image: Target repository:tag inside ACR.
+security:
+  auth: GitHub OIDC to Azure; no static registry credentials.
+  policy: Source image must be reviewed and the imported digest must be signed
+    or verified by the Stage 06 supply-chain workflow before promotion.

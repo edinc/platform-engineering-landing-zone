@@ -1,0 +1,73 @@
+output "resource_group_name" {
+  value       = azurerm_resource_group.platform.name
+  description = "Platform shared-services resource group name."
+}
+
+output "platform_virtual_network_id" {
+  value       = azurerm_virtual_network.platform.id
+  description = "Platform spoke virtual network ID."
+}
+
+output "platform_subnet_ids" {
+  value       = { for name, subnet in azurerm_subnet.platform : name => subnet.id }
+  description = "Platform subnet IDs keyed by subnet name."
+}
+
+output "aks_cluster_id" {
+  value       = try(azurerm_kubernetes_cluster.platform[0].id, null)
+  description = "AKS cluster ID, or null when AKS is disabled."
+}
+
+output "aks_oidc_issuer_url" {
+  value       = try(azurerm_kubernetes_cluster.platform[0].oidc_issuer_url, null)
+  description = "AKS OIDC issuer URL for Stage 07 workload identity federated credentials."
+}
+
+output "acr_id" {
+  value       = try(azurerm_container_registry.platform[0].id, null)
+  description = "Azure Container Registry ID, or null when disabled."
+}
+
+output "acr_login_server" {
+  value       = try(azurerm_container_registry.platform[0].login_server, null)
+  description = "ACR login server, or null when disabled."
+}
+
+output "key_vault_id" {
+  value       = try(azurerm_key_vault.platform[0].id, null)
+  description = "Platform Key Vault ID, or null when disabled."
+}
+
+output "postgres_server_id" {
+  value       = try(azurerm_postgresql_flexible_server.platform[0].id, null)
+  description = "PostgreSQL Flexible Server ID, or null when disabled."
+}
+
+output "service_bus_namespace_id" {
+  value       = try(azurerm_servicebus_namespace.platform[0].id, null)
+  description = "Service Bus namespace ID, or null when disabled."
+}
+
+output "aca_environment_id" {
+  value       = try(azurerm_container_app_environment.platform[0].id, null)
+  description = "Container Apps managed environment ID, or null when disabled."
+}
+
+output "front_door_profile_id" {
+  value       = try(azurerm_cdn_frontdoor_profile.platform[0].id, null)
+  description = "Front Door Premium profile ID, or null when disabled."
+}
+
+output "private_endpoint_ids" {
+  value       = { for key, endpoint in azurerm_private_endpoint.platform : key => endpoint.id }
+  description = "Private Endpoint IDs keyed by service."
+}
+
+output "backend_config_hint" {
+  value = {
+    container_name   = "platform"
+    key              = "${var.profile}/platform.tfstate"
+    use_azuread_auth = true
+  }
+  description = "Backend settings for this stack's state. resource_group_name and storage_account_name come from the _bootstrap outputs."
+}
