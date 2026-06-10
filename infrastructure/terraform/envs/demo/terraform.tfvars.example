@@ -1,0 +1,12 @@
+# Example inputs for the demo env stack. Copy to terraform.tfvars (gitignored).
+
+subscription_id = "44444444-4444-4444-4444-444444444444"
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+
+location       = "westeurope"
+location_short = "weu"
+
+owner       = "platform-engineering"
+cost_center = "cc-demo"
+github_owner = "edinc"
+github_repo  = "platform-engineering-landing-zone"

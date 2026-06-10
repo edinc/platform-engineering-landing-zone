@@ -1,0 +1,17 @@
+# Backend configuration for the subscription-baseline stack's state.
+#
+# Copy to backend.hcl (gitignored) and pass with:
+#   terraform init -backend-config=backend.hcl
+#
+# resource_group_name and storage_account_name come from the _bootstrap stack
+# outputs (resource_group_name, state_storage_account_name). The
+# "subscription-baseline" container is provisioned by _bootstrap. Use a unique
+# key per onboarded subscription/environment so state and resource lifecycles do
+# not overlap across subscriptions. State access is Entra-ID-only (no storage
+# keys).
+
+resource_group_name  = "rg-pe-tfstate-weu"
+storage_account_name = "stpetfweuab12" # stpetf<location_short><name_suffix> from _bootstrap
+container_name       = "subscription-baseline"
+key                  = "subscriptions/11111111-1111-1111-1111-111111111111/subscription-baseline.tfstate"
+use_azuread_auth     = true

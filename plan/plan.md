@@ -7,12 +7,12 @@
 
 ## 1. Vision
 
-An opinionated, reusable **Platform Engineering Landing Zone** that takes a new
-or existing Azure tenant/subscription set and stands up a production-grade
-Internal Developer Platform (IDP) end-to-end:
+An opinionated, reusable **Platform Engineering Landing Zone** that assumes an
+Azure Landing Zone already exists and onboards existing Azure subscriptions into
+a production-grade Internal Developer Platform (IDP) end-to-end:
 
-- A compliant, secure Azure foundation aligned with **CAF / Azure Landing
-  Zones (ALZ) / Azure Well-Architected**.
+- A compliant, secure subscription baseline aligned with **CAF / Azure Landing
+  Zones (ALZ) / Azure Well-Architected**, without owning the tenant-wide ALZ.
 - **Backstage** as the developer portal (Stage 09), powered by **golden paths**
   (Stage 11).
 - **GitOps-driven** workload delivery on **AKS** via Flux.
@@ -29,8 +29,10 @@ bundles, and runbooks that bootstrap and operate the platform.
 
 1. **Azure-native first.** Prefer first-party Azure services. Use **Azure
    Verified Modules (AVM)** where they exist and are GA.
-2. **CAF / ALZ aligned.** Management groups, subscription vending, policy
-   inheritance, hub-and-spoke connectivity, central logging, Defender baseline.
+2. **CAF / ALZ aligned.** Consume an existing management-group and policy
+   foundation; this repo owns subscription onboarding, platform shared services,
+   hub-and-spoke connectivity integration, central diagnostics wiring, Defender
+   baseline, and cost controls.
 3. **Everything-as-Code.** Terraform is primary. Bicep is recorded as a future
    option (Stage 13).
 4. **GitOps everywhere.** Flux (AKS extension, Microsoft-supported) is the
@@ -39,18 +41,20 @@ bundles, and runbooks that bootstrap and operate the platform.
    primary way developers create services, infrastructure, and docs.
 6. **Secure by default.** Workload Identity, OIDC federated CI, Private Link,
    default-deny egress, signed images, Kyverno verify, Defender for Cloud,
-   Azure Policy from CIS Foundations + ALZ "regulated" initiatives.
+   Azure Policy alignment with CIS Foundations + existing ALZ initiatives.
 7. **Operationally complete.** On-call, incident workflow, runbooks, status
    page, DR drills, platform SLOs are stage gates — not appendices.
-8. **Hard ownership boundaries.** Terraform owns ALZ + platform-shared infra;
-   Flux owns Kubernetes desired state; **Azure Service Operator v2** owns
+8. **Hard ownership boundaries.** The existing ALZ owns management groups and
+   tenant/MG-scoped policy; Terraform in this repo owns subscription-scoped
+   baseline and platform-shared infra; Flux owns Kubernetes desired state;
+   **Azure Service Operator v2** owns
    workload-team Azure dependencies; Backstage *initiates* workflows but is
    never the source of truth.
 9. **Three profiles.** `demo`, `nonprod`, `prod` are Terraform variable sets
    controlling SKU/Defender tier/HA so the platform is approachable at low cost
    yet production-capable at full tier.
-10. **Brownfield-aware.** Designed to work against both fresh tenants and
-    existing subscriptions with prior policy/network footprints.
+10. **Brownfield-aware.** Designed to work against existing subscriptions with
+    prior policy/network footprints.
 
 ## 3. Personas
 
@@ -65,7 +69,7 @@ bundles, and runbooks that bootstrap and operate the platform.
 ```
 ┌─────────────────────────────── Tenant / Entra ID ──────────────────────────────┐
 │                                                                                │
-│  Management Group hierarchy (ALZ)                                              │
+│  Existing Management Group hierarchy (external ALZ)                             │
 │  ┌─ alz ─┐                                                                     │
 │  │ platform ─ {management, connectivity, identity}                             │
 │  │ landingzones ─ {corp, online}                                               │
@@ -97,8 +101,8 @@ bundles, and runbooks that bootstrap and operate the platform.
 ## 5. Layered capabilities (no longer the stage order — see §6)
 
 - **L0 Tenant & identity** — Entra tenant, PIM, platform groups, break-glass.
-- **L1 Landing Zone** — Management groups, ALZ policy, subscriptions, central
-  logging, Defender, tag policy, cost.
+- **L1 Subscription baseline** — existing-ALZ readiness, subscription Activity
+  Logs, Defender, tag expectations, budgets, cost exports.
 - **L2 Connectivity & egress** — Hub VNet, Azure Firewall Premium, Private DNS,
   default-deny FQDN allowlist, Private Link standards, exception workflow.
 - **L3 Platform shared services** — AKS, ACR (+ pull-through cache), Key Vault,
@@ -127,10 +131,10 @@ bundles, and runbooks that bootstrap and operate the platform.
 |---|-------|-------------------------|------------|
 | 00 | Foundation & repo bootstrap | Repo layout, conventions, ADR template, IaC + policy CI test harness, lite contributor guide | [`stage-00-foundation.md`](./stages/stage-00-foundation.md) |
 | 01 | Bootstrap & secret zero | TF remote state, GH↔Azure OIDC federation, seed Key Vault, break-glass, DNS delegation; the bootstrap workflow closes the loop via OIDC | [`stage-01-bootstrap-secret-zero.md`](./stages/stage-01-bootstrap-secret-zero.md) |
-| 02 | ALZ baseline & compliance baseline | Management groups, ALZ + CIS Foundations policy initiatives, central LA workspace, Defender baseline, tag policy (incl. `dataClassification`) | [`stage-02-alz-baseline.md`](./stages/stage-02-alz-baseline.md) |
+| 02 | Subscription baseline & compliance alignment | Existing-ALZ subscription onboarding, Activity Log diagnostics to central LA, Defender baseline, tag policy alignment, budgets/cost exports | [`stage-02-subscription-baseline.md`](./stages/stage-02-subscription-baseline.md) |
 | 03 | Connectivity, identity, egress | Hub VNet, Firewall Premium, Private DNS, default-deny FQDN allowlist, exception workflow, Entra groups, PIM | [`stage-03-connectivity-identity-egress.md`](./stages/stage-03-connectivity-identity-egress.md) |
 | 04 | Platform shared services | AKS (private, Cilium, standard mode), ACR Premium + pull-through cache, Key Vault, Postgres Flexible (HA, PITR, CMK), ingress controller, DR design baked in | [`stage-04-platform-shared-services.md`](./stages/stage-04-platform-shared-services.md) |
-| 05 | Environment & subscription vending | `Azure/lz-vending` Terraform module + Backstage scaffolder for new subscriptions, namespaces, and teams | [`stage-05-vending.md`](./stages/stage-05-vending.md) |
+| 05 | Environment & subscription vending | Existing ALZ vending integration, optional `Azure/lz-vending` composition, and Backstage scaffolder hooks for subscriptions, namespaces, and teams | [`stage-05-vending.md`](./stages/stage-05-vending.md) |
 | 06 | CI/CD & software supply chain | OIDC federated GH Actions, reusable workflows, cosign keyless, SBOM, Defender + Trivy + CodeQL, image-promotion semantics (auto-bump dev / PR-promote test+prod, digest pin, sign re-verify) | [`stage-06-cicd-supply-chain.md`](./stages/stage-06-cicd-supply-chain.md) |
 | 07 | GitOps & in-cluster platform | Flux, cert-manager (Let's Encrypt + Key Vault private CA), external-dns, Workload Identity + CSI/ESO, Kyverno verify, Pod Security Admission, OTel/Managed Prom/Grafana | [`stage-07-gitops-incluster.md`](./stages/stage-07-gitops-incluster.md) |
 | 08 | Observability, SRE, FinOps | OTel pipeline, seeded dashboards, alert routing, SLO toolkit (Sloth), status page, cost allocation, AKS NAP, idle/rightsizing | [`stage-08-observability-sre-finops.md`](./stages/stage-08-observability-sre-finops.md) |
@@ -178,8 +182,9 @@ The MVP is **Stages 00 → 11** with these explicit cuts:
 
 ### MVP success criteria
 
-1. A platform engineer can run a documented bootstrap to stand up the full
-   landing zone in a fresh tenant within **one working day of pipeline time**.
+1. A platform engineer can run the documented bootstrap and subscription
+   onboarding path against an existing ALZ subscription within **one working day
+   of pipeline time**.
 2. An application developer can use Backstage to create a new microservice
    from a golden-path template and reach a running endpoint in dev within
    **< 30 minutes**, with no Azure portal interaction.
@@ -211,7 +216,7 @@ platform-engineering-landing-zone/        ← this repo
 │   ├── terraform/
 │   │   ├── _bootstrap/                   ← Stage 01: state, OIDC, seed KV
 │   │   ├── _modules/                     ← reusable, AVM-aligned
-│   │   ├── alz/                          ← Stage 02
+│   │   ├── subscription-baseline/        ← Stage 02
 │   │   ├── connectivity/                 ← Stage 03
 │   │   ├── identity/                     ← Stage 03 (Entra-supported parts)
 │   │   ├── platform/                     ← Stage 04: AKS/ACR/KV/PG
@@ -268,10 +273,10 @@ captures alternatives and trade-offs.
 | 0005 | Azure-resource provisioning from cluster | ASO v2 | Crossplane (re-evaluate if multi-cloud emerges) |
 | 0006 | Secrets in cluster | Key Vault + Secrets Store CSI Driver (default); ESO when K8s Secret objects required | Sealed Secrets |
 | 0007 | Image signing | Cosign keyless via GH OIDC + Kyverno verify | Notation / Notary v2 (re-evaluate if ACR pushes Notation alignment) |
-| 0008 | Subscription vending | `Azure/lz-vending` Terraform module | Bicep ALZ vending, ServiceNow flow |
+| 0008 | Subscription vending | Existing ALZ vending integration; `Azure/lz-vending` when repo-owned | Bicep ALZ vending, ServiceNow flow |
 | 0009 | AKS dataplane | Azure CNI Overlay + Cilium | Azure CNI Powered-by-Cilium |
 | 0010 | AKS node auto-provisioning | **AKS Node Auto-Provisioning (NAP)** — Microsoft-managed, built on Karpenter | Cluster autoscaler only; self-managed Karpenter |
-| 0011 | Compliance baseline | CIS Azure Foundations Benchmark v2 + ALZ "regulated" initiative | ISO 27001 / SOC 2 mapping deferred but informed |
+| 0011 | Compliance baseline | Existing ALZ/CIS baseline + subscription-scoped hardening | ISO 27001 / SOC 2 mapping deferred but informed |
 | 0012 | Backstage hosting | In-cluster on AKS via Helm, deployed by Flux | Azure Container Apps |
 | 0013 | Repository topology | Platform repo (this) + separate `platform-cluster-state` repo | Monorepo |
 | 0014 | Terraform state | AzureRM backend, per-stage state files, AZ blob lease lock, CMK | Terragrunt (only if team is fluent) |
@@ -320,7 +325,7 @@ Mandatory tags on every Azure resource:
 | Risk | Mitigation |
 |------|-----------|
 | Scope sprawl | Stage gates with explicit MVP cut list (§7); ADR triggers for deferred items |
-| ALZ + AVM module churn | Pin versions; periodic upgrade exercise |
+| Existing ALZ integration drift | Readiness discovery, explicit external prerequisites, and periodic subscription-baseline validation |
 | Backstage maintenance burden | Stay close to upstream; minimise core forks; isolate custom code to plugins; Stage 13 build-vs-buy re-evaluation |
 | Identity complexity (Entra + WI + RBAC) | ADRs early; test harness with `kubelogin` + `az login` flows |
 | Cost (Defender, Firewall Premium, Managed Grafana, Premium ACR) | `demo` profile uses Free/Standard tiers; per-profile SKU matrix |
@@ -332,13 +337,13 @@ Mandatory tags on every Azure resource:
 
 | # | Question | Required by |
 |---|----------|------------|
-| 1 | Greenfield or brownfield tenant for first deployment? | Stage 01 |
+| 1 | Which existing ALZ/subscription is the first onboarding target? | Stage 01 |
 | 2 | Single Backstage tenant or per-BU? | Stage 09 |
 | 3 | Cluster topology: regional AKS per env vs Fleet Manager? | Stage 04 |
 | 4 | RPO/RTO per tier (Backstage, Postgres, ACR, KV, GitOps state, AKS) | Stage 04 |
 | 5 | Public + private DNS zone ownership & delegation model | Stage 03 |
-| 6 | Compliance regimes beyond CIS Foundations + ALZ regulated | Stage 02 |
-| 7 | Primary + secondary regions (data residency) | Stage 02 |
+| 6 | Compliance regimes beyond the inherited ALZ/CIS baseline | Stage 02 |
+| 7 | Primary + secondary regions (data residency) | Stage 03 / 04 |
 | 8 | GitHub Cloud vs GHEC; ADO coexistence | Stage 00 |
 | 9 | Platform API contract (for VS Code/CLI) — design now or later? | Stage 06 |
 | 10 | Eventing bus: Service Bus or Event Grid (one as platform-internal) | Stage 04 |

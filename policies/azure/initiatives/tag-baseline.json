@@ -1,0 +1,118 @@
+{
+  "name": "pe-tag-baseline",
+  "displayName": "Platform Engineering - mandatory tag baseline",
+  "description": "Reference/optional Deny initiative for ALZ administrators: denies creation of resources and resource groups that are missing any of the mandatory platform tags (plan.md section 10). The Stage 02 subscription-baseline stack does not assign this initiative; assignment and effect rollout belong to the external ALZ owner (Stage 02 acceptance criteria 2 and 3, ADR-0011). Built-in policy GUIDs are pinned and verified against the Azure/azure-policy repository.",
+  "policyType": "Custom",
+  "metadata": {
+    "version": "1.0.0",
+    "category": "Tags",
+    "source": "policies/azure/initiatives/tag-baseline.json",
+    "owner": "platform-engineering"
+  },
+  "parameters": {},
+  "policyDefinitionGroups": [
+    {
+      "name": "tag-governance",
+      "displayName": "Mandatory tag governance",
+      "description": "Require the mandatory platform tag taxonomy on resources and resource groups."
+    }
+  ],
+  "policyDefinitions": [
+    {
+      "policyDefinitionReferenceId": "requireTag-env",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99",
+      "parameters": { "tagName": { "value": "env" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTagRg-env",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+      "parameters": { "tagName": { "value": "env" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTag-owner",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99",
+      "parameters": { "tagName": { "value": "owner" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTagRg-owner",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+      "parameters": { "tagName": { "value": "owner" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTag-costCenter",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99",
+      "parameters": { "tagName": { "value": "costCenter" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTagRg-costCenter",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+      "parameters": { "tagName": { "value": "costCenter" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTag-product",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99",
+      "parameters": { "tagName": { "value": "product" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTagRg-product",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+      "parameters": { "tagName": { "value": "product" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTag-dataClassification",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99",
+      "parameters": { "tagName": { "value": "dataClassification" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTagRg-dataClassification",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+      "parameters": { "tagName": { "value": "dataClassification" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTag-confidentiality",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99",
+      "parameters": { "tagName": { "value": "confidentiality" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTagRg-confidentiality",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+      "parameters": { "tagName": { "value": "confidentiality" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTag-managedBy",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99",
+      "parameters": { "tagName": { "value": "managedBy" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTagRg-managedBy",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+      "parameters": { "tagName": { "value": "managedBy" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTag-repo",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99",
+      "parameters": { "tagName": { "value": "repo" } },
+      "groupNames": ["tag-governance"]
+    },
+    {
+      "policyDefinitionReferenceId": "requireTagRg-repo",
+      "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025",
+      "parameters": { "tagName": { "value": "repo" } },
+      "groupNames": ["tag-governance"]
+    }
+  ]
+}

@@ -13,7 +13,7 @@ PLANNABLE_TERRAFORM_DIRS := $(filter-out $(BOOTSTRAP_DIR),$(TERRAFORM_DIRS))
 HELM_CHART_DIRS := $(shell find . -type f -name 'Chart.yaml' -not -path './.git/*' -exec dirname {} \; 2>/dev/null | sort -u)
 K8S_MANIFESTS := $(shell find platform-gitops templates -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint policy-test-rego policy-test-kyverno plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint policy-test-rego policy-test-kyverno policy-test-azure plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -107,6 +107,9 @@ policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
 
 policy-test-kyverno: ## Test Kyverno policies with kyverno test.
 	$(MISE_EXEC) kyverno test policies/kyverno/tests
+
+policy-test-azure: ## Validate custom Azure Policy initiatives (Stage 02 acceptance criteria 3 and 8).
+	$(PYTHON) scripts/policy/validate_azure_initiatives.py policies/azure/initiatives
 
 plan: ## Run Terraform plan for planable stacks (excludes the _bootstrap stack).
 	@if [ -z "$(PLANNABLE_TERRAFORM_DIRS)" ]; then \

@@ -43,3 +43,7 @@ backend.hcl
 *.auto.tfvars
 !*.tfvars.example
 .env
+
+# Brownfield discovery output (tenant inventory snapshots — never commit)
+.discovery/
+*.discovery/
