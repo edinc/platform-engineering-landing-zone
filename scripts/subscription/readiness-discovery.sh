@@ -199,8 +199,9 @@ echo
 log "Subscription Activity Log diagnostic settings:"
 if DIAG_JSON="$(az monitor diagnostic-settings subscription list --subscription "$SUBSCRIPTION_ID" -o json 2>/dev/null)"; then
   emit "activity-log-diagnostics" "$DIAG_JSON"
-  COUNT="$(jq 'length' <<<"$DIAG_JSON")"
-  jq -r '.[] | "  - " + .name + " -> " + (.workspaceId // .storageAccountId // .eventHubAuthorizationRuleId // "unknown destination")' <<<"$DIAG_JSON"
+  DIAG_LIST="$(jq 'if type == "object" and has("value") then .value else . end' <<<"$DIAG_JSON")"
+  COUNT="$(jq 'length' <<<"$DIAG_LIST")"
+  jq -r '.[] | "  - " + .name + " -> " + (.workspaceId // .storageAccountId // .eventHubAuthorizationRuleId // "unknown destination")' <<<"$DIAG_LIST"
   ok "${COUNT} diagnostic setting(s) listed. Stage 02 can create one when log_analytics_workspace_id is supplied."
 else
   warn "Could not list subscription diagnostic settings (needs Microsoft.Insights access)."
