@@ -54,6 +54,13 @@ resource "azurerm_storage_account" "tfstate" {
     ip_rules       = local.firewall_ip_rules
   }
 
+  lifecycle {
+    # CMK association is managed by azurerm_storage_account_customer_managed_key.
+    # AzureRM also reads it back as a nested storage account block, so ignoring
+    # the read-only mirror prevents a follow-up plan from removing the CMK.
+    ignore_changes = [customer_managed_key]
+  }
+
   tags = local.tags
 }
 
