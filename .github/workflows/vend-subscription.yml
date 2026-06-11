@@ -1,0 +1,421 @@
+name: Vend subscription (Stage 05)
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_path:
+        description: Path to a SubscriptionVendingRequest YAML file.
+        required: true
+        default: docs/contracts/vending-request.yaml
+  pull_request:
+    paths:
+      - vending/requests/subscriptions/**/*.yaml
+      - docs/contracts/vending-request.yaml
+      - docs/contracts/examples/external-subscription-request.yaml
+      - docs/contracts/vending-request.schema.json
+      - .github/workflows/vend-subscription.yml
+  push:
+    branches:
+      - main
+    paths:
+      - vending/requests/subscriptions/**/*.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vend-subscription-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-subscription-request:
+    name: Validate subscription request
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Resolve request
+        id: request
+        run: |
+          set -euo pipefail
+          matches="$(git diff --name-only "origin/${GITHUB_BASE_REF}"...HEAD | grep -E '^vending/requests/subscriptions/.*\.ya?ml$' || true)"
+          count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+          if [ "$count" -gt 1 ]; then
+            echo "::error::Only one subscription vending request may change per PR/run; found $count."
+            printf '%s\n' "$matches"
+            exit 1
+          fi
+          request_path="$(printf '%s\n' "$matches" | sed '/^$/d' | head -1 || true)"
+          if [ -z "$request_path" ]; then
+            request_path="docs/contracts/vending-request.yaml"
+          fi
+          case "$request_path" in
+            *[!A-Za-z0-9_./-]*|*..*)
+              echo "::error::Unsafe vending request path: $request_path"
+              exit 1
+              ;;
+          esac
+          echo "path=$request_path" >> "$GITHUB_OUTPUT"
+
+      - name: Validate request schema
+        env:
+          REQUEST_PATH: ${{ steps.request.outputs.path }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/contracts
+          npx --yes js-yaml@4.1.0 "$REQUEST_PATH" > .tools/tmp/contracts/request.json
+          npx --yes ajv-cli@5.0.0 validate --strict=true -s docs/contracts/vending-request.schema.json -d .tools/tmp/contracts/request.json
+          kind="$(jq -r '.kind' .tools/tmp/contracts/request.json)"
+          if [ "$kind" != "SubscriptionVendingRequest" ]; then
+            echo "::error::Expected kind SubscriptionVendingRequest, got $kind."
+            exit 1
+          fi
+
+      - name: Terraform validate request stack
+        run: |
+          set -euo pipefail
+          mode="$(jq -r '.spec.subscription.mode' .tools/tmp/contracts/request.json)"
+          case "$mode" in
+            create) stack="infrastructure/terraform/vending/subscription" ;;
+            onboard-existing) stack="infrastructure/terraform/vending/onboarding" ;;
+            *)
+              echo "::error::Unsupported subscription mode $mode."
+              exit 1
+              ;;
+          esac
+          mise exec -- terraform -chdir="$stack" init -backend=false -input=false
+          mise exec -- terraform -chdir="$stack" validate
+
+  vend-subscription:
+    name: Validate and plan subscription request
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    environment: vending
+    permissions:
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+      TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+      TFSTATE_CONTAINER: ${{ vars.TFSTATE_CONTAINER }}
+      CENTRAL_LOG_ANALYTICS_WORKSPACE_ID: ${{ vars.CENTRAL_LOG_ANALYTICS_WORKSPACE_ID }}
+      APPROVED_SUBSCRIPTION_MANAGEMENT_GROUP_IDS: ${{ vars.APPROVED_SUBSCRIPTION_MANAGEMENT_GROUP_IDS }}
+      VENDING_PR_LABELS: ${{ vars.VENDING_PR_LABELS }}
+      VENDING_PR_REVIEWERS: ${{ vars.VENDING_PR_REVIEWERS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Resolve request and action
+        id: request
+        env:
+          INPUT_REQUEST_PATH: ${{ inputs.request_path }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          action="plan"
+          case "${GITHUB_EVENT_NAME}" in
+            workflow_dispatch)
+              request_path="${INPUT_REQUEST_PATH}"
+              action="plan"
+              ;;
+            pull_request)
+              matches="$(git diff --name-only "origin/${GITHUB_BASE_REF}"...HEAD | grep -E '^vending/requests/subscriptions/.*\.ya?ml$' || true)"
+              count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+              if [ "$count" -gt 1 ]; then
+                echo "::error::Only one subscription vending request may change per PR/run; found $count."
+                printf '%s\n' "$matches"
+                exit 1
+              fi
+              request_path="$(printf '%s\n' "$matches" | sed '/^$/d' | head -1 || true)"
+              if [ -z "$request_path" ]; then
+                request_path="docs/contracts/vending-request.yaml"
+              fi
+              ;;
+            push)
+              matches="$(git diff --name-only "${PUSH_BEFORE}" "${PUSH_AFTER}" | grep -E '^vending/requests/subscriptions/.*\.ya?ml$' || true)"
+              count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+              if [ "$count" -ne 1 ]; then
+                echo "::error::Exactly one subscription vending request must change per push run; found $count."
+                printf '%s\n' "$matches"
+                exit 1
+              fi
+              request_path="$(printf '%s\n' "$matches" | sed '/^$/d' | head -1)"
+              action="apply"
+              ;;
+            *)
+              echo "::error::Unsupported event ${GITHUB_EVENT_NAME}."
+              exit 1
+              ;;
+          esac
+
+          if [ ! -f "$request_path" ]; then
+            echo "::error::Vending request file not found: $request_path"
+            exit 1
+          fi
+          case "$request_path" in
+            *[!A-Za-z0-9_./-]*|*..*)
+              echo "::error::Unsafe vending request path: $request_path"
+              exit 1
+              ;;
+          esac
+          if [ "$action" = "apply" ] && [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "::error::Terraform apply is only allowed from main."
+            exit 1
+          fi
+
+          echo "path=$request_path" >> "$GITHUB_OUTPUT"
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+
+      - name: Validate request schema
+        env:
+          REQUEST_PATH: ${{ steps.request.outputs.path }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/contracts
+          npx --yes js-yaml@4.1.0 "$REQUEST_PATH" > .tools/tmp/contracts/request.json
+          npx --yes ajv-cli@5.0.0 validate --strict=true -s docs/contracts/vending-request.schema.json -d .tools/tmp/contracts/request.json
+          kind="$(jq -r '.kind' .tools/tmp/contracts/request.json)"
+          if [ "$kind" != "SubscriptionVendingRequest" ]; then
+            echo "::error::Expected kind SubscriptionVendingRequest, got $kind."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate required variables
+        run: |
+          set -euo pipefail
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT TFSTATE_CONTAINER APPROVED_SUBSCRIPTION_MANAGEMENT_GROUP_IDS; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables: ${missing[*]}."
+            exit 1
+          fi
+
+      - name: Prepare Terraform inputs
+        id: tf
+        run: |
+          set -euo pipefail
+          mode="$(jq -r '.spec.subscription.mode' .tools/tmp/contracts/request.json)"
+          requested_management_group_id="$(jq -r '.spec.subscription.managementGroupId' .tools/tmp/contracts/request.json)"
+          approved_management_groups=".tools/tmp/approved-management-groups.txt"
+          printf '%s' "$APPROVED_SUBSCRIPTION_MANAGEMENT_GROUP_IDS" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;/^$/d' > "$approved_management_groups"
+          if [ ! -s "$approved_management_groups" ]; then
+            echo "::error::APPROVED_SUBSCRIPTION_MANAGEMENT_GROUP_IDS must contain at least one management group ID."
+            exit 1
+          fi
+          if ! grep -Fx "$requested_management_group_id" "$approved_management_groups" >/dev/null; then
+            echo "::error::Requested managementGroupId is not approved for vending: $requested_management_group_id"
+            exit 1
+          fi
+          case "$mode" in
+            create)
+              stack="infrastructure/terraform/vending/subscription"
+              backend_key="subscriptions/$(jq -r '.spec.subscription.subscriptionAliasName' .tools/tmp/contracts/request.json)/terraform.tfstate"
+              jq \
+                --arg tenantId "$ARM_TENANT_ID" \
+                --arg vendingSubscriptionId "$ARM_SUBSCRIPTION_ID" \
+                '{
+                  tenant_id: $tenantId,
+                  vending_subscription_id: $vendingSubscriptionId,
+                  location: .spec.regions[0],
+                  subscription_alias_name: .spec.subscription.subscriptionAliasName,
+                  subscription_display_name: .spec.subscription.subscriptionDisplayName,
+                  subscription_billing_scope: .spec.subscription.billingScopeId,
+                  subscription_workload: .spec.subscription.workload,
+                  management_group_id: .spec.subscription.managementGroupId,
+                  owner: .spec.team,
+                  product: .spec.product,
+                  cost_center: .spec.costCenter,
+                  data_classification: .spec.dataClassification,
+                  confidentiality: .spec.tags.confidentiality,
+                  repo: .spec.tags.repo,
+                  extra_tags: .spec.tags,
+                  monthly_budget_amount: .spec.budget.amount,
+                  budget_start_date: .spec.budget.startDate,
+                  budget_end_date: .spec.budget.endDate,
+                  budget_contact_emails: .spec.budget.contactEmails,
+                  role_assignments: {},
+                  spoke_virtual_network: (
+                    if .spec.subscription.network? then {
+                      name: (.spec.team + "-" + .spec.environment + "-spoke"),
+                      address_space: .spec.subscription.network.addressSpace,
+                      hub_network_resource_id: (.spec.subscription.network.hubNetworkResourceId // ""),
+                      resource_group_name: ("rg-" + .spec.team + "-" + .spec.environment + "-network-" + .spec.regions[0])
+                    } else null end
+                  )
+                }' .tools/tmp/contracts/request.json > "$stack/request.auto.tfvars.json"
+              ;;
+            onboard-existing)
+              stack="infrastructure/terraform/vending/onboarding"
+              subscription_id="$(jq -r '.spec.subscription.existingSubscriptionId' .tools/tmp/contracts/request.json)"
+              backend_key="onboarding/${subscription_id}/terraform.tfstate"
+              jq \
+                --arg tenantId "$ARM_TENANT_ID" \
+                --arg logWorkspace "${CENTRAL_LOG_ANALYTICS_WORKSPACE_ID:-}" \
+                '{
+                  tenant_id: $tenantId,
+                  subscription_id: .spec.subscription.existingSubscriptionId,
+                  management_group_id: .spec.subscription.managementGroupId,
+                  alz_placement_evidence: .spec.subscription.alzPlacementEvidence,
+                  log_analytics_workspace_id: $logWorkspace,
+                  defender_tiers: {
+                    virtual_machines: (if .spec.environment == "demo" then "Free" else "Standard" end),
+                    containers: (if .spec.environment == "demo" then "Free" else "Standard" end),
+                    key_vaults: (if .spec.environment == "demo" then "Free" else "Standard" end),
+                    storage_accounts: (if .spec.environment == "demo" then "Free" else "Standard" end),
+                    sql_servers: (if .spec.environment == "demo" then "Free" else "Standard" end),
+                    open_source_dbs: (if .spec.environment == "demo" then "Free" else "Standard" end),
+                    resource_manager: (if .spec.environment == "demo" then "Free" else "Standard" end),
+                    apis: (if .spec.environment == "demo" then "Free" else "Standard" end)
+                  },
+                  monthly_budget_amount: .spec.budget.amount,
+                  budget_start_date: .spec.budget.startDate,
+                  budget_contact_emails: .spec.budget.contactEmails
+                }' .tools/tmp/contracts/request.json > "$stack/request.auto.tfvars.json"
+              ;;
+            *)
+              echo "::error::Unsupported subscription mode $mode."
+              exit 1
+              ;;
+          esac
+          echo "stack=$stack" >> "$GITHUB_OUTPUT"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "backend_key=$backend_key" >> "$GITHUB_OUTPUT"
+
+      - name: Terraform init
+        working-directory: ${{ steps.tf.outputs.stack }}
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.request.outputs.action }}" = "apply" ]; then
+            {
+              printf 'resource_group_name  = "%s"\n' "$TFSTATE_RESOURCE_GROUP"
+              printf 'storage_account_name = "%s"\n' "$TFSTATE_STORAGE_ACCOUNT"
+              printf 'container_name       = "%s"\n' "$TFSTATE_CONTAINER"
+              printf 'key                  = "%s"\n' "${{ steps.tf.outputs.backend_key }}"
+              printf 'use_azuread_auth     = true\n'
+            } > backend.hcl
+            mise exec -- terraform init -input=false -backend-config=backend.hcl
+          else
+            mise exec -- terraform init -backend=false -input=false
+          fi
+
+      - name: Terraform validate
+        working-directory: ${{ steps.tf.outputs.stack }}
+        run: mise exec -- terraform validate
+
+      - name: Terraform plan
+        working-directory: ${{ steps.tf.outputs.stack }}
+        run: mise exec -- terraform plan -input=false -out=vending.tfplan
+
+      - name: Terraform apply
+        if: ${{ steps.request.outputs.action == 'apply' }}
+        working-directory: ${{ steps.tf.outputs.stack }}
+        run: mise exec -- terraform apply -input=false vending.tfplan
+
+      - name: Open onboarding handoff PR
+        if: ${{ steps.request.outputs.action == 'apply' && steps.tf.outputs.mode == 'onboard-existing' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          subscription_id="$(jq -r '.spec.subscription.existingSubscriptionId' .tools/tmp/contracts/request.json)"
+          team="$(jq -r '.spec.team' .tools/tmp/contracts/request.json)"
+          environment="$(jq -r '.spec.environment' .tools/tmp/contracts/request.json)"
+          labels="${VENDING_PR_LABELS:-vending,subscription}"
+          reviewers="${VENDING_PR_REVIEWERS:-}"
+
+          workdir="$(mktemp -d)"
+          trap 'rm -rf "$workdir"' EXIT
+          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$workdir/repo"
+          cd "$workdir/repo"
+          branch="vending/onboarding-${subscription_id}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          target="vending/onboarding/${subscription_id}"
+          mkdir -p "$target"
+          cp "${GITHUB_WORKSPACE}/infrastructure/terraform/vending/onboarding/generated/subscription-baseline.auto.tfvars.json" "$target/subscription-baseline.tfvars.json"
+          cp "${GITHUB_WORKSPACE}/infrastructure/terraform/vending/onboarding/generated/handoff.json" "$target/handoff.json"
+          git add "$target"
+          if git diff --cached --quiet; then
+            echo "::notice::No onboarding handoff changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: add onboarding handoff for ${subscription_id}"
+          git push origin "$branch"
+
+          IFS=',' read -ra label_array <<< "$labels"
+          for label in "${label_array[@]}"; do
+            label="${label#"${label%%[![:space:]]*}"}"
+            label="${label%"${label##*[![:space:]]}"}"
+            if [ -n "$label" ]; then
+              gh label create "$label" --repo "${GITHUB_REPOSITORY}" --color "0E8A16" --force
+            fi
+          done
+
+          pr_args=(
+            --repo "${GITHUB_REPOSITORY}"
+            --head "$branch"
+            --base main
+            --title "Onboard subscription ${subscription_id}"
+            --body "Stage 05 external subscription onboarding handoff for team ${team} (${environment}). Generated by ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
+          )
+          for label in "${label_array[@]}"; do
+            label="${label#"${label%%[![:space:]]*}"}"
+            label="${label%"${label##*[![:space:]]}"}"
+            if [ -n "$label" ]; then
+              pr_args+=(--label "$label")
+            fi
+          done
+          if [ -n "$reviewers" ]; then
+            IFS=',' read -ra reviewer_array <<< "$reviewers"
+            for reviewer in "${reviewer_array[@]}"; do
+              reviewer="${reviewer#"${reviewer%%[![:space:]]*}"}"
+              reviewer="${reviewer%"${reviewer##*[![:space:]]}"}"
+              if [ -n "$reviewer" ]; then
+                pr_args+=(--reviewer "$reviewer")
+              fi
+            done
+          fi
+          gh pr create "${pr_args[@]}"

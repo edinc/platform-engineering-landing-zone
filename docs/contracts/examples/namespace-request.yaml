@@ -1,0 +1,41 @@
+apiVersion: platform.example.io/v1alpha1
+kind: NamespaceVendingRequest
+metadata:
+  name: payments-nonprod-namespace
+spec:
+  team: payments
+  product: checkout
+  costCenter: cc-payments
+  onCallRotationId: pd-payments-primary
+  dataClassification: confidential
+  environment: nonprod
+  regions:
+    - westeurope
+  tags:
+    owner: payments
+    costCenter: cc-payments
+    product: checkout
+    dataClassification: confidential
+    confidentiality: medium
+    managedBy: terraform
+    repo: edinc/platform-engineering-landing-zone
+  namespace:
+    name: payments-checkout
+    clusterEnvironment: nonprod
+    entraGroupObjectId: 00000000-0000-0000-0000-000000000001
+    serviceAccountName: checkout-api
+    resourceQuota:
+      cpuRequests: "2000m"
+      memoryRequests: 4Gi
+      cpuLimits: "4000m"
+      memoryLimits: 8Gi
+      pods: 50
+    egressAllowlist:
+      cidrs:
+        - 10.30.0.0/16
+    azure:
+      aksClusterId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-weu/providers/Microsoft.ContainerService/managedClusters/aks-pe-nonprod-weu
+      acrId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-weu/providers/Microsoft.ContainerRegistry/registries/acrpenonprodweu001
+      keyVaultSecretIds:
+        - /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-weu/providers/Microsoft.KeyVault/vaults/kv-pe-nonprod-weu-001/secrets/payments-checkout
+      resourceGroupName: rg-pe-nonprod-platform-weu
