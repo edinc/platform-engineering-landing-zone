@@ -1,0 +1,90 @@
+name: Stage 06 supply-chain smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_name:
+        description: ACR image repository for the smoke image.
+        required: true
+        default: smoke/stage06-hello
+      tag:
+        description: Optional semver-compatible tag. Defaults in the reusable workflow.
+        required: false
+        default: ""
+      run_nonprod_promotion:
+        description: Open a nonprod cluster-state promotion PR.
+        required: false
+        type: boolean
+        default: false
+      run_prod_promotion:
+        description: Open a prod cluster-state promotion PR.
+        required: false
+        type: boolean
+        default: false
+      nonprod_kustomization_path:
+        description: Cluster-state Kustomize path for the nonprod smoke image.
+        required: false
+        default: ""
+      prod_kustomization_path:
+        description: Cluster-state Kustomize path for the prod smoke image.
+        required: false
+        default: ""
+
+# Promotion legs verify the cosign identity against TRUSTED_BUILDER_REF.
+# Dispatch from main, or set that protected environment variable to this
+# workflow commit SHA before enabling nonprod/prod promotion.
+# Privileged jobs intentionally use a fixed private runner label; dispatchers
+# must not be able to route Azure OIDC jobs to arbitrary self-hosted runners.
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    name: Build signed smoke image
+    uses: ./.github/workflows/container-build-sign.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      image_name: ${{ inputs.image_name }}
+      context: samples/hello-container
+      dockerfile: samples/hello-container/Dockerfile
+      environment: dev
+      tag: ${{ inputs.tag }}
+      runs_on: self-hosted
+
+  promote-nonprod:
+    name: Promote smoke image to nonprod
+    if: ${{ inputs.run_nonprod_promotion }}
+    needs: build
+    uses: ./.github/workflows/promote-image.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      image_ref: ${{ needs.build.outputs.digest_ref }}
+      image_name: ${{ inputs.image_name }}
+      source_environment: dev
+      target_environment: nonprod
+      kustomization_path: ${{ inputs.nonprod_kustomization_path }}
+      runs_on: self-hosted
+
+  promote-prod:
+    name: Promote smoke image to prod
+    if: ${{ inputs.run_prod_promotion && inputs.run_nonprod_promotion }}
+    needs:
+      - build
+      - promote-nonprod
+    uses: ./.github/workflows/promote-image.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      image_ref: ${{ needs.build.outputs.digest_ref }}
+      image_name: ${{ inputs.image_name }}
+      source_environment: nonprod
+      target_environment: prod
+      kustomization_path: ${{ inputs.prod_kustomization_path }}
+      runs_on: self-hosted

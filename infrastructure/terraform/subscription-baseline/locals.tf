@@ -21,16 +21,49 @@ locals {
   ]
 
   # Defender for Cloud plans keyed by the EXACT azurerm resource_type strings.
-  # Plans whose Standard tier requires a subplan carry it here; defender.tf only
-  # emits the subplan when the tier is Standard (a subplan is invalid with Free).
+  # Plans whose Standard tier requires a default subplan carry it here; brownfield
+  # subscriptions can override/preserve tenant-specific subplans and extensions
+  # through defender_plan_subplans / defender_plan_extensions.
   defender_plans = {
-    VirtualMachines               = { tier = var.defender_tiers.virtual_machines, subplan = "P2" }
-    Containers                    = { tier = var.defender_tiers.containers, subplan = null }
-    KeyVaults                     = { tier = var.defender_tiers.key_vaults, subplan = null }
-    StorageAccounts               = { tier = var.defender_tiers.storage_accounts, subplan = "DefenderForStorageV2" }
-    SqlServers                    = { tier = var.defender_tiers.sql_servers, subplan = null }
-    OpenSourceRelationalDatabases = { tier = var.defender_tiers.open_source_dbs, subplan = null }
-    Arm                           = { tier = var.defender_tiers.resource_manager, subplan = null }
-    Api                           = { tier = var.defender_tiers.apis, subplan = "P1" }
+    VirtualMachines = {
+      tier       = var.defender_tiers.virtual_machines
+      subplan    = try(var.defender_plan_subplans.VirtualMachines, "P2")
+      extensions = try(var.defender_plan_extensions.VirtualMachines, [])
+    }
+    Containers = {
+      tier       = var.defender_tiers.containers
+      subplan    = try(var.defender_plan_subplans.Containers, null)
+      extensions = try(var.defender_plan_extensions.Containers, [])
+    }
+    KeyVaults = {
+      tier       = var.defender_tiers.key_vaults
+      subplan    = try(var.defender_plan_subplans.KeyVaults, null)
+      extensions = try(var.defender_plan_extensions.KeyVaults, [])
+    }
+    StorageAccounts = {
+      tier       = var.defender_tiers.storage_accounts
+      subplan    = try(var.defender_plan_subplans.StorageAccounts, "DefenderForStorageV2")
+      extensions = try(var.defender_plan_extensions.StorageAccounts, [])
+    }
+    SqlServers = {
+      tier       = var.defender_tiers.sql_servers
+      subplan    = try(var.defender_plan_subplans.SqlServers, null)
+      extensions = try(var.defender_plan_extensions.SqlServers, [])
+    }
+    OpenSourceRelationalDatabases = {
+      tier       = var.defender_tiers.open_source_dbs
+      subplan    = try(var.defender_plan_subplans.OpenSourceRelationalDatabases, null)
+      extensions = try(var.defender_plan_extensions.OpenSourceRelationalDatabases, [])
+    }
+    Arm = {
+      tier       = var.defender_tiers.resource_manager
+      subplan    = try(var.defender_plan_subplans.Arm, null)
+      extensions = try(var.defender_plan_extensions.Arm, [])
+    }
+    Api = {
+      tier       = var.defender_tiers.apis
+      subplan    = try(var.defender_plan_subplans.Api, "P1")
+      extensions = try(var.defender_plan_extensions.Api, [])
+    }
   }
 }

@@ -215,6 +215,12 @@ variable "aks_user_node_pool" {
   }
 }
 
+variable "aks_host_encryption_enabled" {
+  type        = bool
+  description = "Whether AKS node pools enable host encryption. Keep true for production; set false only for demo subscriptions where Microsoft.Compute/EncryptionAtHost is unavailable."
+  default     = true
+}
+
 variable "aks_service_cidr" {
   type        = string
   description = "Kubernetes service CIDR."
@@ -262,15 +268,11 @@ variable "acr_cache_rules" {
     source_repo = string
     target_repo = string
   }))
-  description = "ACR Artifact Cache rules. Quay is intentionally excluded and handled by workflows/import-quay.yml."
+  description = "ACR Artifact Cache rules. Docker Hub and Quay are intentionally excluded from defaults because current ACR cache requires credentials for Docker and does not support Quay; use workflows/import-quay.yml or supply authenticated rules explicitly."
   default = {
     mcr_pause = {
       source_repo = "mcr.microsoft.com/oss/kubernetes/pause"
       target_repo = "cache/mcr/oss/kubernetes/pause"
-    }
-    docker_nginx = {
-      source_repo = "docker.io/library/nginx"
-      target_repo = "cache/docker/library/nginx"
     }
     ghcr_actions_runner = {
       source_repo = "ghcr.io/actions/actions-runner"

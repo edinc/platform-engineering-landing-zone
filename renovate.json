@@ -1,0 +1,78 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "timezone": "Europe/Amsterdam",
+  "labels": [
+    "dependencies"
+  ],
+  "platformAutomerge": false,
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "separateMajorMinor": true,
+  "vulnerabilityAlerts": {
+    "enabled": false,
+    "labels": [
+      "security",
+      "dependencies"
+    ]
+  },
+  "packageRules": [
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "labels": [
+        "dependencies",
+        "github-actions"
+      ],
+      "commitMessageTopic": "GitHub Actions dependency {{depName}}"
+    },
+    {
+      "matchManagers": [
+        "terraform"
+      ],
+      "labels": [
+        "dependencies",
+        "terraform"
+      ],
+      "commitMessageTopic": "Terraform dependency {{depName}}"
+    },
+    {
+      "matchManagers": [
+        "dockerfile",
+        "kubernetes"
+      ],
+      "labels": [
+        "dependencies",
+        "container"
+      ],
+      "commitMessageTopic": "container dependency {{depName}}"
+    },
+    {
+      "matchManagers": [
+        "helmv3"
+      ],
+      "labels": [
+        "dependencies",
+        "helm"
+      ],
+      "commitMessageTopic": "Helm dependency {{depName}}"
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "automerge": false
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+stage: 06
+status: executable
+executable_location: .github/workflows/techdocs-publish.yml
+description: Backstage TechDocs generation and Azure Blob publishing contract.

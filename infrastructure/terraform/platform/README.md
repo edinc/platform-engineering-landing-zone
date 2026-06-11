@@ -57,6 +57,7 @@ CI validates credential-free with `terraform init -backend=false`.
 | `private_dns_zone_subscription_id` | Subscription that owns the supplied Private DNS zones; set to the Stage 03 connectivity subscription for centralized zones. |
 | `firewall_private_ip_address` | Enables platform subnet UDRs to Stage 03 Firewall. |
 | `log_analytics_workspace_id` | Enables Defender/OMS/ACA logging integrations. |
+| `aks_host_encryption_enabled` | Keep `true` for production; set `false` only in demo subscriptions where EncryptionAtHost is unavailable. |
 
 ## Validation
 
@@ -70,7 +71,7 @@ make lint checkov
 | # | Criterion | Current status |
 |---|-----------|----------------|
 | 1 | AKS private/RBAC/WI/Defender/planned-maintenance/image-cleaner baseline | Implemented for private/RBAC/WI/OIDC/Cilium/image-cleaner/maintenance; Defender is enabled when a workspace is supplied; AKS Backup remains follow-up. |
-| 2 | ACR Artifact Cache and quay import workflow | Cache rule contract added; quay import design stub added under `workflows/import-quay.yml`. |
+| 2 | ACR Artifact Cache and quay import workflow | Cache rule contract added for unauthenticated supported sources; Docker Hub requires credentials and quay import uses `workflows/import-quay.yml`; ACR trusted-service bypass stays enabled so `az acr import` can run while public access is disabled. |
 | 3 | Backstage Postgres DB private | Optional Postgres + `backstage` database implemented; CMK rotation remains follow-up. |
 | 4 | Front Door + ingress-nginx PLS | Front Door Premium + WAF shell implemented; ingress-nginx/PLS origin waits for in-cluster Stage 07. |
 | 5 | Cluster-state repo | Implemented in sibling `../cluster-state-repo/` composition. |

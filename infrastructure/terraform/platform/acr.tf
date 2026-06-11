@@ -17,7 +17,10 @@ resource "azurerm_container_registry" "platform" {
   export_policy_enabled         = false
   data_endpoint_enabled         = true
   zone_redundancy_enabled       = var.profile == "prod" && length(var.availability_zones) > 1
-  network_rule_bypass_option    = "None"
+  # Required for Azure-managed control-plane operations such as az acr import
+  # while public network access remains disabled and the registry data plane is
+  # reachable only through Private Link.
+  network_rule_bypass_option = "AzureServices"
 
   network_rule_set {
     default_action = "Deny"

@@ -13,3 +13,6 @@ catalog with incident response, restore drills, and DR procedures.
 | [`aks-baseline.md`](aks-baseline.md) | AKS baseline operations, upgrades, and follow-ups | 04 |
 | [`region-matrix.md`](region-matrix.md) | Regional feature support matrix for Stage 04 services | 04 |
 | [`vending.md`](vending.md) | Subscription and AKS namespace vending operations | 05 |
+| [`release.md`](release.md) | Signed image, Helm artifact, and PR-based promotion operations | 06 |
+| [`renovate.md`](renovate.md) | Renovate dependency update operations | 06 |
+| [`ghas-cost.md`](ghas-cost.md) | GHAS and CodeQL opt-in and cost controls | 06 |

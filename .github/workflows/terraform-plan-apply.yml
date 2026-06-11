@@ -1,0 +1,224 @@
+name: Reusable Terraform plan/apply
+
+on:
+  workflow_call:
+    inputs:
+      stack_path:
+        description: Repository-relative Terraform stack path.
+        required: true
+        type: string
+      environment:
+        description: GitHub Environment that owns the Azure OIDC variables.
+        required: true
+        type: string
+      backend_key:
+        description: Remote-state key. Omit only for validation-only plans.
+        required: false
+        type: string
+        default: ""
+      plan_name:
+        description: Local Terraform plan file name.
+        required: false
+        type: string
+        default: tfplan
+      apply:
+        description: Apply the generated plan. Applies are restricted to main.
+        required: false
+        type: boolean
+        default: false
+      trusted_runs_on:
+        description: Runner label for Azure-backed Terraform plan/apply jobs. Use a VNet-integrated self-hosted runner that can reach private state.
+        required: false
+        type: string
+        default: self-hosted
+
+permissions:
+  contents: read
+
+jobs:
+  untrusted-pr:
+    name: Terraform PR validation
+    if: ${{ github.event_name == 'pull_request' && !inputs.apply }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Validate untrusted PR inputs
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+          BACKEND_KEY: ${{ inputs.backend_key }}
+          PLAN_NAME: ${{ inputs.plan_name }}
+        run: |
+          set -euo pipefail
+          case "$STACK_PATH" in
+            ""|/*|*..*|*[!A-Za-z0-9_./-]*)
+              echo "::error::Unsafe stack_path: $STACK_PATH"
+              exit 1
+              ;;
+          esac
+          if [ ! -d "$STACK_PATH" ]; then
+            echo "::error::Terraform stack path does not exist: $STACK_PATH"
+            exit 1
+          fi
+          case "$PLAN_NAME" in
+            ""|*/*|*..*|*[!A-Za-z0-9_.-]*)
+              echo "::error::Unsafe plan_name: $PLAN_NAME"
+              exit 1
+              ;;
+          esac
+          if [ -n "$BACKEND_KEY" ]; then
+            echo "::error::Pull-request Terraform validation cannot use remote backend or Azure OIDC. Re-run a protected branch workflow for Azure-backed plans."
+            exit 1
+          fi
+
+      - name: Terraform init without backend
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+        run: mise exec -- terraform -chdir="$STACK_PATH" init -backend=false -input=false
+
+      - name: Terraform validate
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+        run: mise exec -- terraform -chdir="$STACK_PATH" validate
+
+      - name: Terraform speculative plan without refresh
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+          PLAN_NAME: ${{ inputs.plan_name }}
+        run: mise exec -- terraform -chdir="$STACK_PATH" plan -refresh=false -lock=false -input=false -out="$PLAN_NAME"
+
+  trusted:
+    name: Terraform ${{ inputs.apply && 'apply' || 'plan' }}
+    if: ${{ github.event_name != 'pull_request' || inputs.apply }}
+    runs-on: ${{ inputs.trusted_runs_on }}
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+      TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+      TFSTATE_CONTAINER: ${{ vars.TFSTATE_CONTAINER }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Validate trusted inputs and environment
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+          BACKEND_KEY: ${{ inputs.backend_key }}
+          PLAN_NAME: ${{ inputs.plan_name }}
+        run: |
+          set -euo pipefail
+          case "$STACK_PATH" in
+            ""|/*|*..*|*[!A-Za-z0-9_./-]*)
+              echo "::error::Unsafe stack_path: $STACK_PATH"
+              exit 1
+              ;;
+          esac
+          if [ ! -d "$STACK_PATH" ]; then
+            echo "::error::Terraform stack path does not exist: $STACK_PATH"
+            exit 1
+          fi
+          case "$PLAN_NAME" in
+            ""|*/*|*..*|*[!A-Za-z0-9_.-]*)
+              echo "::error::Unsafe plan_name: $PLAN_NAME"
+              exit 1
+              ;;
+          esac
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "::error::Azure-backed Terraform plan/apply is allowed only from refs/heads/main."
+            exit 1
+          fi
+          if [ -z "$BACKEND_KEY" ]; then
+            echo "::error::backend_key is required for trusted Azure-backed Terraform plans and applies."
+            exit 1
+          fi
+          case "$BACKEND_KEY" in
+            ""|/*|*..*|*[!A-Za-z0-9_./-]*)
+              echo "::error::Unsafe backend_key: $BACKEND_KEY"
+              exit 1
+              ;;
+          esac
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT TFSTATE_CONTAINER; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables: ${missing[*]}."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform init
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+          BACKEND_KEY: ${{ inputs.backend_key }}
+        run: |
+          set -euo pipefail
+          {
+            printf 'resource_group_name  = "%s"\n' "$TFSTATE_RESOURCE_GROUP"
+            printf 'storage_account_name = "%s"\n' "$TFSTATE_STORAGE_ACCOUNT"
+            printf 'container_name       = "%s"\n' "$TFSTATE_CONTAINER"
+            printf 'key                  = "%s"\n' "$BACKEND_KEY"
+            printf 'use_azuread_auth     = true\n'
+          } > "$STACK_PATH/backend.hcl"
+          mise exec -- terraform -chdir="$STACK_PATH" init -input=false -backend-config=backend.hcl
+
+      - name: Terraform validate
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+        run: mise exec -- terraform -chdir="$STACK_PATH" validate
+
+      - name: Terraform plan
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+          PLAN_NAME: ${{ inputs.plan_name }}
+        run: mise exec -- terraform -chdir="$STACK_PATH" plan -input=false -lock-timeout=120s -out="$PLAN_NAME"
+
+      - name: Terraform apply
+        if: ${{ inputs.apply }}
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+          PLAN_NAME: ${{ inputs.plan_name }}
+        run: mise exec -- terraform -chdir="$STACK_PATH" apply -input=false -lock-timeout=120s "$PLAN_NAME"

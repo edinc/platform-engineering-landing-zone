@@ -1,0 +1,216 @@
+name: Reusable TechDocs publish
+
+on:
+  workflow_call:
+    inputs:
+      source_dir:
+        description: TechDocs source directory.
+        required: false
+        type: string
+        default: .
+      entity_namespace:
+        description: Backstage entity namespace.
+        required: false
+        type: string
+        default: default
+      entity_kind:
+        description: Backstage entity kind.
+        required: false
+        type: string
+        default: Component
+      entity_name:
+        description: Backstage entity name.
+        required: true
+        type: string
+      environment:
+        description: GitHub Environment that owns Azure OIDC and TechDocs variables.
+        required: false
+        type: string
+        default: dev
+      storage_account_name:
+        description: TechDocs storage account. Defaults to TECHDOCS_STORAGE_ACCOUNT_NAME variable.
+        required: false
+        type: string
+        default: ""
+      storage_container_name:
+        description: TechDocs container. Defaults to TECHDOCS_STORAGE_CONTAINER_NAME variable.
+        required: false
+        type: string
+        default: techdocs
+      upload_runs_on:
+        description: Runner label for Azure Blob upload. Use a VNet-integrated self-hosted runner when TechDocs storage is private.
+        required: false
+        type: string
+        default: self-hosted
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    name: Generate TechDocs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20.x
+
+      - name: Validate source input
+        env:
+          SOURCE_DIR: ${{ inputs.source_dir }}
+        run: |
+          set -euo pipefail
+          case "$SOURCE_DIR" in ""|/*|*..*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe source_dir."; exit 1 ;; esac
+          if [ ! -d "$SOURCE_DIR" ]; then
+            echo "::error::source_dir does not exist: $SOURCE_DIR"
+            exit 1
+          fi
+          if [ -L "$SOURCE_DIR" ]; then
+            echo "::error::source_dir must not be a symlink."
+            exit 1
+          fi
+          workspace_real="$(realpath "$GITHUB_WORKSPACE")"
+          source_real="$(realpath "$SOURCE_DIR")"
+          case "$source_real" in "$workspace_real"|"$workspace_real"/*) ;; *) echo "::error::source_dir must stay under the checked-out repository."; exit 1 ;; esac
+
+      - name: Install TechDocs MkDocs toolchain
+        run: |
+          set -euo pipefail
+          python3 -m pip install --user mkdocs-techdocs-core==1.7.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Generate TechDocs
+        env:
+          SOURCE_DIR: ${{ inputs.source_dir }}
+        run: |
+          set -euo pipefail
+          corepack enable
+          mkdir -p .tools/tmp/techdocs
+          npx --yes @techdocs/cli@1.9.5 generate --no-docker --source-dir "$SOURCE_DIR" --output-dir .tools/tmp/techdocs
+
+      - name: Upload generated site artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: techdocs-site
+          path: .tools/tmp/techdocs
+          if-no-files-found: error
+          retention-days: 1
+
+  upload:
+    name: Upload TechDocs
+    runs-on: ${{ inputs.upload_runs_on }}
+    needs: generate
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TECHDOCS_STORAGE_ACCOUNT_NAME: ${{ vars.TECHDOCS_STORAGE_ACCOUNT_NAME }}
+      TECHDOCS_STORAGE_CONTAINER_NAME: ${{ vars.TECHDOCS_STORAGE_CONTAINER_NAME }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Download generated site artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: techdocs-site
+          path: .tools/tmp/techdocs
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Validate private runner tools
+        run: |
+          set -euo pipefail
+          missing=()
+          for tool in az; do
+            if ! command -v "$tool" >/dev/null 2>&1; then missing+=("$tool"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Private runner is missing required tools: ${missing[*]}."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate upload inputs
+        id: input
+        env:
+          ENTITY_NAMESPACE: ${{ inputs.entity_namespace }}
+          ENTITY_KIND: ${{ inputs.entity_kind }}
+          ENTITY_NAME: ${{ inputs.entity_name }}
+          INPUT_STORAGE_ACCOUNT: ${{ inputs.storage_account_name }}
+          INPUT_CONTAINER: ${{ inputs.storage_container_name }}
+        run: |
+          set -euo pipefail
+          case "$ENTITY_NAMESPACE" in ""|*[!A-Za-z0-9_.-]*) echo "::error::Unsafe entity_namespace."; exit 1 ;; esac
+          case "$ENTITY_KIND" in ""|*[!A-Za-z0-9_.-]*) echo "::error::Unsafe entity_kind."; exit 1 ;; esac
+          case "$ENTITY_NAME" in ""|*[!A-Za-z0-9_.-]*) echo "::error::Unsafe entity_name."; exit 1 ;; esac
+          storage_account="${INPUT_STORAGE_ACCOUNT:-$TECHDOCS_STORAGE_ACCOUNT_NAME}"
+          container="${INPUT_CONTAINER:-${TECHDOCS_STORAGE_CONTAINER_NAME:-techdocs}}"
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ -z "$storage_account" ]; then missing+=(TECHDOCS_STORAGE_ACCOUNT_NAME); fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables or inputs: ${missing[*]}."
+            exit 1
+          fi
+          destination="$(
+            printf '%s/%s/%s' "$ENTITY_NAMESPACE" "$ENTITY_KIND" "$ENTITY_NAME" |
+              tr '[:upper:]' '[:lower:]'
+          )"
+          {
+            echo "storage_account=$storage_account"
+            echo "container=$container"
+            echo "destination=$destination"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload TechDocs to Azure Blob
+        env:
+          STORAGE_ACCOUNT: ${{ steps.input.outputs.storage_account }}
+          CONTAINER: ${{ steps.input.outputs.container }}
+          DESTINATION: ${{ steps.input.outputs.destination }}
+        run: |
+          set -euo pipefail
+          az storage blob upload-batch \
+            --auth-mode login \
+            --account-name "$STORAGE_ACCOUNT" \
+            --destination "$CONTAINER" \
+            --destination-path "$DESTINATION" \
+            --source .tools/tmp/techdocs \
+            --overwrite true \
+            --only-show-errors

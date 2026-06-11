@@ -79,7 +79,7 @@ variable "state_containers" {
     "backstage",
     "onboarding",
     "golden-paths",
-    "dr",
+    "disaster-recovery",
     "envs-demo",
     "envs-nonprod",
     "envs-prod",
@@ -88,6 +88,14 @@ variable "state_containers" {
   validation {
     condition     = contains(var.state_containers, "bootstrap")
     error_message = "state_containers must include the bootstrap container used by this stack's own backend."
+  }
+
+  validation {
+    condition = alltrue([
+      for name in var.state_containers :
+      can(regex("^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$", name))
+    ])
+    error_message = "state_containers must be valid Azure Storage container names: 3-63 lowercase letters, numbers, or hyphens; start/end alphanumeric."
   }
 }
 

@@ -1,5 +1,5 @@
 stage: 04
-status: design-stub
+status: executable
 executable_location: .github/workflows/import-quay.yml
 description: >
   Reusable workflow contract for importing quay.io images into the platform ACR

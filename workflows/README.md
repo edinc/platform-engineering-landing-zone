@@ -1,13 +1,12 @@
 # Workflow design stubs
 
-This directory holds non-executable design stubs for reusable workflow contracts
-planned in later stages.
+This directory holds lightweight contract records for reusable workflow surfaces.
 
-GitHub only discovers runnable workflows from `.github/workflows/`. When Stage
-06 introduces reusable workflows, the executable `workflow_call` files must live
-under `.github/workflows/`; this top-level directory remains a planning and
-contract location unless a later ADR changes the repository layout.
+GitHub only discovers runnable reusable workflows from `.github/workflows/`.
+Stage 06 therefore keeps executable `workflow_call` files under
+`.github/workflows/`, while this top-level directory records the contract
+lineage and intended executable location.
 
-Stage 04 adds [`import-quay.yml`](import-quay.yml) as a design stub because ACR
+Stage 04 added [`import-quay.yml`](import-quay.yml) as a design stub because ACR
 Artifact Cache does not support `quay.io`; Stage 06 turns it into an executable
-OIDC-backed `az acr import` workflow.
+OIDC-backed `az acr import` reusable workflow.

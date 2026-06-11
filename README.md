@@ -10,11 +10,12 @@ establishing the repository foundation, conventions, and quality gates.
 
 ## Current stage
 
-Stage 00 - Foundation and repository bootstrap.
+Stage 06 - CI/CD and software supply chain.
 
-This stage creates the repo skeleton, local tooling, ADR structure, GitHub
-workflow harness, pre-commit configuration, and policy test fixtures. It does
-not deploy Azure resources.
+This stage introduces OIDC-backed reusable GitHub Actions workflows for
+Terraform, policy checks, container build/sign/SBOM, Helm publishing,
+TechDocs publishing, GitOps PR creation, quay imports, and digest-pinned image
+promotion.
 
 ## Local setup
 
