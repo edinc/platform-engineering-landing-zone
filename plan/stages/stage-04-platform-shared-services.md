@@ -54,9 +54,11 @@ In the `platform` subscription:
 - Geo-replication: primary + DR region (single login server; failover is
   DNS-routed, not a separate endpoint — see Stage 12).
 - Private endpoint; public network access disabled.
-- **ACR Artifact Cache** rules for: `mcr.microsoft.com`, `docker.io`,
-  `ghcr.io`. (`quay.io` is **not** a supported source — pulls from quay
-  use the `az acr import` workflow in `workflows/import-quay.yml`.)
+- **ACR Artifact Cache** rules for unauthenticated supported sources such as
+  `mcr.microsoft.com` and `ghcr.io`. Docker Hub cache rules require a credential
+  set in current ACR behaviour, so they are not enabled by default. `quay.io` is
+  **not** a supported source — pulls from quay use the `az acr import` workflow
+  in `workflows/import-quay.yml`.
 - Retention policy: untagged manifests 14d; tag locks for promoted prod tags.
 - **ACR Tasks** for base-image rebuilds run on a **VNet-injected dedicated
   agent pool** (required because ACR public access is disabled).
@@ -83,10 +85,10 @@ In the `platform` subscription:
 
 ### Service Bus (platform-internal eventing — ADR-0032)
 
-- **Service Bus namespace** `sb-pe-<env>-<region>` (Standard for
-  `demo`/`nonprod`, Premium for `prod`), Private Endpoint, public access
-  disabled, RBAC mode. Workload teams declare topics/queues via ASO v2
-  (Stage 07 curated CRD allowlist).
+- **Service Bus namespace** `sb-pe-<env>-<region>` (Premium for enabled
+  environments so Private Endpoint is available), public access disabled, RBAC
+  mode. Workload teams declare topics/queues via ASO v2 (Stage 07 curated CRD
+  allowlist).
 
 ### Ingress
 

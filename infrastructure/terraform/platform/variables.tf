@@ -262,15 +262,11 @@ variable "acr_cache_rules" {
     source_repo = string
     target_repo = string
   }))
-  description = "ACR Artifact Cache rules. Quay is intentionally excluded and handled by workflows/import-quay.yml."
+  description = "ACR Artifact Cache rules. Docker Hub and Quay are intentionally excluded from defaults because current ACR cache requires credentials for Docker and does not support Quay; use workflows/import-quay.yml or supply authenticated rules explicitly."
   default = {
     mcr_pause = {
       source_repo = "mcr.microsoft.com/oss/kubernetes/pause"
       target_repo = "cache/mcr/oss/kubernetes/pause"
-    }
-    docker_nginx = {
-      source_repo = "docker.io/library/nginx"
-      target_repo = "cache/docker/library/nginx"
     }
     ghcr_actions_runner = {
       source_repo = "ghcr.io/actions/actions-runner"
