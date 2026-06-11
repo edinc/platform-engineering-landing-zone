@@ -33,8 +33,8 @@ durably in Azure, with a documented break-glass path.
   - Containers per stage: `bootstrap`, `alz` (legacy, retained to prevent
     accidental state deletion), `subscription-baseline`,
     `connectivity`, `identity`, `platform`, `vending`, `cicd`, `gitops`,
-    `observability`, `backstage`, `onboarding`, `golden-paths`, `dr`,
-    `envs-demo`, `envs-nonprod`, `envs-prod`.
+    `observability`, `backstage`, `onboarding`, `golden-paths`,
+    `disaster-recovery`, `envs-demo`, `envs-nonprod`, `envs-prod`.
 - **Seed Key Vault** `kv-pe-boot-<region>-<suffix>` for bootstrap-time secrets (HSM
   tier optional). Purge protection on. Phase-1 IP-firewalled; PE retrofit at
   Stage 03 (same two-phase model as state).
