@@ -135,6 +135,24 @@ jobs:
           name: techdocs-site
           path: .tools/tmp/techdocs
 
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Validate private runner tools
+        run: |
+          set -euo pipefail
+          missing=()
+          for tool in az; do
+            if ! command -v "$tool" >/dev/null 2>&1; then missing+=("$tool"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Private runner is missing required tools: ${missing[*]}."
+            exit 1
+          fi
+
       - name: Azure login (OIDC)
         uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
         with:
