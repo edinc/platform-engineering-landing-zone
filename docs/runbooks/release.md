@@ -17,6 +17,12 @@ Related decisions: [ADR-0007](../adr/0007-image-signing.md),
 | Protected GitHub Environments | Gate `nonprod` and `prod` promotion. |
 | VNet-integrated self-hosted runner | Required for private ACR push/sign/promote operations and private Key Vault reads. |
 
+Private runner images must include the GitHub Actions runner prerequisites plus
+standard Unix tools (`bash`, `curl`, `git`, `jq`, and `rsync`). The reusable
+workflows install the pinned mise toolchain for Azure CLI, GitHub CLI, Node.js,
+cosign, and related platform tools, then fail fast if required base tools are
+missing.
+
 Set these protected environment variables for promotion verification when the
 builder is not the caller repository:
 
