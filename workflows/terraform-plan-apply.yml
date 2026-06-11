@@ -1,4 +1,4 @@
 stage: 06
-status: design-stub
+status: executable
 executable_location: .github/workflows/terraform-plan-apply.yml
 description: Terraform plan and apply reusable workflow contract.

@@ -14,7 +14,7 @@ Next free number: **0054**
 | 0004 | Service mesh | Seeded in plan | Pending |
 | 0005 | Azure-resource provisioning from cluster | Seeded in plan | Pending |
 | 0006 | Secrets in cluster | Seeded in plan | Pending |
-| 0007 | Image signing | Seeded in plan | Pending |
+| 0007 | Image signing | Accepted | [`0007-image-signing.md`](0007-image-signing.md) |
 | 0008 | Subscription vending | Accepted | [`0008-subscription-vending.md`](0008-subscription-vending.md) |
 | 0009 | AKS dataplane | Seeded in plan | Pending |
 | 0010 | AKS node auto-provisioning | Seeded in plan | Pending |
@@ -23,13 +23,13 @@ Next free number: **0054**
 | 0013 | Repository topology | Seeded in plan | Pending |
 | 0014 | Terraform state | Accepted | [`0014-terraform-state.md`](0014-terraform-state.md) |
 | 0015 | Internal API auth | Seeded in plan | Pending |
-| 0016 | Image promotion | Seeded in plan | Pending |
+| 0016 | Image promotion | Accepted | [`0016-image-promotion.md`](0016-image-promotion.md) |
 | 0017 | DR posture | Seeded in plan | Pending |
 | 0018 | Developer inner loop | Seeded in plan | Pending |
-| 0019 | CI scanning | Seeded in plan | Pending |
+| 0019 | CI scanning | Accepted | [`0019-ci-scanning.md`](0019-ci-scanning.md) |
 | 0020 | Backstage build-vs-buy | Seeded in plan | Pending |
 | 0021 | Pre-commit framework and local quality gates | Accepted | [`0021-pre-commit.md`](0021-pre-commit.md) |
-| 0022 | Conventional Commits and Release Please | Seeded in Stage 06 | Pending |
+| 0022 | Conventional Commits and Release Please | Accepted | [`0022-conventional-commits-release-please.md`](0022-conventional-commits-release-please.md) |
 | 0023 | SCM branching and GitHub Environments | Accepted | [`0023-scm-branching.md`](0023-scm-branching.md) |
 | 0024 | Break-glass procedure | Accepted | [`0024-break-glass.md`](0024-break-glass.md) |
 | 0025 | OIDC federation policy | Accepted | [`0025-oidc-federation.md`](0025-oidc-federation.md) |
@@ -42,7 +42,7 @@ Next free number: **0054**
 | 0032 | Platform-internal eventing uses Azure Service Bus | Accepted | [`0032-platform-eventing.md`](0032-platform-eventing.md) |
 | 0033 | AKS namespace as workload-scope vending unit | Accepted | [`0033-aks-namespace-vending.md`](0033-aks-namespace-vending.md) |
 | 0034 | Vending request schema | Accepted | [`0034-vending-request-schema.md`](0034-vending-request-schema.md) |
-| 0035 | Dependency updater strategy | Seeded in Stage 06 | Pending |
+| 0035 | Dependency updater strategy | Accepted | [`0035-dependency-updater-strategy.md`](0035-dependency-updater-strategy.md) |
 | 0036 | Kyverno as single in-cluster policy engine | Seeded in Stage 07 | Pending |
 | 0037 | OTel resource attributes and log fields | Seeded in Stage 08 | Pending |
 | 0038 | SLO tooling | Seeded in Stage 08 | Pending |

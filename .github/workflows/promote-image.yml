@@ -1,0 +1,293 @@
+name: Reusable image promotion PR
+
+on:
+  workflow_call:
+    inputs:
+      image_ref:
+        description: Source image tag or digest reference to promote.
+        required: true
+        type: string
+      image_name:
+        description: Kustomize image name to update in cluster state.
+        required: true
+        type: string
+      source_environment:
+        description: Source environment name.
+        required: true
+        type: string
+      target_environment:
+        description: Target environment name.
+        required: true
+        type: string
+      kustomization_path:
+        description: Repository-relative cluster-state directory containing kustomization.yaml.
+        required: true
+        type: string
+      cluster_state_repo_owner:
+        description: Cluster-state repository owner. Defaults to CLUSTER_STATE_REPO_OWNER or the caller owner.
+        required: false
+        type: string
+        default: ""
+      cluster_state_repo_name:
+        description: Cluster-state repository name. Defaults to CLUSTER_STATE_REPO_NAME or platform-cluster-state.
+        required: false
+        type: string
+        default: ""
+      cluster_state_default_branch:
+        description: Cluster-state base branch.
+        required: false
+        type: string
+        default: main
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  promote:
+    name: Promote image to ${{ inputs.target_environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target_environment }}
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      PLATFORM_ACR_NAME: ${{ vars.PLATFORM_ACR_NAME }}
+      SEED_KEY_VAULT_NAME: ${{ vars.SEED_KEY_VAULT_NAME }}
+      PLATFORM_VENDING_BOT_APP_ID: ${{ vars.PLATFORM_VENDING_BOT_APP_ID }}
+      PLATFORM_VENDING_BOT_INSTALLATION_ID: ${{ vars.PLATFORM_VENDING_BOT_INSTALLATION_ID }}
+      PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME: ${{ vars.PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME }}
+      CLUSTER_STATE_REPO_OWNER_VAR: ${{ vars.CLUSTER_STATE_REPO_OWNER }}
+      CLUSTER_STATE_REPO_NAME_VAR: ${{ vars.CLUSTER_STATE_REPO_NAME }}
+      TRUSTED_BUILDER_REPOSITORY_VAR: ${{ vars.TRUSTED_BUILDER_REPOSITORY }}
+      TRUSTED_BUILDER_WORKFLOW_VAR: ${{ vars.TRUSTED_BUILDER_WORKFLOW }}
+      TRUSTED_BUILDER_REF_VAR: ${{ vars.TRUSTED_BUILDER_REF }}
+      COSIGN_EXPERIMENTAL: "1"
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate promotion inputs
+        id: input
+        env:
+          IMAGE_REF: ${{ inputs.image_ref }}
+          IMAGE_NAME: ${{ inputs.image_name }}
+          SOURCE_ENVIRONMENT: ${{ inputs.source_environment }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          KUSTOMIZATION_PATH: ${{ inputs.kustomization_path }}
+          INPUT_OWNER: ${{ inputs.cluster_state_repo_owner }}
+          INPUT_REPO: ${{ inputs.cluster_state_repo_name }}
+          INPUT_BASE: ${{ inputs.cluster_state_default_branch }}
+        run: |
+          set -euo pipefail
+          case "$IMAGE_REF" in ""|*[[:space:]]*) echo "::error::Unsafe image_ref."; exit 1 ;; esac
+          case "$IMAGE_NAME" in ""|*[[:space:]]*) echo "::error::Unsafe image_name."; exit 1 ;; esac
+          case "$SOURCE_ENVIRONMENT" in ""|*[!A-Za-z0-9_-]*) echo "::error::Unsafe source_environment."; exit 1 ;; esac
+          case "$TARGET_ENVIRONMENT" in ""|*[!A-Za-z0-9_-]*) echo "::error::Unsafe target_environment."; exit 1 ;; esac
+          case "$TARGET_ENVIRONMENT" in
+            nonprod|prod) ;;
+            *) echo "::error::target_environment must be nonprod or prod."; exit 1 ;;
+          esac
+          case "$KUSTOMIZATION_PATH" in ""|/*|*..*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe kustomization_path."; exit 1 ;; esac
+          if [ -z "$CLUSTER_STATE_REPO_OWNER_VAR" ] || [ -z "$CLUSTER_STATE_REPO_NAME_VAR" ]; then
+            echo "::error::CLUSTER_STATE_REPO_OWNER and CLUSTER_STATE_REPO_NAME protected variables are required."
+            exit 1
+          fi
+          owner="$CLUSTER_STATE_REPO_OWNER_VAR"
+          repo="$CLUSTER_STATE_REPO_NAME_VAR"
+          if [ -n "$INPUT_OWNER" ] && [ "$INPUT_OWNER" != "$owner" ]; then
+            echo "::error::cluster_state_repo_owner must match the protected CLUSTER_STATE_REPO_OWNER variable."
+            exit 1
+          fi
+          if [ -n "$INPUT_REPO" ] && [ "$INPUT_REPO" != "$repo" ]; then
+            echo "::error::cluster_state_repo_name must match the protected CLUSTER_STATE_REPO_NAME variable."
+            exit 1
+          fi
+          base_branch="${INPUT_BASE:-main}"
+          case "$owner" in ""|*[!A-Za-z0-9_.-]*) echo "::error::Unsafe cluster-state owner."; exit 1 ;; esac
+          case "$repo" in ""|*[!A-Za-z0-9_.-]*) echo "::error::Unsafe cluster-state repository."; exit 1 ;; esac
+          case "$base_branch" in ""|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe cluster-state default branch."; exit 1 ;; esac
+          trusted_repo="${TRUSTED_BUILDER_REPOSITORY_VAR:-$GITHUB_REPOSITORY}"
+          trusted_workflow="${TRUSTED_BUILDER_WORKFLOW_VAR:-container-build-sign.yml}"
+          trusted_ref="${TRUSTED_BUILDER_REF_VAR:-refs/heads/main}"
+          case "$trusted_repo" in ""|/*|*..*|*//*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe TRUSTED_BUILDER_REPOSITORY."; exit 1 ;; esac
+          case "$trusted_repo" in */*) ;; *) echo "::error::TRUSTED_BUILDER_REPOSITORY must be owner/repo."; exit 1 ;; esac
+          case "$trusted_workflow" in ""|*/*|*..*|*[!A-Za-z0-9_.-]*) echo "::error::Unsafe TRUSTED_BUILDER_WORKFLOW."; exit 1 ;; esac
+          case "$trusted_ref" in
+            refs/heads/main) ;;
+            *)
+              if [[ ! "$trusted_ref" =~ ^[0-9a-f]{40}$ ]]; then
+                echo "::error::TRUSTED_BUILDER_REF must be refs/heads/main or a 40-character commit SHA."
+                exit 1
+              fi
+              ;;
+          esac
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID PLATFORM_ACR_NAME SEED_KEY_VAULT_NAME PLATFORM_VENDING_BOT_APP_ID PLATFORM_VENDING_BOT_INSTALLATION_ID PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME CLUSTER_STATE_REPO_OWNER_VAR CLUSTER_STATE_REPO_NAME_VAR; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables: ${missing[*]}."
+            exit 1
+          fi
+          {
+            echo "owner=$owner"
+            echo "repo=$repo"
+            echo "base_branch=$base_branch"
+            echo "certificate_identity=https://github.com/${trusted_repo}/.github/workflows/${trusted_workflow}@${trusted_ref}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: ACR login
+        run: az acr login --name "$PLATFORM_ACR_NAME"
+
+      - name: Resolve and verify digest
+        id: image
+        env:
+          IMAGE_REF: ${{ inputs.image_ref }}
+          CERTIFICATE_IDENTITY: ${{ steps.input.outputs.certificate_identity }}
+        run: |
+          set -euo pipefail
+          if [[ "$IMAGE_REF" == *@sha256:* ]]; then
+            digest_ref="$IMAGE_REF"
+          else
+            digest="$(docker buildx imagetools inspect "$IMAGE_REF" --format '{{json .Manifest.Digest}}' | tr -d '"')"
+            if [ -z "$digest" ] || [ "$digest" = "null" ]; then
+              echo "::error::Could not resolve image digest for $IMAGE_REF."
+              exit 1
+            fi
+            repository="${IMAGE_REF%:*}"
+            digest_ref="${repository}@${digest}"
+          fi
+          mise exec -- cosign verify \
+            --certificate-identity "$CERTIFICATE_IDENTITY" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$digest_ref" >/tmp/cosign-verify.json
+          repository="${digest_ref%@sha256:*}"
+          digest="${digest_ref#*@}"
+          promoted_tag="${{ inputs.target_environment }}-${GITHUB_SHA::12}"
+          promoted_ref="${repository}:${promoted_tag}"
+          docker buildx imagetools create --tag "$promoted_ref" "$digest_ref"
+          {
+            echo "digest_ref=$digest_ref"
+            echo "promoted_ref=$promoted_ref"
+            echo "promoted_digest_ref=${repository}@${digest}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Mint platform-vending-bot token
+        id: app_token
+        run: |
+          set -euo pipefail
+          private_key="$(az keyvault secret show \
+            --vault-name "$SEED_KEY_VAULT_NAME" \
+            --name "$PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME" \
+            --query value -o tsv)"
+          if [ -z "$private_key" ]; then
+            echo "::error::GitHub App private key secret is empty."
+            exit 1
+          fi
+          mask_multiline() {
+            local value="$1"
+            value="${value//'%'/'%25'}"
+            value="${value//$'\r'/'%0D'}"
+            value="${value//$'\n'/'%0A'}"
+            echo "::add-mask::$value"
+            while IFS= read -r line; do
+              if [ -n "$line" ]; then echo "::add-mask::$line"; fi
+            done <<< "$1"
+          }
+          mask_multiline "$private_key"
+          # shellcheck disable=SC2016
+          jwt="$(APP_ID="$PLATFORM_VENDING_BOT_APP_ID" PRIVATE_KEY="$private_key" node -e 'const crypto = require("crypto"); const base64url = (value) => Buffer.from(JSON.stringify(value)).toString("base64url"); const now = Math.floor(Date.now() / 1000); const header = { alg: "RS256", typ: "JWT" }; const payload = { iat: now - 60, exp: now + 540, iss: process.env.APP_ID }; const unsigned = `${base64url(header)}.${base64url(payload)}`; const signer = crypto.createSign("RSA-SHA256"); signer.update(unsigned); signer.end(); process.stdout.write(`${unsigned}.${signer.sign(process.env.PRIVATE_KEY, "base64url")}`);')"
+          token_response="$(curl -fsS \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${jwt}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/app/installations/${PLATFORM_VENDING_BOT_INSTALLATION_ID}/access_tokens" \
+            -d "$(jq -n --arg repo "${{ steps.input.outputs.repo }}" '{repositories: [$repo], permissions: {contents: "write", pull_requests: "write"}}')")"
+          app_token="$(jq -r '.token' <<< "$token_response")"
+          if [ -z "$app_token" ] || [ "$app_token" = "null" ]; then
+            echo "::error::Failed to mint platform-vending-bot installation token."
+            exit 1
+          fi
+          echo "::add-mask::$app_token"
+          echo "token=$app_token" >> "$GITHUB_OUTPUT"
+
+      - name: Open cluster-state promotion PR
+        env:
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
+          OWNER: ${{ steps.input.outputs.owner }}
+          REPO: ${{ steps.input.outputs.repo }}
+          BASE_BRANCH: ${{ steps.input.outputs.base_branch }}
+          KUSTOMIZATION_PATH: ${{ inputs.kustomization_path }}
+          IMAGE_NAME: ${{ inputs.image_name }}
+          PROMOTED_DIGEST_REF: ${{ steps.image.outputs.promoted_digest_ref }}
+          PROMOTED_REF: ${{ steps.image.outputs.promoted_ref }}
+          SOURCE_ENVIRONMENT: ${{ inputs.source_environment }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+        run: |
+          set -euo pipefail
+          workdir="$(mktemp -d)"
+          trap 'rm -rf "$workdir"' EXIT
+          git clone --depth 1 --single-branch --branch "$BASE_BRANCH" "https://x-access-token:${APP_TOKEN}@github.com/${OWNER}/${REPO}.git" "$workdir/repo"
+          cd "$workdir/repo"
+          if [ ! -f "$KUSTOMIZATION_PATH/kustomization.yaml" ] && [ ! -f "$KUSTOMIZATION_PATH/Kustomization" ] && [ ! -f "$KUSTOMIZATION_PATH/kustomization.yml" ]; then
+            echo "::error::No kustomization file found under $KUSTOMIZATION_PATH."
+            exit 1
+          fi
+          if [ -L "$KUSTOMIZATION_PATH" ]; then
+            echo "::error::kustomization_path must not be a symlink."
+            exit 1
+          fi
+          repo_real="$(realpath "$PWD")"
+          kustomization_real="$(realpath "$KUSTOMIZATION_PATH")"
+          case "$kustomization_real" in "$repo_real"|"$repo_real"/*) ;; *) echo "::error::kustomization_path must stay under the cluster-state repository."; exit 1 ;; esac
+          branch="promote/${TARGET_ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "$branch"
+          git config user.name "platform-vending-bot[bot]"
+          git config user.email "platform-vending-bot[bot]@users.noreply.github.com"
+          (cd "$kustomization_real" && mise exec -- kustomize edit set image "${IMAGE_NAME}=${PROMOTED_DIGEST_REF}")
+          git add "$kustomization_real"
+          if git diff --cached --quiet; then
+            echo "::notice::No cluster-state image changes to promote."
+            exit 0
+          fi
+          git commit -m "chore: promote ${IMAGE_NAME} to ${TARGET_ENVIRONMENT}"
+          git push origin "$branch"
+          body_file="$(mktemp)"
+          cat > "$body_file" <<EOF
+          Promotes ${IMAGE_NAME} from ${SOURCE_ENVIRONMENT} to ${TARGET_ENVIRONMENT}.
+
+          Digest-pinned image: \`${PROMOTED_DIGEST_REF}\`
+          Promoted tag: \`${PROMOTED_REF}\`
+          Verification: cosign keyless signature re-verified in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}.
+          EOF
+          gh pr create \
+            --repo "${OWNER}/${REPO}" \
+            --head "$branch" \
+            --base "$BASE_BRANCH" \
+            --title "Promote ${IMAGE_NAME} to ${TARGET_ENVIRONMENT}" \
+            --body-file "$body_file"

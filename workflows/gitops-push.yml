@@ -1,0 +1,4 @@
+stage: 06
+status: executable
+executable_location: .github/workflows/gitops-push.yml
+description: GitOps cluster-state pull request reusable workflow contract.

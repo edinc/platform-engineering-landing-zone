@@ -29,8 +29,13 @@ In `.github/workflows/` and `workflows/` (as reusable):
   Flux manifests to `platform-cluster-state` and opens a PR. It does **not**
   call the cluster API. Deployment happens via Flux reconciliation, which
   is the platform's only deploy mechanism (ADR-0002).
+- `import-quay.yml` — Stage 04 `quay.io` import contract promoted to an
+  executable OIDC-backed ACR import workflow. Source images must be digest
+  pinned before import.
 - All reusable workflows pinned to **immutable SHAs** (not tags) and the
-  caller workflows use `step-security/harden-runner` for SLSA L3
+  caller workflows use `step-security/harden-runner`. Stage 06 starts in
+  egress audit mode while endpoint allowlists are tuned; moving build and
+  promotion workflows to block mode is required before claiming SLSA L3
   hermeticity.
 
 ### Supply-chain controls
@@ -52,8 +57,8 @@ In `.github/workflows/` and `workflows/` (as reusable):
     in §13 plan.md open questions).
   - **Renovate** (deployed as a GitHub App + `renovate.json` config in
     the repo) for dependency PRs (Renovate preferred for Helm/OCI/Terraform
-    breadth). **Dependabot** retained for security-only alerts (auto-merge
-    rule on patch CVEs).
+    breadth). **Dependabot** retained through repository security settings for
+    security-only alerts.
 - **Base-image governance**: approved bases mirrored in ACR; renovate auto-PRs
   base updates; ACR Tasks (VNet-injected agent pool — Stage 04) rebuild
   downstream images.

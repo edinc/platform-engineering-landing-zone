@@ -1,0 +1,142 @@
+name: Reusable Helm chart publish
+
+on:
+  workflow_call:
+    inputs:
+      chart_path:
+        description: Repository-relative Helm chart path.
+        required: true
+        type: string
+      environment:
+        description: GitHub Environment that owns Azure OIDC and ACR variables.
+        required: false
+        type: string
+        default: dev
+      acr_name:
+        description: ACR resource name. Defaults to PLATFORM_ACR_NAME variable.
+        required: false
+        type: string
+        default: ""
+      acr_login_server:
+        description: ACR login server. Defaults to PLATFORM_ACR_LOGIN_SERVER variable.
+        required: false
+        type: string
+        default: ""
+      oci_repository:
+        description: ACR repository prefix for charts.
+        required: false
+        type: string
+        default: helm
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Package, push, sign
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      PLATFORM_ACR_NAME: ${{ vars.PLATFORM_ACR_NAME }}
+      PLATFORM_ACR_LOGIN_SERVER: ${{ vars.PLATFORM_ACR_LOGIN_SERVER }}
+      COSIGN_EXPERIMENTAL: "1"
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate inputs
+        id: input
+        env:
+          CHART_PATH: ${{ inputs.chart_path }}
+          INPUT_ACR_NAME: ${{ inputs.acr_name }}
+          INPUT_ACR_LOGIN_SERVER: ${{ inputs.acr_login_server }}
+          OCI_REPOSITORY: ${{ inputs.oci_repository }}
+        run: |
+          set -euo pipefail
+          case "$CHART_PATH" in ""|/*|*..*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe chart_path: $CHART_PATH"; exit 1 ;; esac
+          case "$OCI_REPOSITORY" in ""|/*|*..*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe oci_repository: $OCI_REPOSITORY"; exit 1 ;; esac
+          if [ ! -f "$CHART_PATH/Chart.yaml" ]; then
+            echo "::error::Chart.yaml not found under $CHART_PATH."
+            exit 1
+          fi
+          acr_name="${INPUT_ACR_NAME:-$PLATFORM_ACR_NAME}"
+          acr_login_server="${INPUT_ACR_LOGIN_SERVER:-$PLATFORM_ACR_LOGIN_SERVER}"
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ -z "$acr_name" ]; then missing+=(PLATFORM_ACR_NAME); fi
+          if [ -z "$acr_login_server" ]; then missing+=(PLATFORM_ACR_LOGIN_SERVER); fi
+          if [[ ! "$acr_name" =~ ^[A-Za-z0-9]{5,50}$ ]]; then
+            echo "::error::acr_name must be 5-50 alphanumeric characters."
+            exit 1
+          fi
+          case "$acr_login_server" in ""|*/*|*..*|*[!A-Za-z0-9.-]*) echo "::error::Unsafe acr_login_server."; exit 1 ;; esac
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables or inputs: ${missing[*]}."
+            exit 1
+          fi
+          echo "acr_name=$acr_name" >> "$GITHUB_OUTPUT"
+          echo "acr_login_server=$acr_login_server" >> "$GITHUB_OUTPUT"
+
+      - name: ACR login
+        env:
+          ACR_NAME: ${{ steps.input.outputs.acr_name }}
+        run: az acr login --name "$ACR_NAME"
+
+      - name: Package and push chart
+        id: chart
+        env:
+          CHART_PATH: ${{ inputs.chart_path }}
+          OCI_REPOSITORY: ${{ inputs.oci_repository }}
+          ACR_LOGIN_SERVER: ${{ steps.input.outputs.acr_login_server }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/charts
+          mise exec -- helm dependency build "$CHART_PATH"
+          package_output="$(mise exec -- helm package "$CHART_PATH" --destination .tools/tmp/charts)"
+          chart_package="$(printf '%s\n' "$package_output" | sed -n 's/^Successfully packaged chart and saved it to: //p')"
+          if [ -z "$chart_package" ]; then
+            echo "::error::Unable to determine packaged chart path."
+            exit 1
+          fi
+          push_output="$(mise exec -- helm push "$chart_package" "oci://${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}")"
+          printf '%s\n' "$push_output"
+          digest="$(printf '%s\n' "$push_output" | sed -n 's/^Digest: //p' | tail -1)"
+          chart_name="$(mise exec -- helm show chart "$CHART_PATH" | awk -F': ' '$1 == "name" {print $2}')"
+          chart_version="$(mise exec -- helm show chart "$CHART_PATH" | awk -F': ' '$1 == "version" {print $2}')"
+          if [ -z "$digest" ] || [ -z "$chart_name" ] || [ -z "$chart_version" ]; then
+            echo "::error::Unable to determine chart digest, name, or version."
+            exit 1
+          fi
+          echo "chart_ref=${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}/${chart_name}:${chart_version}" >> "$GITHUB_OUTPUT"
+          echo "digest_ref=${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}/${chart_name}@${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Sign chart artifact
+        env:
+          DIGEST_REF: ${{ steps.chart.outputs.digest_ref }}
+        run: mise exec -- cosign sign --yes "$DIGEST_REF"
