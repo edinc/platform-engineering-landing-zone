@@ -54,6 +54,8 @@ In the `platform` subscription:
 - Geo-replication: primary + DR region (single login server; failover is
   DNS-routed, not a separate endpoint — see Stage 12).
 - Private endpoint; public network access disabled.
+- Azure trusted-service bypass enabled for registry control-plane operations such
+  as `az acr import`; registry data-plane access still uses Private Link.
 - **ACR Artifact Cache** rules for unauthenticated supported sources such as
   `mcr.microsoft.com` and `ghcr.io`. Docker Hub cache rules require a credential
   set in current ACR behaviour, so they are not enabled by default. `quay.io` is
