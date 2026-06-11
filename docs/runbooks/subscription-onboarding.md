@@ -137,6 +137,20 @@ Then run the normal Terraform plan/apply path for the
 only subscription-scoped resources: Defender pricing, Activity Log diagnostics,
 optional budget, and optional cost export.
 
+For brownfield subscriptions where Defender pricing plans already exist, import
+the existing pricing resources into state before the first apply:
+
+```bash
+terraform -chdir=infrastructure/terraform/subscription-baseline init -backend-config=backend.hcl
+scripts/subscription/import-defender-pricing.sh \
+  --subscription-id <test-subscription-id>
+```
+
+The helper is idempotent and imports the Defender plan resource types managed by
+the Stage 02 stack (`VirtualMachines`, `Containers`, `KeyVaults`,
+`StorageAccounts`, `SqlServers`, `OpenSourceRelationalDatabases`, `Arm`, and
+`Api`).
+
 ## 4. Drain the non-compliant inventory
 
 For every resource the discovery script flagged:
