@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+"""Validate Stage 06 reusable workflow contracts without external dependencies."""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+
+REQUIRED_WORKFLOWS = {
+    "container-build-sign.yml",
+    "gitops-push.yml",
+    "helm-publish.yml",
+    "import-quay.yml",
+    "policy-checks.yml",
+    "promote-image.yml",
+    "techdocs-publish.yml",
+    "terraform-plan-apply.yml",
+}
+SMOKE_WORKFLOW = "stage06-smoke.yml"
+
+ACTION_REF_RE = re.compile(r"^\s*uses:\s+([^@\s#]+)@([^\s#]+)", re.MULTILINE)
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+TOP_LEVEL_KEY_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 _-]*):", re.MULTILINE)
+ALLOWED_TOP_LEVEL_KEYS = {"name", "on", "permissions", "concurrency", "env", "defaults", "jobs"}
+
+
+def fail(message: str) -> None:
+    print(f"ERROR: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def validate_workflow(name: str) -> None:
+    path = ROOT / ".github" / "workflows" / name
+    if not path.is_file():
+        fail(f"Missing executable reusable workflow: {path.relative_to(ROOT)}")
+    text = path.read_text(encoding="utf-8")
+    if "workflow_call:" not in text:
+        fail(f"{path.relative_to(ROOT)} must expose on.workflow_call")
+    if name != "import-quay.yml" and "actions/checkout@" not in text:
+        fail(f"{path.relative_to(ROOT)} must explicitly checkout the repository")
+    if "step-security/harden-runner@" not in text:
+        fail(f"{path.relative_to(ROOT)} must include harden-runner")
+    top_level_keys = set(TOP_LEVEL_KEY_RE.findall(text))
+    unexpected_keys = sorted(top_level_keys - ALLOWED_TOP_LEVEL_KEYS)
+    if unexpected_keys:
+        fail(
+            f"{path.relative_to(ROOT)} contains unexpected top-level workflow keys: "
+            f"{', '.join(unexpected_keys)}"
+        )
+    for action, ref in ACTION_REF_RE.findall(text):
+        if action.startswith("./"):
+            continue
+        if not SHA_RE.fullmatch(ref):
+            fail(
+                f"{path.relative_to(ROOT)} uses mutable action ref {action}@{ref}; "
+                "pin external actions to immutable commit SHAs"
+            )
+
+
+def validate_contract_stub(name: str) -> None:
+    path = ROOT / "workflows" / name
+    if not path.is_file():
+        fail(f"Missing workflow contract record: {path.relative_to(ROOT)}")
+    text = path.read_text(encoding="utf-8")
+    expected = f"executable_location: .github/workflows/{name}"
+    if "status: executable" not in text:
+        fail(f"{path.relative_to(ROOT)} must be marked executable")
+    if expected not in text:
+        fail(f"{path.relative_to(ROOT)} must point to {expected}")
+
+
+def validate_renovate() -> None:
+    path = ROOT / "renovate.json"
+    if not path.is_file():
+        fail("Missing renovate.json")
+    with path.open(encoding="utf-8") as handle:
+        config = json.load(handle)
+    if config.get("$schema") != "https://docs.renovatebot.com/renovate-schema.json":
+        fail("renovate.json must declare the Renovate schema")
+    if config.get("platformAutomerge") is not False:
+        fail("renovate.json must keep platformAutomerge disabled for reviewed updates")
+    if config.get("vulnerabilityAlerts", {}).get("enabled") is not False:
+        fail("renovate.json must leave Renovate vulnerability alerts disabled")
+
+
+def validate_smoke_workflow() -> None:
+    path = ROOT / ".github" / "workflows" / SMOKE_WORKFLOW
+    if not path.is_file():
+        fail(f"Missing Stage 06 smoke workflow: {path.relative_to(ROOT)}")
+    text = path.read_text(encoding="utf-8")
+    required_fragments = [
+        "workflow_dispatch:",
+        "./.github/workflows/container-build-sign.yml",
+        "./.github/workflows/promote-image.yml",
+        "samples/hello-container",
+    ]
+    for fragment in required_fragments:
+        if fragment not in text:
+            fail(f"{path.relative_to(ROOT)} must include {fragment}")
+
+
+def main() -> None:
+    for workflow in sorted(REQUIRED_WORKFLOWS):
+        validate_workflow(workflow)
+        validate_contract_stub(workflow)
+    validate_smoke_workflow()
+    validate_renovate()
+    print("Stage 06 reusable workflow contracts validated.")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,237 @@
+name: Reusable container build, scan, SBOM, sign
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        description: Repository path inside ACR, for example apps/api.
+        required: true
+        type: string
+      context:
+        description: Docker build context.
+        required: false
+        type: string
+        default: .
+      dockerfile:
+        description: Dockerfile path.
+        required: false
+        type: string
+        default: Dockerfile
+      platforms:
+        description: Comma-separated target platforms.
+        required: false
+        type: string
+        default: linux/amd64,linux/arm64
+      tag:
+        description: Image tag. Defaults to the commit SHA.
+        required: false
+        type: string
+        default: ""
+      environment:
+        description: GitHub Environment that owns Azure OIDC and ACR variables.
+        required: false
+        type: string
+        default: dev
+      acr_name:
+        description: ACR resource name. Defaults to PLATFORM_ACR_NAME variable.
+        required: false
+        type: string
+        default: ""
+      acr_login_server:
+        description: ACR login server. Defaults to PLATFORM_ACR_LOGIN_SERVER variable.
+        required: false
+        type: string
+        default: ""
+    outputs:
+      image_ref:
+        description: Tag reference pushed by the workflow.
+        value: ${{ jobs.build.outputs.image_ref }}
+      digest_ref:
+        description: Digest-pinned image reference.
+        value: ${{ jobs.build.outputs.digest_ref }}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    name: Build, scan, sign
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      image_ref: ${{ steps.refs.outputs.image_ref }}
+      digest_ref: ${{ steps.refs.outputs.digest_ref }}
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      PLATFORM_ACR_NAME: ${{ vars.PLATFORM_ACR_NAME }}
+      PLATFORM_ACR_LOGIN_SERVER: ${{ vars.PLATFORM_ACR_LOGIN_SERVER }}
+      SYFT_VERSION: "1.18.1"
+      TRIVY_VERSION: "0.56.2"
+      COSIGN_EXPERIMENTAL: "1"
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate inputs
+        id: input
+        env:
+          IMAGE_NAME: ${{ inputs.image_name }}
+          CONTEXT: ${{ inputs.context }}
+          DOCKERFILE: ${{ inputs.dockerfile }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_ACR_NAME: ${{ inputs.acr_name }}
+          INPUT_ACR_LOGIN_SERVER: ${{ inputs.acr_login_server }}
+        run: |
+          set -euo pipefail
+          acr_name="${INPUT_ACR_NAME:-$PLATFORM_ACR_NAME}"
+          acr_login_server="${INPUT_ACR_LOGIN_SERVER:-$PLATFORM_ACR_LOGIN_SERVER}"
+          tag="${INPUT_TAG:-0.0.0-${GITHUB_RUN_NUMBER}.g${GITHUB_SHA::12}}"
+          case "$IMAGE_NAME" in ""|/*|*..*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe image_name: $IMAGE_NAME"; exit 1 ;; esac
+          case "$CONTEXT" in ""|/*|*..*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe context: $CONTEXT"; exit 1 ;; esac
+          case "$DOCKERFILE" in ""|/*|*..*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe dockerfile: $DOCKERFILE"; exit 1 ;; esac
+          case "$tag" in ""|*[!A-Za-z0-9_.-]*) echo "::error::Unsafe tag: $tag"; exit 1 ;; esac
+          workspace_real="$(realpath "$GITHUB_WORKSPACE")"
+          context_real="$(realpath -m "$CONTEXT")"
+          dockerfile_real="$(realpath -m "$DOCKERFILE")"
+          case "$context_real" in "$workspace_real"|"$workspace_real"/*) ;; *) echo "::error::context must stay under the checked-out repository."; exit 1 ;; esac
+          case "$dockerfile_real" in "$workspace_real"/*) ;; *) echo "::error::dockerfile must stay under the checked-out repository."; exit 1 ;; esac
+          if [ ! -f "$dockerfile_real" ]; then
+            echo "::error::Dockerfile not found: $DOCKERFILE"
+            exit 1
+          fi
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ -z "$acr_name" ]; then missing+=(PLATFORM_ACR_NAME); fi
+          if [ -z "$acr_login_server" ]; then missing+=(PLATFORM_ACR_LOGIN_SERVER); fi
+          if [[ ! "$acr_name" =~ ^[A-Za-z0-9]{5,50}$ ]]; then
+            echo "::error::acr_name must be 5-50 alphanumeric characters."
+            exit 1
+          fi
+          case "$acr_login_server" in ""|*/*|*..*|*[!A-Za-z0-9.-]*) echo "::error::Unsafe acr_login_server."; exit 1 ;; esac
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables or inputs: ${missing[*]}."
+            exit 1
+          fi
+          image_ref="${acr_login_server}/${IMAGE_NAME}:${tag}"
+          staging_ref="${acr_login_server}/${IMAGE_NAME}:build-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          {
+            echo "acr_name=$acr_name"
+            echo "image_ref=$image_ref"
+            echo "staging_ref=$staging_ref"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install syft and trivy
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/stage06
+          syft_archive="syft_${SYFT_VERSION}_linux_amd64.tar.gz"
+          trivy_archive="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -fsSLo ".tools/stage06/${syft_archive}" "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/${syft_archive}"
+          curl -fsSLo .tools/stage06/syft-checksums.txt "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_checksums.txt"
+          grep " ${syft_archive}$" .tools/stage06/syft-checksums.txt | (cd .tools/stage06 && sha256sum -c -)
+          tar -xzf ".tools/stage06/${syft_archive}" -C .tools/stage06 syft
+          curl -fsSLo ".tools/stage06/${trivy_archive}" "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/${trivy_archive}"
+          curl -fsSLo .tools/stage06/trivy-checksums.txt "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt"
+          grep " ${trivy_archive}$" .tools/stage06/trivy-checksums.txt | (cd .tools/stage06 && sha256sum -c -)
+          tar -xzf ".tools/stage06/${trivy_archive}" -C .tools/stage06 trivy
+          echo "${GITHUB_WORKSPACE}/.tools/stage06" >> "$GITHUB_PATH"
+
+      - name: ACR login
+        env:
+          ACR_NAME: ${{ steps.input.outputs.acr_name }}
+        run: az acr login --name "$ACR_NAME"
+
+      - name: Build and push image
+        env:
+          STAGING_REF: ${{ steps.input.outputs.staging_ref }}
+          CONTEXT: ${{ inputs.context }}
+          DOCKERFILE: ${{ inputs.dockerfile }}
+          PLATFORMS: ${{ inputs.platforms }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/build
+          docker buildx build \
+            --platform "$PLATFORMS" \
+            --file "$DOCKERFILE" \
+            --tag "$STAGING_REF" \
+            --provenance=mode=max \
+            --metadata-file .tools/tmp/build/build-metadata.json \
+            --push \
+            "$CONTEXT"
+
+      - name: Resolve digest
+        id: refs
+        env:
+          IMAGE_REF: ${{ steps.input.outputs.image_ref }}
+        run: |
+          set -euo pipefail
+          digest="$(jq -r '."containerimage.digest" // empty' .tools/tmp/build/build-metadata.json)"
+          if [ -z "$digest" ] || [ "$digest" = "null" ]; then
+            echo "::error::Could not resolve pushed image digest for $IMAGE_REF."
+            exit 1
+          fi
+          repository="${IMAGE_REF%:*}"
+          digest_ref="${repository}@${digest}"
+          echo "image_ref=$IMAGE_REF" >> "$GITHUB_OUTPUT"
+          echo "digest_ref=$digest_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Scan image with Trivy
+        env:
+          DIGEST_REF: ${{ steps.refs.outputs.digest_ref }}
+          TRIVY_SEVERITY: CRITICAL,HIGH
+        run: trivy image --exit-code 1 --severity "$TRIVY_SEVERITY" --ignore-unfixed "$DIGEST_REF"
+
+      - name: Generate SBOMs
+        env:
+          DIGEST_REF: ${{ steps.refs.outputs.digest_ref }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/sbom
+          syft "$DIGEST_REF" -o spdx-json > .tools/tmp/sbom/sbom.spdx.json
+          syft "$DIGEST_REF" -o cyclonedx-json > .tools/tmp/sbom/sbom.cyclonedx.json
+
+      - name: Sign image and attach SBOM
+        env:
+          DIGEST_REF: ${{ steps.refs.outputs.digest_ref }}
+        run: |
+          set -euo pipefail
+          mise exec -- cosign sign --yes "$DIGEST_REF"
+          mise exec -- cosign attest --yes --type spdx --predicate .tools/tmp/sbom/sbom.spdx.json "$DIGEST_REF"
+          mise exec -- cosign attest --yes --type cyclonedx --predicate .tools/tmp/sbom/sbom.cyclonedx.json "$DIGEST_REF"
+
+      - name: Publish final tag
+        env:
+          IMAGE_REF: ${{ steps.refs.outputs.image_ref }}
+          DIGEST_REF: ${{ steps.refs.outputs.digest_ref }}
+        run: docker buildx imagetools create --tag "$IMAGE_REF" "$DIGEST_REF"

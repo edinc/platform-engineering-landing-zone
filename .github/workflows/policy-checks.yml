@@ -1,0 +1,107 @@
+name: Reusable policy checks
+
+on:
+  workflow_call:
+    inputs:
+      run_terraform:
+        description: Run terraform fmt/tflint/checkov gates.
+        required: false
+        type: boolean
+        default: true
+      run_rego:
+        description: Run OPA/Rego conftest policy tests.
+        required: false
+        type: boolean
+        default: true
+      run_kyverno:
+        description: Run Kyverno policy tests.
+        required: false
+        type: boolean
+        default: true
+      run_azure_policy:
+        description: Run custom Azure Policy and firewall allowlist tests.
+        required: false
+        type: boolean
+        default: true
+      run_codeql:
+        description: Run CodeQL analysis. Requires GHAS on the caller repository.
+        required: false
+        type: boolean
+        default: false
+      codeql_languages:
+        description: Comma-separated CodeQL languages.
+        required: false
+        type: string
+        default: javascript-typescript,python
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    name: IaC and policy checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Bootstrap local quality tools
+        run: make bootstrap
+
+      - name: Terraform format and lint
+        if: ${{ inputs.run_terraform }}
+        run: make terraform-fmt tflint checkov
+
+      - name: Rego policy tests
+        if: ${{ inputs.run_rego }}
+        run: make policy-test-rego
+
+      - name: Kyverno policy tests
+        if: ${{ inputs.run_kyverno }}
+        run: make policy-test-kyverno
+
+      - name: Azure policy tests
+        if: ${{ inputs.run_azure_policy }}
+        run: make policy-test-azure
+
+  codeql:
+    name: CodeQL analysis
+    if: ${{ inputs.run_codeql }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
+        with:
+          languages: ${{ inputs.codeql_languages }}
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2

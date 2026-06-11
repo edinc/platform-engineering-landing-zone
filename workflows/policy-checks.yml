@@ -1,4 +1,4 @@
 stage: 06
-status: design-stub
+status: executable
 executable_location: .github/workflows/policy-checks.yml
 description: Reusable policy checks workflow contract.
