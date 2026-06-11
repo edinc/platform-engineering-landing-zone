@@ -15,6 +15,7 @@ Related decisions: [ADR-0007](../adr/0007-image-signing.md),
 | Stage 04 ACR | Stores images, signatures, SBOMs, and Helm OCI artifacts. |
 | Stage 05 `platform-vending-bot` | Opens cross-repo PRs in `platform-cluster-state`. |
 | Protected GitHub Environments | Gate `nonprod` and `prod` promotion. |
+| VNet-integrated self-hosted runner | Required for private ACR push/sign/promote operations and private Key Vault reads. |
 
 Set these protected environment variables for promotion verification when the
 builder is not the caller repository:
@@ -86,6 +87,8 @@ same reusable workflow used by golden paths. To exercise promotion, provide the
 nonprod and prod `kustomization_path` values for a disposable smoke overlay and
 enable the matching promotion inputs. Prod smoke promotion intentionally depends
 on nonprod smoke promotion so the path proves dev -> nonprod -> prod ordering.
+Set `runs_on` to the private runner label that has network access to the
+platform ACR and seed Key Vault.
 
 Run promotion smoke tests from `main`, or set the protected
 `TRUSTED_BUILDER_REF` environment variable to the immutable workflow commit SHA

@@ -26,6 +26,11 @@ on:
         required: false
         type: boolean
         default: false
+      trusted_runs_on:
+        description: Runner label for Azure-backed Terraform plan/apply jobs. Use a VNet-integrated self-hosted runner that can reach private state.
+        required: false
+        type: string
+        default: self-hosted
 
 permissions:
   contents: read
@@ -101,7 +106,7 @@ jobs:
   trusted:
     name: Terraform ${{ inputs.apply && 'apply' || 'plan' }}
     if: ${{ github.event_name != 'pull_request' || inputs.apply }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.trusted_runs_on }}
     environment: ${{ inputs.environment }}
     permissions:
       contents: read

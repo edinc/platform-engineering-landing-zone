@@ -42,6 +42,11 @@ on:
         required: false
         type: string
         default: ""
+      runs_on:
+        description: Runner label. Use a VNet-integrated self-hosted runner because private ACR data-plane push/sign operations cannot run from GitHub-hosted runners.
+        required: false
+        type: string
+        default: self-hosted
     outputs:
       image_ref:
         description: Tag reference pushed by the workflow.
@@ -57,7 +62,7 @@ permissions:
 jobs:
   build:
     name: Build, scan, sign
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     environment: ${{ inputs.environment }}
     outputs:
       image_ref: ${{ steps.refs.outputs.image_ref }}

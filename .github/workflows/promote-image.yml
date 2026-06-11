@@ -38,6 +38,12 @@ on:
         required: false
         type: string
         default: main
+      runs_on:
+        description: Runner label. Use a VNet-integrated self-hosted runner because promotion verifies/pushes private ACR data-plane references and reads Key Vault.
+        required: false
+        type: string
+        default: self-hosted
+
 permissions:
   contents: read
   id-token: write
@@ -45,7 +51,7 @@ permissions:
 jobs:
   promote:
     name: Promote image to ${{ inputs.target_environment }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     environment: ${{ inputs.target_environment }}
     env:
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}

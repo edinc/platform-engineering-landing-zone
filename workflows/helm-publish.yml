@@ -2,3 +2,4 @@ stage: 06
 status: executable
 executable_location: .github/workflows/helm-publish.yml
 description: Helm chart publishing reusable workflow contract.
+runner: VNet-integrated self-hosted runner by default for private ACR data-plane access.
