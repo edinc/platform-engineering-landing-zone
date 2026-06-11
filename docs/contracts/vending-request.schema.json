@@ -1,0 +1,504 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://platform.example.io/contracts/vending-request.schema.json",
+  "title": "Platform vending request",
+  "description": "Versioned Stage 05 contract for subscription and AKS namespace vending requests.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "enum": ["platform.example.io/v1alpha1"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["SubscriptionVendingRequest", "NamespaceVendingRequest"]
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/slug"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63
+          }
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "team",
+        "product",
+        "costCenter",
+        "onCallRotationId",
+        "dataClassification",
+        "environment",
+        "regions",
+        "tags"
+      ],
+      "properties": {
+        "team": {
+          "$ref": "#/definitions/slug"
+        },
+        "product": {
+          "$ref": "#/definitions/slug"
+        },
+        "costCenter": {
+          "type": "string",
+          "pattern": "^cc-[a-z0-9-]{2,32}$"
+        },
+        "onCallRotationId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128
+        },
+        "dataClassification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"]
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["demo", "nonprod", "prod"]
+        },
+        "regions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]+[a-z0-9]+$"
+          }
+        },
+        "tags": {
+          "$ref": "#/definitions/tags"
+        },
+        "budget": {
+          "$ref": "#/definitions/budget"
+        },
+        "addOns": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["postgres", "serviceBus"]
+          },
+          "default": []
+        },
+        "subscription": {
+          "$ref": "#/definitions/subscription"
+        },
+        "namespace": {
+          "$ref": "#/definitions/namespace"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "SubscriptionVendingRequest"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "type": "object",
+            "properties": {
+              "budget": {},
+              "subscription": {},
+              "namespace": {}
+            },
+            "required": ["budget", "subscription"],
+            "not": {
+              "type": "object",
+              "properties": {
+                "namespace": {}
+              },
+              "required": ["namespace"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "NamespaceVendingRequest"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "type": "object",
+            "properties": {
+              "namespace": {},
+              "subscription": {}
+            },
+            "required": ["namespace"],
+            "not": {
+              "type": "object",
+              "properties": {
+                "subscription": {}
+              },
+              "required": ["subscription"]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$"
+    },
+    "tags": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "required": [
+        "owner",
+        "costCenter",
+        "product",
+        "dataClassification",
+        "confidentiality",
+        "managedBy",
+        "repo"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "costCenter": {
+          "type": "string",
+          "pattern": "^cc-[a-z0-9-]{2,32}$"
+        },
+        "product": {
+          "$ref": "#/definitions/slug"
+        },
+        "dataClassification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"]
+        },
+        "confidentiality": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "managedBy": {
+          "type": "string",
+          "enum": ["terraform"]
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amount", "currency", "startDate", "endDate", "contactEmails", "thresholds"],
+      "properties": {
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["EUR", "USD", "GBP", "SEK", "NOK", "DKK"]
+        },
+        "startDate": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-01T00:00:00Z$"
+        },
+        "endDate": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+        },
+        "contactEmails": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+          }
+        },
+        "thresholds": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["percentage", "type"],
+            "properties": {
+              "percentage": {
+                "type": "number",
+                "enum": [80, 100]
+              },
+              "type": {
+                "type": "string",
+                "enum": ["Actual", "Forecasted"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "subscription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "archetype", "managementGroupId"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["create", "onboard-existing"]
+        },
+        "archetype": {
+          "type": "string",
+          "enum": ["corp", "online"]
+        },
+        "managementGroupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.()/-]{2,90}$"
+        },
+        "subscriptionAliasName": {
+          "$ref": "#/definitions/slug"
+        },
+        "subscriptionDisplayName": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 63
+        },
+        "billingScopeId": {
+          "type": "string",
+          "pattern": "^/providers/Microsoft\\.Billing/billingAccounts/.+"
+        },
+        "workload": {
+          "type": "string",
+          "enum": ["Production", "DevTest"]
+        },
+        "existingSubscriptionId": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F-]{36}$"
+        },
+        "alzPlacementEvidence": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 512
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["addressSpace"],
+          "properties": {
+            "addressSpace": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+              }
+            },
+            "hubNetworkResourceId": {
+              "type": "string",
+              "pattern": "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "create"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "subscriptionAliasName": {},
+              "subscriptionDisplayName": {},
+              "billingScopeId": {},
+              "workload": {},
+              "existingSubscriptionId": {}
+            },
+            "required": [
+              "subscriptionAliasName",
+              "subscriptionDisplayName",
+              "billingScopeId",
+              "workload"
+            ],
+            "not": {
+              "type": "object",
+              "properties": {
+                "existingSubscriptionId": {}
+              },
+              "required": ["existingSubscriptionId"]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "onboard-existing"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "existingSubscriptionId": {},
+              "alzPlacementEvidence": {},
+              "billingScopeId": {},
+              "subscriptionAliasName": {}
+            },
+            "required": ["existingSubscriptionId", "alzPlacementEvidence"],
+            "not": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "billingScopeId": {}
+                  },
+                  "required": ["billingScopeId"]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "subscriptionAliasName": {}
+                  },
+                  "required": ["subscriptionAliasName"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "namespace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "clusterEnvironment",
+        "entraGroupObjectId",
+        "serviceAccountName",
+        "resourceQuota",
+        "egressAllowlist",
+        "azure"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/slug"
+        },
+        "clusterEnvironment": {
+          "type": "string",
+          "enum": ["demo", "nonprod", "prod"]
+        },
+        "entraGroupObjectId": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F-]{36}$"
+        },
+        "serviceAccountName": {
+          "$ref": "#/definitions/slug"
+        },
+        "resourceQuota": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cpuRequests", "memoryRequests", "cpuLimits", "memoryLimits", "pods"],
+          "properties": {
+            "cpuRequests": {
+              "type": "string",
+              "pattern": "^[0-9]+m?$"
+            },
+            "memoryRequests": {
+              "type": "string",
+              "pattern": "^[0-9]+(Mi|Gi)$"
+            },
+            "cpuLimits": {
+              "type": "string",
+              "pattern": "^[0-9]+m?$"
+            },
+            "memoryLimits": {
+              "type": "string",
+              "pattern": "^[0-9]+(Mi|Gi)$"
+            },
+            "pods": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        },
+        "egressAllowlist": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cidrs"],
+          "properties": {
+            "cidrs": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+              }
+            }
+          }
+        },
+        "azure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["aksClusterId", "acrId", "keyVaultSecretIds", "resourceGroupName"],
+          "properties": {
+            "aksClusterId": {
+              "type": "string",
+              "pattern": "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.ContainerService/managedClusters/[^/]+$"
+            },
+            "acrId": {
+              "type": "string",
+              "pattern": "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.ContainerRegistry/registries/[^/]+$"
+            },
+            "keyVaultSecretIds": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.KeyVault/vaults/[^/]+/secrets/[^/]+$"
+              }
+            },
+            "resourceGroupName": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.()/-]{1,90}$"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -12,8 +12,10 @@ BOOTSTRAP_DIR := infrastructure/terraform/_bootstrap
 PLANNABLE_TERRAFORM_DIRS := $(filter-out $(BOOTSTRAP_DIR),$(TERRAFORM_DIRS))
 HELM_CHART_DIRS := $(shell find . -type f -name 'Chart.yaml' -not -path './.git/*' -exec dirname {} \; 2>/dev/null | sort -u)
 K8S_MANIFESTS := $(shell find platform-gitops templates -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null | sort)
+CONTRACT_REQUESTS := $(shell find docs/contracts -type f \( -path '*/examples/*.yaml' -o -name 'vending-request.yaml' \) 2>/dev/null | sort)
+CONTRACT_NEGATIVE_REQUESTS := $(shell find docs/contracts/tests -type f -name '*.yaml' 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -36,7 +38,7 @@ lint: pre-commit terraform-fmt tflint ## Run local linting checks.
 pre-commit: ## Run pre-commit hooks across tracked files.
 	$(MISE_EXEC) pre-commit run --all-files
 
-validate: terraform-validate checkov kubeconform helm-lint ## Run validation checks that do not deploy resources.
+validate: terraform-validate checkov kubeconform helm-lint contract-test ## Run validation checks that do not deploy resources.
 
 terraform-fmt: ## Check Terraform formatting.
 	@if [ -z "$(TERRAFORM_DIRS)" ]; then \
@@ -91,6 +93,33 @@ helm-lint: ## Lint Helm charts when chart directories exist.
 	  for chart in $(HELM_CHART_DIRS); do \
 	    echo "Linting Helm chart $$chart"; \
 	    $(MISE_EXEC) helm lint "$$chart"; \
+	  done; \
+	fi
+
+contract-test: ## Validate public request contracts and negative fixtures.
+	@if [ -z "$(CONTRACT_REQUESTS)" ]; then \
+	  echo "No contract request examples found; skipping contract validation."; \
+	else \
+	  mkdir -p .tools/tmp/contracts; \
+	  for request in $(CONTRACT_REQUESTS); do \
+	    json_file=".tools/tmp/contracts/$$(basename "$$request").json"; \
+	    echo "Validating contract $$request"; \
+	    $(MISE_EXEC) npx --yes js-yaml@4.1.0 "$$request" > "$$json_file"; \
+	    $(MISE_EXEC) npx --yes ajv-cli@5.0.0 validate --strict=true -s docs/contracts/vending-request.schema.json -d "$$json_file"; \
+	  done; \
+	fi
+	@if [ -n "$(CONTRACT_NEGATIVE_REQUESTS)" ]; then \
+	  mkdir -p .tools/tmp/contracts; \
+	  for request in $(CONTRACT_NEGATIVE_REQUESTS); do \
+	    json_file=".tools/tmp/contracts/$$(basename "$$request").json"; \
+	    echo "Validating negative contract fixture $$request"; \
+	    $(MISE_EXEC) npx --yes js-yaml@4.1.0 "$$request" > "$$json_file"; \
+	    if $(MISE_EXEC) npx --yes ajv-cli@5.0.0 validate --strict=true -s docs/contracts/vending-request.schema.json -d "$$json_file"; then \
+	      echo "Expected $$request to fail vending-request.schema.json validation."; \
+	      exit 1; \
+	    else \
+	      echo "Schema rejected $$request as expected."; \
+	    fi; \
 	  done; \
 	fi
 

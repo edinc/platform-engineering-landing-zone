@@ -1,0 +1,446 @@
+name: Vend AKS namespace (Stage 05)
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_path:
+        description: Path to a NamespaceVendingRequest YAML file.
+        required: true
+        default: docs/contracts/examples/namespace-request.yaml
+  pull_request:
+    paths:
+      - vending/requests/namespaces/**/*.yaml
+      - docs/contracts/examples/namespace-request.yaml
+      - docs/contracts/vending-request.schema.json
+      - .github/workflows/vend-namespace.yml
+  push:
+    branches:
+      - main
+    paths:
+      - vending/requests/namespaces/**/*.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vend-namespace-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-namespace-request:
+    name: Validate namespace request
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Resolve request
+        id: request
+        run: |
+          set -euo pipefail
+          matches="$(git diff --name-only "origin/${GITHUB_BASE_REF}"...HEAD | grep -E '^vending/requests/namespaces/.*\.ya?ml$' || true)"
+          count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+          if [ "$count" -gt 1 ]; then
+            echo "::error::Only one namespace vending request may change per PR/run; found $count."
+            printf '%s\n' "$matches"
+            exit 1
+          fi
+          request_path="$(printf '%s\n' "$matches" | sed '/^$/d' | head -1 || true)"
+          if [ -z "$request_path" ]; then
+            request_path="docs/contracts/examples/namespace-request.yaml"
+          fi
+          case "$request_path" in
+            *[!A-Za-z0-9_./-]*|*..*)
+              echo "::error::Unsafe vending request path: $request_path"
+              exit 1
+              ;;
+          esac
+          echo "path=$request_path" >> "$GITHUB_OUTPUT"
+
+      - name: Validate request schema
+        env:
+          REQUEST_PATH: ${{ steps.request.outputs.path }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/contracts
+          npx --yes js-yaml@4.1.0 "$REQUEST_PATH" > .tools/tmp/contracts/request.json
+          npx --yes ajv-cli@5.0.0 validate --strict=true -s docs/contracts/vending-request.schema.json -d .tools/tmp/contracts/request.json
+          kind="$(jq -r '.kind' .tools/tmp/contracts/request.json)"
+          if [ "$kind" != "NamespaceVendingRequest" ]; then
+            echo "::error::Expected kind NamespaceVendingRequest, got $kind."
+            exit 1
+          fi
+          if ! jq -e '.spec.namespace.clusterEnvironment == .spec.environment' .tools/tmp/contracts/request.json >/dev/null; then
+            echo "::error::namespace.clusterEnvironment must match spec.environment until multi-cluster routing is introduced."
+            exit 1
+          fi
+
+      - name: Terraform validate request stack
+        run: |
+          set -euo pipefail
+          mise exec -- terraform -chdir=infrastructure/terraform/vending/aks-namespace init -backend=false -input=false
+          mise exec -- terraform -chdir=infrastructure/terraform/vending/aks-namespace validate
+
+  vend-namespace:
+    name: Validate, plan, and open cluster-state PR
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    environment: vending
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+      TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+      TFSTATE_CONTAINER: ${{ vars.TFSTATE_CONTAINER }}
+      AKS_OIDC_ISSUER_URL: ${{ vars.AKS_OIDC_ISSUER_URL }}
+      PLATFORM_AKS_CLUSTER_ID: ${{ vars.PLATFORM_AKS_CLUSTER_ID }}
+      PLATFORM_ACR_ID: ${{ vars.PLATFORM_ACR_ID }}
+      PLATFORM_KEY_VAULT_SECRET_IDS: ${{ vars.PLATFORM_KEY_VAULT_SECRET_IDS }}
+      PLATFORM_RESOURCE_GROUP_NAME: ${{ vars.PLATFORM_RESOURCE_GROUP_NAME }}
+      SEED_KEY_VAULT_NAME: ${{ vars.SEED_KEY_VAULT_NAME }}
+      PLATFORM_VENDING_BOT_APP_ID: ${{ vars.PLATFORM_VENDING_BOT_APP_ID }}
+      PLATFORM_VENDING_BOT_INSTALLATION_ID: ${{ vars.PLATFORM_VENDING_BOT_INSTALLATION_ID }}
+      PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME: ${{ vars.PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME }}
+      CLUSTER_STATE_REPO_OWNER: ${{ vars.CLUSTER_STATE_REPO_OWNER }}
+      CLUSTER_STATE_REPO_NAME: ${{ vars.CLUSTER_STATE_REPO_NAME }}
+      CLUSTER_STATE_DEFAULT_BRANCH: ${{ vars.CLUSTER_STATE_DEFAULT_BRANCH }}
+      VENDING_PR_LABELS: ${{ vars.VENDING_PR_LABELS }}
+      VENDING_PR_REVIEWERS: ${{ vars.VENDING_PR_REVIEWERS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Resolve request and action
+        id: request
+        env:
+          INPUT_REQUEST_PATH: ${{ inputs.request_path }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          action="plan"
+          case "${GITHUB_EVENT_NAME}" in
+            workflow_dispatch)
+              request_path="${INPUT_REQUEST_PATH}"
+              action="plan"
+              ;;
+            pull_request)
+              matches="$(git diff --name-only "origin/${GITHUB_BASE_REF}"...HEAD | grep -E '^vending/requests/namespaces/.*\.ya?ml$' || true)"
+              count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+              if [ "$count" -gt 1 ]; then
+                echo "::error::Only one namespace vending request may change per PR/run; found $count."
+                printf '%s\n' "$matches"
+                exit 1
+              fi
+              request_path="$(printf '%s\n' "$matches" | sed '/^$/d' | head -1 || true)"
+              if [ -z "$request_path" ]; then
+                request_path="docs/contracts/examples/namespace-request.yaml"
+              fi
+              ;;
+            push)
+              matches="$(git diff --name-only "${PUSH_BEFORE}" "${PUSH_AFTER}" | grep -E '^vending/requests/namespaces/.*\.ya?ml$' || true)"
+              count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+              if [ "$count" -ne 1 ]; then
+                echo "::error::Exactly one namespace vending request must change per push run; found $count."
+                printf '%s\n' "$matches"
+                exit 1
+              fi
+              request_path="$(printf '%s\n' "$matches" | sed '/^$/d' | head -1)"
+              action="apply"
+              ;;
+            *)
+              echo "::error::Unsupported event ${GITHUB_EVENT_NAME}."
+              exit 1
+              ;;
+          esac
+
+          if [ ! -f "$request_path" ]; then
+            echo "::error::Vending request file not found: $request_path"
+            exit 1
+          fi
+          case "$request_path" in
+            *[!A-Za-z0-9_./-]*|*..*)
+              echo "::error::Unsafe vending request path: $request_path"
+              exit 1
+              ;;
+          esac
+          if [ "$action" = "apply" ] && [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "::error::Terraform apply is only allowed from main."
+            exit 1
+          fi
+
+          echo "path=$request_path" >> "$GITHUB_OUTPUT"
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+
+      - name: Validate request schema
+        env:
+          REQUEST_PATH: ${{ steps.request.outputs.path }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/contracts
+          npx --yes js-yaml@4.1.0 "$REQUEST_PATH" > .tools/tmp/contracts/request.json
+          npx --yes ajv-cli@5.0.0 validate --strict=true -s docs/contracts/vending-request.schema.json -d .tools/tmp/contracts/request.json
+          kind="$(jq -r '.kind' .tools/tmp/contracts/request.json)"
+          if [ "$kind" != "NamespaceVendingRequest" ]; then
+            echo "::error::Expected kind NamespaceVendingRequest, got $kind."
+            exit 1
+          fi
+          if ! jq -e '.spec.namespace.clusterEnvironment == .spec.environment' .tools/tmp/contracts/request.json >/dev/null; then
+            echo "::error::namespace.clusterEnvironment must match spec.environment until multi-cluster routing is introduced."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate required variables
+        run: |
+          set -euo pipefail
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT TFSTATE_CONTAINER AKS_OIDC_ISSUER_URL PLATFORM_AKS_CLUSTER_ID PLATFORM_ACR_ID PLATFORM_KEY_VAULT_SECRET_IDS PLATFORM_RESOURCE_GROUP_NAME; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ "${{ steps.request.outputs.action }}" = "apply" ]; then
+            for v in SEED_KEY_VAULT_NAME PLATFORM_VENDING_BOT_APP_ID PLATFORM_VENDING_BOT_INSTALLATION_ID PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME; do
+              if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+            done
+          fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables: ${missing[*]}."
+            exit 1
+          fi
+
+      - name: Prepare Terraform inputs
+        id: tf
+        run: |
+          set -euo pipefail
+          stack="infrastructure/terraform/vending/aks-namespace"
+          request_aks_cluster_id="$(jq -r '.spec.namespace.azure.aksClusterId' .tools/tmp/contracts/request.json)"
+          request_acr_id="$(jq -r '.spec.namespace.azure.acrId' .tools/tmp/contracts/request.json)"
+          request_resource_group="$(jq -r '.spec.namespace.azure.resourceGroupName' .tools/tmp/contracts/request.json)"
+          if [ "$request_aks_cluster_id" != "$PLATFORM_AKS_CLUSTER_ID" ]; then
+            echo "::error::Request aksClusterId must match protected PLATFORM_AKS_CLUSTER_ID."
+            exit 1
+          fi
+          if [ "$request_acr_id" != "$PLATFORM_ACR_ID" ]; then
+            echo "::error::Request acrId must match protected PLATFORM_ACR_ID."
+            exit 1
+          fi
+          if [ "$request_resource_group" != "$PLATFORM_RESOURCE_GROUP_NAME" ]; then
+            echo "::error::Request resourceGroupName must match protected PLATFORM_RESOURCE_GROUP_NAME."
+            exit 1
+          fi
+          approved_secret_ids=".tools/tmp/approved-key-vault-secret-ids.txt"
+          printf '%s' "$PLATFORM_KEY_VAULT_SECRET_IDS" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;/^$/d' > "$approved_secret_ids"
+          if [ ! -s "$approved_secret_ids" ]; then
+            echo "::error::PLATFORM_KEY_VAULT_SECRET_IDS must contain at least one approved secret resource ID."
+            exit 1
+          fi
+          while IFS= read -r secret_id; do
+            if ! grep -Fx "$secret_id" "$approved_secret_ids" >/dev/null; then
+              echo "::error::Requested Key Vault secret is not in PLATFORM_KEY_VAULT_SECRET_IDS: $secret_id"
+              exit 1
+            fi
+          done < <(jq -r '.spec.namespace.azure.keyVaultSecretIds[]' .tools/tmp/contracts/request.json)
+
+          team="$(jq -r '.spec.team' .tools/tmp/contracts/request.json)"
+          environment="$(jq -r '.spec.environment' .tools/tmp/contracts/request.json)"
+          namespace="$(jq -r '.spec.namespace.name' .tools/tmp/contracts/request.json)"
+          backend_key="namespaces/${team}/${environment}/${namespace}/terraform.tfstate"
+          jq \
+            --arg tenantId "$ARM_TENANT_ID" \
+            --arg subscriptionId "$ARM_SUBSCRIPTION_ID" \
+            --arg oidcIssuer "$AKS_OIDC_ISSUER_URL" \
+            --arg aksClusterId "$PLATFORM_AKS_CLUSTER_ID" \
+            --arg acrId "$PLATFORM_ACR_ID" \
+            --arg resourceGroupName "$PLATFORM_RESOURCE_GROUP_NAME" \
+            '{
+              tenant_id: $tenantId,
+              subscription_id: $subscriptionId,
+              location: .spec.regions[0],
+              resource_group_name: $resourceGroupName,
+              team_name: .spec.team,
+              product: .spec.product,
+              environment: .spec.environment,
+              namespace: .spec.namespace.name,
+              service_account_name: .spec.namespace.serviceAccountName,
+              entra_group_object_id: .spec.namespace.entraGroupObjectId,
+              aks_oidc_issuer_url: $oidcIssuer,
+              aks_cluster_id: $aksClusterId,
+              acr_id: $acrId,
+              key_vault_secret_ids: .spec.namespace.azure.keyVaultSecretIds,
+              resource_quota: {
+                cpu_requests: .spec.namespace.resourceQuota.cpuRequests,
+                memory_requests: .spec.namespace.resourceQuota.memoryRequests,
+                cpu_limits: .spec.namespace.resourceQuota.cpuLimits,
+                memory_limits: .spec.namespace.resourceQuota.memoryLimits,
+                pods: .spec.namespace.resourceQuota.pods
+              },
+              egress_allowlist_cidrs: .spec.namespace.egressAllowlist.cidrs,
+              cost_center: .spec.costCenter,
+              on_call_rotation_id: .spec.onCallRotationId,
+              data_classification: .spec.dataClassification,
+              extra_labels: (.metadata.labels // {})
+            }' .tools/tmp/contracts/request.json > "$stack/request.auto.tfvars.json"
+          echo "backend_key=$backend_key" >> "$GITHUB_OUTPUT"
+
+      - name: Terraform init
+        working-directory: infrastructure/terraform/vending/aks-namespace
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.request.outputs.action }}" = "apply" ]; then
+            {
+              printf 'resource_group_name  = "%s"\n' "$TFSTATE_RESOURCE_GROUP"
+              printf 'storage_account_name = "%s"\n' "$TFSTATE_STORAGE_ACCOUNT"
+              printf 'container_name       = "%s"\n' "$TFSTATE_CONTAINER"
+              printf 'key                  = "%s"\n' "${{ steps.tf.outputs.backend_key }}"
+              printf 'use_azuread_auth     = true\n'
+            } > backend.hcl
+            mise exec -- terraform init -input=false -backend-config=backend.hcl
+          else
+            mise exec -- terraform init -backend=false -input=false
+          fi
+
+      - name: Terraform validate
+        working-directory: infrastructure/terraform/vending/aks-namespace
+        run: mise exec -- terraform validate
+
+      - name: Terraform plan
+        working-directory: infrastructure/terraform/vending/aks-namespace
+        run: mise exec -- terraform plan -input=false -out=vending.tfplan
+
+      - name: Terraform apply
+        if: ${{ steps.request.outputs.action == 'apply' }}
+        working-directory: infrastructure/terraform/vending/aks-namespace
+        run: mise exec -- terraform apply -input=false vending.tfplan
+
+      - name: Open platform-cluster-state PR
+        if: ${{ steps.request.outputs.action == 'apply' }}
+        run: |
+          set -euo pipefail
+          owner="${CLUSTER_STATE_REPO_OWNER:-${GITHUB_REPOSITORY_OWNER}}"
+          repo="${CLUSTER_STATE_REPO_NAME:-platform-cluster-state}"
+          base_branch="${CLUSTER_STATE_DEFAULT_BRANCH:-main}"
+          labels="${VENDING_PR_LABELS:-vending,namespace}"
+          reviewers="${VENDING_PR_REVIEWERS:-}"
+
+          manifest_dir="$(mise exec -- terraform -chdir=infrastructure/terraform/vending/aks-namespace output -raw manifest_directory)"
+          flux_file="$(mise exec -- terraform -chdir=infrastructure/terraform/vending/aks-namespace output -raw flux_kustomization_file)"
+          cluster_state_path="$(mise exec -- terraform -chdir=infrastructure/terraform/vending/aks-namespace output -raw cluster_state_path)"
+          cluster_state_flux_file="$(mise exec -- terraform -chdir=infrastructure/terraform/vending/aks-namespace output -raw cluster_state_flux_file)"
+          namespace="$(jq -r '.spec.namespace.name' .tools/tmp/contracts/request.json)"
+          team="$(jq -r '.spec.team' .tools/tmp/contracts/request.json)"
+          environment="$(jq -r '.spec.environment' .tools/tmp/contracts/request.json)"
+
+          private_key="$(az keyvault secret show \
+            --vault-name "$SEED_KEY_VAULT_NAME" \
+            --name "$PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME" \
+            --query value -o tsv)"
+          if [ -z "$private_key" ]; then
+            echo "::error::GitHub App private key secret is empty."
+            exit 1
+          fi
+          echo "::add-mask::$private_key"
+          jwt="$(APP_ID="$PLATFORM_VENDING_BOT_APP_ID" PRIVATE_KEY="$private_key" node -e 'const crypto = require("crypto"); const base64url = (value) => Buffer.from(JSON.stringify(value)).toString("base64url"); const now = Math.floor(Date.now() / 1000); const header = { alg: "RS256", typ: "JWT" }; const payload = { iat: now - 60, exp: now + 540, iss: process.env.APP_ID }; const unsigned = `${base64url(header)}.${base64url(payload)}`; const signer = crypto.createSign("RSA-SHA256"); signer.update(unsigned); signer.end(); process.stdout.write(`${unsigned}.${signer.sign(process.env.PRIVATE_KEY, "base64url")}`);')"
+          token_response="$(curl -fsS \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${jwt}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/app/installations/${PLATFORM_VENDING_BOT_INSTALLATION_ID}/access_tokens" \
+            -d "$(jq -n --arg repo "$repo" '{repositories: [$repo], permissions: {contents: "write", pull_requests: "write", issues: "write"}}')")"
+          app_token="$(jq -r '.token' <<< "$token_response")"
+          if [ -z "$app_token" ] || [ "$app_token" = "null" ]; then
+            echo "::error::Failed to mint platform-vending-bot installation token."
+            exit 1
+          fi
+          echo "::add-mask::$app_token"
+          export GH_TOKEN="$app_token"
+
+          workdir="$(mktemp -d)"
+          trap 'rm -rf "$workdir"' EXIT
+          git clone --depth 1 "https://x-access-token:${app_token}@github.com/${owner}/${repo}.git" "$workdir/repo"
+          cd "$workdir/repo"
+          branch="vending/${team}-${environment}-${namespace}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "$branch"
+          git config user.name "platform-vending-bot[bot]"
+          git config user.email "platform-vending-bot[bot]@users.noreply.github.com"
+
+          mkdir -p "$cluster_state_path"
+          mkdir -p "$(dirname "$cluster_state_flux_file")"
+          rsync -a --delete "${manifest_dir}/" "${cluster_state_path}/"
+          cp "$flux_file" "$cluster_state_flux_file"
+          git add "$cluster_state_path" "$cluster_state_flux_file"
+          if git diff --cached --quiet; then
+            echo "::notice::No cluster-state manifest changes to commit."
+            exit 0
+          fi
+          git commit -m "feat: vend ${namespace} namespace"
+          git push origin "$branch"
+
+          IFS=',' read -ra label_array <<< "$labels"
+          for label in "${label_array[@]}"; do
+            label="${label#"${label%%[![:space:]]*}"}"
+            label="${label%"${label##*[![:space:]]}"}"
+            if [ -n "$label" ]; then
+              gh label create "$label" --repo "${owner}/${repo}" --color "0E8A16" --force
+            fi
+          done
+
+          pr_args=(
+            --repo "${owner}/${repo}"
+            --head "$branch"
+            --base "$base_branch"
+            --title "Vend ${namespace} namespace"
+            --body "Stage 05 namespace vending request for team ${team} (${environment}). Generated by ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
+          )
+          for label in "${label_array[@]}"; do
+            label="${label#"${label%%[![:space:]]*}"}"
+            label="${label%"${label##*[![:space:]]}"}"
+            if [ -n "$label" ]; then
+              pr_args+=(--label "$label")
+            fi
+          done
+          if [ -n "$reviewers" ]; then
+            IFS=',' read -ra reviewer_array <<< "$reviewers"
+            for reviewer in "${reviewer_array[@]}"; do
+              reviewer="${reviewer#"${reviewer%%[![:space:]]*}"}"
+              reviewer="${reviewer%"${reviewer##*[![:space:]]}"}"
+              if [ -n "$reviewer" ]; then
+                pr_args+=(--reviewer "$reviewer")
+              fi
+            done
+          fi
+          gh pr create "${pr_args[@]}"

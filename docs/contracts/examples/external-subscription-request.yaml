@@ -1,0 +1,41 @@
+apiVersion: platform.example.io/v1alpha1
+kind: SubscriptionVendingRequest
+metadata:
+  name: analytics-prod-onboarding
+spec:
+  team: analytics
+  product: lakehouse
+  costCenter: cc-analytics
+  onCallRotationId: pd-analytics-primary
+  dataClassification: restricted
+  environment: prod
+  regions:
+    - westeurope
+    - northeurope
+  tags:
+    owner: analytics
+    costCenter: cc-analytics
+    product: lakehouse
+    dataClassification: restricted
+    confidentiality: high
+    managedBy: terraform
+    repo: edinc/platform-engineering-landing-zone
+  budget:
+    amount: 2500
+    currency: EUR
+    startDate: "2026-07-01T00:00:00Z"
+    endDate: "2027-07-01T00:00:00Z"
+    contactEmails:
+      - platform-finance@example.com
+      - analytics-owners@example.com
+    thresholds:
+      - percentage: 80
+        type: Actual
+      - percentage: 100
+        type: Forecasted
+  subscription:
+    mode: onboard-existing
+    archetype: online
+    managementGroupId: online-prod
+    existingSubscriptionId: 00000000-0000-0000-0000-000000000002
+    alzPlacementEvidence: CHG123456 confirms online-prod placement and inherited ALZ policy assignments.

@@ -15,7 +15,7 @@ Next free number: **0054**
 | 0005 | Azure-resource provisioning from cluster | Seeded in plan | Pending |
 | 0006 | Secrets in cluster | Seeded in plan | Pending |
 | 0007 | Image signing | Seeded in plan | Pending |
-| 0008 | Subscription vending | Seeded in plan | Pending |
+| 0008 | Subscription vending | Accepted | [`0008-subscription-vending.md`](0008-subscription-vending.md) |
 | 0009 | AKS dataplane | Seeded in plan | Pending |
 | 0010 | AKS node auto-provisioning | Seeded in plan | Pending |
 | 0011 | Compliance baseline | Accepted | [`0011-compliance-baseline.md`](0011-compliance-baseline.md) |
@@ -40,8 +40,8 @@ Next free number: **0054**
 | 0030 | Hub-and-spoke networking for MVP | Accepted | [`0030-hub-and-spoke.md`](0030-hub-and-spoke.md) |
 | 0031 | Default-deny egress and FQDN allowlist | Accepted | [`0031-default-deny-egress.md`](0031-default-deny-egress.md) |
 | 0032 | Platform-internal eventing uses Azure Service Bus | Accepted | [`0032-platform-eventing.md`](0032-platform-eventing.md) |
-| 0033 | AKS namespace as workload-scope vending unit | Seeded in Stage 05 | Pending |
-| 0034 | Vending request schema | Seeded in Stage 05 | Pending |
+| 0033 | AKS namespace as workload-scope vending unit | Accepted | [`0033-aks-namespace-vending.md`](0033-aks-namespace-vending.md) |
+| 0034 | Vending request schema | Accepted | [`0034-vending-request-schema.md`](0034-vending-request-schema.md) |
 | 0035 | Dependency updater strategy | Seeded in Stage 06 | Pending |
 | 0036 | Kyverno as single in-cluster policy engine | Seeded in Stage 07 | Pending |
 | 0037 | OTel resource attributes and log fields | Seeded in Stage 08 | Pending |
@@ -58,7 +58,7 @@ Next free number: **0054**
 | 0048 | Runner connectivity model | Accepted | [`0048-runner-connectivity.md`](0048-runner-connectivity.md) |
 | 0049 | DDoS protection posture | Accepted | [`0049-ddos-protection.md`](0049-ddos-protection.md) |
 | 0050 | ACA managed environment as a platform shared service | Accepted | [`0050-aca-managed-environment.md`](0050-aca-managed-environment.md) |
-| 0051 | Cross-repo GitHub writes | Seeded in Stage 05 | Pending |
+| 0051 | Cross-repo GitHub writes | Accepted | [`0051-cross-repo-github-writes.md`](0051-cross-repo-github-writes.md) |
 | 0052 | Backstage Postgres passwordless auth | Seeded in Stage 09 | Pending |
 | 0053 | ACA GitOps exception | Seeded in Stage 11 | Pending |
 

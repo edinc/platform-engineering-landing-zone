@@ -12,3 +12,4 @@ catalog with incident response, restore drills, and DR procedures.
 | [`dr-matrix.md`](dr-matrix.md) | RTO/RPO matrix and DR validation handoff | 04 |
 | [`aks-baseline.md`](aks-baseline.md) | AKS baseline operations, upgrades, and follow-ups | 04 |
 | [`region-matrix.md`](region-matrix.md) | Regional feature support matrix for Stage 04 services | 04 |
+| [`vending.md`](vending.md) | Subscription and AKS namespace vending operations | 05 |
