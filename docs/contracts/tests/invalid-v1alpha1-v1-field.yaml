@@ -1,0 +1,43 @@
+apiVersion: platform.example.io/v1alpha1
+kind: SubscriptionVendingRequest
+metadata:
+  name: invalid-v1alpha1-v1-field
+spec:
+  team: payments
+  product: checkout
+  costCenter: cc-payments
+  onCallRotationId: pd-payments-primary
+  dataClassification: confidential
+  environment: nonprod
+  regions:
+    - westeurope
+  tags:
+    owner: payments
+    costCenter: cc-payments
+    product: checkout
+    dataClassification: confidential
+    confidentiality: medium
+    managedBy: terraform
+    repo: edinc/platform-engineering-landing-zone
+  lifecycle:
+    deletionPolicy: Retain
+  budget:
+    amount: 500
+    currency: EUR
+    startDate: "2026-07-01T00:00:00Z"
+    endDate: "2027-07-01T00:00:00Z"
+    contactEmails:
+      - platform-finance@example.com
+    thresholds:
+      - percentage: 80
+        type: Actual
+      - percentage: 100
+        type: Forecasted
+  subscription:
+    mode: create
+    archetype: corp
+    managementGroupId: corp
+    subscriptionAliasName: payments-nonprod
+    subscriptionDisplayName: Payments NonProd
+    billingScopeId: /providers/Microsoft.Billing/billingAccounts/1234567/enrollmentAccounts/123456
+    workload: DevTest

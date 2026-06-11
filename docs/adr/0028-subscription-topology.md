@@ -68,5 +68,5 @@ management group.**
 
 - [`plan/stages/stage-02-subscription-baseline.md`](../../plan/stages/stage-02-subscription-baseline.md)
 - [`infrastructure/terraform/subscription-baseline/`](../../infrastructure/terraform/subscription-baseline/)
-- [ADR-0008: Subscription vending (seeded, Stage 05)](README.md)
+- [ADR-0008: Subscription vending](0008-subscription-vending.md)
 - [ADR-0011: Compliance baseline](0011-compliance-baseline.md)
