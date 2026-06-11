@@ -29,14 +29,12 @@ on:
         description: Cluster-state Kustomize path for the prod smoke image.
         required: false
         default: ""
-      runs_on:
-        description: Runner label for private ACR/Key Vault operations.
-        required: false
-        default: self-hosted
 
 # Promotion legs verify the cosign identity against TRUSTED_BUILDER_REF.
 # Dispatch from main, or set that protected environment variable to this
 # workflow commit SHA before enabling nonprod/prod promotion.
+# Privileged jobs intentionally use a fixed private runner label; dispatchers
+# must not be able to route Azure OIDC jobs to arbitrary self-hosted runners.
 
 permissions:
   contents: read
@@ -55,7 +53,7 @@ jobs:
       dockerfile: samples/hello-container/Dockerfile
       environment: dev
       tag: ${{ inputs.tag }}
-      runs_on: ${{ inputs.runs_on }}
+      runs_on: self-hosted
 
   promote-nonprod:
     name: Promote smoke image to nonprod
@@ -71,7 +69,7 @@ jobs:
       source_environment: dev
       target_environment: nonprod
       kustomization_path: ${{ inputs.nonprod_kustomization_path }}
-      runs_on: ${{ inputs.runs_on }}
+      runs_on: self-hosted
 
   promote-prod:
     name: Promote smoke image to prod
@@ -89,4 +87,4 @@ jobs:
       source_environment: nonprod
       target_environment: prod
       kustomization_path: ${{ inputs.prod_kustomization_path }}
-      runs_on: ${{ inputs.runs_on }}
+      runs_on: self-hosted

@@ -135,6 +135,11 @@ jobs:
           name: techdocs-site
           path: .tools/tmp/techdocs
 
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
       - name: Install mise toolchain
         uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
         with:
