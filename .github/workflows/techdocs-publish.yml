@@ -37,6 +37,11 @@ on:
         required: false
         type: string
         default: techdocs
+      upload_runs_on:
+        description: Runner label for Azure Blob upload. Use a VNet-integrated self-hosted runner when TechDocs storage is private.
+        required: false
+        type: string
+        default: self-hosted
 
 permissions:
   contents: read
@@ -106,7 +111,7 @@ jobs:
 
   upload:
     name: Upload TechDocs
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.upload_runs_on }}
     needs: generate
     environment: ${{ inputs.environment }}
     permissions:

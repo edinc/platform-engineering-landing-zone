@@ -27,7 +27,7 @@ Use **layered scanning**:
    cluster-state PRs.
 6. Untrusted pull-request Terraform checks run without Azure OIDC or remote
    backend access. Azure-backed Terraform plans run only from protected,
-   environment-gated workflows.
+   environment-gated workflows on private runners that can reach remote state.
 
 ## Consequences
 

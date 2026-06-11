@@ -2,3 +2,4 @@ stage: 06
 status: executable
 executable_location: .github/workflows/promote-image.yml
 description: Image promotion reusable workflow contract.
+runner: VNet-integrated self-hosted runner by default for private ACR and Key Vault access.
