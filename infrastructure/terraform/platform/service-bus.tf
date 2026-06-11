@@ -19,7 +19,10 @@ resource "azurerm_servicebus_namespace" "platform" {
   }
 
   network_rule_set {
-    default_action                = "Deny"
+    # Service Bus requires Allow when no ip_rules/network_rules are present.
+    # public_network_access_enabled=false and the Private Endpoint enforce the
+    # private-only posture; rule matching is moot while public access is disabled.
+    default_action                = "Allow"
     public_network_access_enabled = false
     trusted_services_allowed      = false
   }
