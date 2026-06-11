@@ -57,6 +57,7 @@ CI validates credential-free with `terraform init -backend=false`.
 | `private_dns_zone_subscription_id` | Subscription that owns the supplied Private DNS zones; set to the Stage 03 connectivity subscription for centralized zones. |
 | `firewall_private_ip_address` | Enables platform subnet UDRs to Stage 03 Firewall. |
 | `log_analytics_workspace_id` | Enables Defender/OMS/ACA logging integrations. |
+| `aks_host_encryption_enabled` | Keep `true` for production; set `false` only in demo subscriptions where EncryptionAtHost is unavailable. |
 
 ## Validation
 

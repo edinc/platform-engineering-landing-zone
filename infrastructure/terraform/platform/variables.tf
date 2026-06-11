@@ -215,6 +215,12 @@ variable "aks_user_node_pool" {
   }
 }
 
+variable "aks_host_encryption_enabled" {
+  type        = bool
+  description = "Whether AKS node pools enable host encryption. Keep true for production; set false only for demo subscriptions where Microsoft.Compute/EncryptionAtHost is unavailable."
+  default     = true
+}
+
 variable "aks_service_cidr" {
   type        = string
   description = "Kubernetes service CIDR."
