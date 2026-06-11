@@ -20,7 +20,9 @@ locals {
     "platform.example.io/on-call" = var.on_call_rotation_id
   }
 
-  parent_output_directory    = abspath("${path.module}/${var.output_directory}/tenants/${var.team_name}/${var.environment}")
+  output_root = startswith(var.output_directory, "/") ? var.output_directory : "${path.module}/${var.output_directory}"
+
+  parent_output_directory    = abspath("${local.output_root}/tenants/${var.team_name}/${var.environment}")
   namespace_output_directory = "${local.parent_output_directory}/${var.namespace}"
 
   manifests = {
