@@ -61,7 +61,7 @@ resource "azurerm_kubernetes_cluster" "platform" {
     vnet_subnet_id               = azurerm_subnet.platform["aks-system"].id
     zones                        = var.availability_zones
     only_critical_addons_enabled = true
-    host_encryption_enabled      = true
+    host_encryption_enabled      = var.aks_host_encryption_enabled
     max_pods                     = 110
     os_disk_type                 = "Ephemeral"
     os_sku                       = "AzureLinux"
@@ -148,7 +148,7 @@ resource "azurerm_kubernetes_cluster" "platform" {
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "default_user" {
-  #checkov:skip=CKV_AZURE_227:host_encryption_enabled is explicitly true; Checkov does not resolve the current azurerm v4 argument name.
+  #checkov:skip=CKV_AZURE_227:host_encryption_enabled is controlled by aks_host_encryption_enabled; default true, demo can opt out when the subscription lacks EncryptionAtHost.
   count = var.enable_aks ? 1 : 0
 
   name                        = "user"
@@ -157,7 +157,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "default_user" {
   mode                        = "User"
   vnet_subnet_id              = azurerm_subnet.platform["aks-user"].id
   auto_scaling_enabled        = true
-  host_encryption_enabled     = true
+  host_encryption_enabled     = var.aks_host_encryption_enabled
   max_pods                    = 110
   min_count                   = var.aks_user_node_pool.min_count
   max_count                   = var.aks_user_node_pool.max_count
