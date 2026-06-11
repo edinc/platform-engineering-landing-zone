@@ -1,0 +1,90 @@
+name: Reusable quay.io import to ACR
+
+on:
+  workflow_call:
+    inputs:
+      acr_name:
+        description: Target Azure Container Registry name. Defaults to PLATFORM_ACR_NAME variable.
+        required: false
+        type: string
+        default: ""
+      source_image:
+        description: Fully-qualified quay.io source image.
+        required: true
+        type: string
+      target_image:
+        description: Target repository:tag inside ACR.
+        required: true
+        type: string
+      environment:
+        description: GitHub Environment that owns Azure OIDC and ACR variables.
+        required: false
+        type: string
+        default: dev
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  import:
+    name: Import quay.io image
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      PLATFORM_ACR_NAME: ${{ vars.PLATFORM_ACR_NAME }}
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate import inputs
+        id: input
+        env:
+          INPUT_ACR_NAME: ${{ inputs.acr_name }}
+          SOURCE_IMAGE: ${{ inputs.source_image }}
+          TARGET_IMAGE: ${{ inputs.target_image }}
+        run: |
+          set -euo pipefail
+          acr_name="${INPUT_ACR_NAME:-$PLATFORM_ACR_NAME}"
+          case "$SOURCE_IMAGE" in quay.io/*@sha256:*) ;; *) echo "::error::source_image must be a digest-pinned quay.io image (quay.io/...@sha256:<digest>)."; exit 1 ;; esac
+          case "$SOURCE_IMAGE" in *[[:space:]]*) echo "::error::source_image must not contain whitespace."; exit 1 ;; esac
+          case "$TARGET_IMAGE" in ""|/*|*..*|*[!A-Za-z0-9_./:-]*) echo "::error::Unsafe target_image: $TARGET_IMAGE"; exit 1 ;; esac
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ -z "$acr_name" ]; then missing+=(PLATFORM_ACR_NAME); fi
+          if [[ ! "$acr_name" =~ ^[A-Za-z0-9]{5,50}$ ]]; then
+            echo "::error::acr_name must be 5-50 alphanumeric characters."
+            exit 1
+          fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables or inputs: ${missing[*]}."
+            exit 1
+          fi
+          echo "acr_name=$acr_name" >> "$GITHUB_OUTPUT"
+
+      - name: Import image
+        env:
+          ACR_NAME: ${{ steps.input.outputs.acr_name }}
+          SOURCE_IMAGE: ${{ inputs.source_image }}
+          TARGET_IMAGE: ${{ inputs.target_image }}
+        run: |
+          set -euo pipefail
+          az acr import \
+            --name "$ACR_NAME" \
+            --source "$SOURCE_IMAGE" \
+            --image "$TARGET_IMAGE" \
+            --only-show-errors

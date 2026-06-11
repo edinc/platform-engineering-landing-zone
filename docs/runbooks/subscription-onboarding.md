@@ -137,6 +137,55 @@ Then run the normal Terraform plan/apply path for the
 only subscription-scoped resources: Defender pricing, Activity Log diagnostics,
 optional budget, and optional cost export.
 
+For brownfield subscriptions where Defender pricing plans already exist, import
+the existing pricing resources into state before the first apply:
+
+```bash
+terraform -chdir=infrastructure/terraform/subscription-baseline init -backend-config=backend.hcl
+scripts/subscription/import-defender-pricing.sh \
+  --subscription-id <test-subscription-id>
+```
+
+The helper is idempotent and imports the Defender plan resource types managed by
+the Stage 02 stack (`VirtualMachines`, `Containers`, `KeyVaults`,
+`StorageAccounts`, `SqlServers`, `OpenSourceRelationalDatabases`, `Arm`, and
+`Api`).
+
+If the follow-up plan shows it would remove or replace existing Defender
+subplans or extensions, preserve the brownfield settings explicitly:
+
+```hcl
+defender_plan_subplans = {
+  Arm             = "PerApiCall"
+  KeyVaults       = "PerTransaction"
+  StorageAccounts = "DefenderForStorageV2"
+  VirtualMachines = "P2"
+}
+
+defender_plan_extensions = {
+  VirtualMachines = [
+    {
+      name = "AgentlessVmScanning"
+      additional_extension_properties = {
+        ExclusionTags = "[]"
+      }
+    }
+  ]
+  StorageAccounts = [
+    {
+      name = "OnUploadMalwareScanning"
+      additional_extension_properties = {
+        CapGBPerMonthPerStorageAccount = "5000"
+      }
+    },
+    { name = "SensitiveDataDiscovery" }
+  ]
+}
+```
+
+Do not apply a plan that removes inherited ALZ/Defender extensions unless a
+security owner has approved the downgrade.
+
 ## 4. Drain the non-compliant inventory
 
 For every resource the discovery script flagged:

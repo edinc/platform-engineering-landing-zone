@@ -372,7 +372,18 @@ jobs:
             echo "::error::GitHub App private key secret is empty."
             exit 1
           fi
-          echo "::add-mask::$private_key"
+          mask_multiline() {
+            local value="$1"
+            value="${value//'%'/'%25'}"
+            value="${value//$'\r'/'%0D'}"
+            value="${value//$'\n'/'%0A'}"
+            echo "::add-mask::$value"
+            while IFS= read -r line; do
+              if [ -n "$line" ]; then echo "::add-mask::$line"; fi
+            done <<< "$1"
+          }
+          mask_multiline "$private_key"
+          # shellcheck disable=SC2016
           jwt="$(APP_ID="$PLATFORM_VENDING_BOT_APP_ID" PRIVATE_KEY="$private_key" node -e 'const crypto = require("crypto"); const base64url = (value) => Buffer.from(JSON.stringify(value)).toString("base64url"); const now = Math.floor(Date.now() / 1000); const header = { alg: "RS256", typ: "JWT" }; const payload = { iat: now - 60, exp: now + 540, iss: process.env.APP_ID }; const unsigned = `${base64url(header)}.${base64url(payload)}`; const signer = crypto.createSign("RSA-SHA256"); signer.update(unsigned); signer.end(); process.stdout.write(`${unsigned}.${signer.sign(process.env.PRIVATE_KEY, "base64url")}`);')"
           token_response="$(curl -fsS \
             -X POST \

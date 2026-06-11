@@ -41,6 +41,8 @@ kubeconfig*
 backend.hcl
 *.tfvars
 *.auto.tfvars
+*.auto.tfvars.json
+*.tfvars.json
 !*.tfvars.example
 .env
 

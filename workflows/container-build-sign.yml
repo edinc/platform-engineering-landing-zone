@@ -1,4 +1,5 @@
 stage: 06
-status: design-stub
+status: executable
 executable_location: .github/workflows/container-build-sign.yml
 description: Container build, SBOM, and signing reusable workflow contract.
+runner: VNet-integrated self-hosted runner by default for private ACR data-plane access.
