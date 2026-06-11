@@ -73,6 +73,37 @@ variable "defender_tiers" {
   }
 }
 
+variable "defender_plan_subplans" {
+  type        = map(string)
+  description = "Optional Defender subplan overrides keyed by exact Microsoft.Security pricing resource type (for example Arm, KeyVaults, StorageAccounts). Use to preserve brownfield subplans discovered before import/apply."
+  default     = {}
+
+  validation {
+    condition = alltrue([
+      for key in keys(var.defender_plan_subplans) :
+      contains(["VirtualMachines", "Containers", "KeyVaults", "StorageAccounts", "SqlServers", "OpenSourceRelationalDatabases", "Arm", "Api"], key)
+    ])
+    error_message = "defender_plan_subplans keys must be one of the Defender pricing resource types managed by this stack."
+  }
+}
+
+variable "defender_plan_extensions" {
+  type = map(list(object({
+    name                            = string
+    additional_extension_properties = optional(map(string), {})
+  })))
+  description = "Optional Defender extension blocks keyed by exact Microsoft.Security pricing resource type. Use to preserve brownfield extensions discovered before import/apply."
+  default     = {}
+
+  validation {
+    condition = alltrue([
+      for key in keys(var.defender_plan_extensions) :
+      contains(["VirtualMachines", "Containers", "KeyVaults", "StorageAccounts", "SqlServers", "OpenSourceRelationalDatabases", "Arm", "Api"], key)
+    ])
+    error_message = "defender_plan_extensions keys must be one of the Defender pricing resource types managed by this stack."
+  }
+}
+
 variable "monthly_budget_amount" {
   type        = number
   description = "Optional monthly budget amount for the target subscription. Set to null to skip budget creation."

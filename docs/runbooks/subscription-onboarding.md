@@ -151,6 +151,41 @@ the Stage 02 stack (`VirtualMachines`, `Containers`, `KeyVaults`,
 `StorageAccounts`, `SqlServers`, `OpenSourceRelationalDatabases`, `Arm`, and
 `Api`).
 
+If the follow-up plan shows it would remove or replace existing Defender
+subplans or extensions, preserve the brownfield settings explicitly:
+
+```hcl
+defender_plan_subplans = {
+  Arm             = "PerApiCall"
+  KeyVaults       = "PerTransaction"
+  StorageAccounts = "DefenderForStorageV2"
+  VirtualMachines = "P2"
+}
+
+defender_plan_extensions = {
+  VirtualMachines = [
+    {
+      name = "AgentlessVmScanning"
+      additional_extension_properties = {
+        ExclusionTags = "[]"
+      }
+    }
+  ]
+  StorageAccounts = [
+    {
+      name = "OnUploadMalwareScanning"
+      additional_extension_properties = {
+        CapGBPerMonthPerStorageAccount = "5000"
+      }
+    },
+    { name = "SensitiveDataDiscovery" }
+  ]
+}
+```
+
+Do not apply a plan that removes inherited ALZ/Defender extensions unless a
+security owner has approved the downgrade.
+
 ## 4. Drain the non-compliant inventory
 
 For every resource the discovery script flagged:

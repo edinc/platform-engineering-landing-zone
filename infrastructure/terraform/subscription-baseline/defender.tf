@@ -15,4 +15,13 @@ resource "azurerm_security_center_subscription_pricing" "this" {
   tier          = each.value.tier
   resource_type = each.key
   subplan       = each.value.tier == "Standard" ? each.value.subplan : null
+
+  dynamic "extension" {
+    for_each = each.value.tier == "Standard" ? each.value.extensions : []
+
+    content {
+      name                            = extension.value.name
+      additional_extension_properties = extension.value.additional_extension_properties
+    }
+  }
 }
