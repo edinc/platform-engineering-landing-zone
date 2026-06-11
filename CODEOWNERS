@@ -25,3 +25,6 @@
 # Intended group: platform-maintainers
 /.github/workflows/ @edinc
 /.github/rulesets/ @edinc
+
+# Intended groups: platform-infrastructure, platform-security, platform-finance
+/vending/requests/ @edinc

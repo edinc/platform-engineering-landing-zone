@@ -1,7 +1,7 @@
 ## Stage
 
-- [ ] Stage 00 - Foundation and repo bootstrap
-- [ ] Later stage, identified in `plan/stages/`
+- Stage: <!-- e.g., Stage 05 - Environment and subscription vending -->
+- Stage plan: <!-- e.g., `plan/stages/stage-05-vending.md` -->
 
 ## Summary
 
