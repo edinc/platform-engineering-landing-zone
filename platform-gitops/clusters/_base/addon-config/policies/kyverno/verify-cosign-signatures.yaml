@@ -1,0 +1,46 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-cosign-signatures
+  annotations:
+    policies.kyverno.io/title: Verify cosign keyless signatures
+    policies.kyverno.io/category: Supply Chain
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  background: false
+  webhookTimeoutSeconds: 15
+  rules:
+    - name: verify-github-oidc-signatures
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - flux-system
+                - cert-manager
+                - external-dns
+                - external-secrets
+                - kyverno
+                - azureserviceoperator-system
+                - keda
+                - ingress-nginx
+                - observability
+      verifyImages:
+        - imageReferences:
+            - "*"
+          mutateDigest: true
+          required: true
+          attestors:
+            - count: 1
+              entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subjectRegExp: ^https://github\.com/edinc/platform-engineering-landing-zone/\.github/workflows/container-build-sign\.yml@refs/heads/main$
+                    rekor:
+                      url: https://rekor.sigstore.dev

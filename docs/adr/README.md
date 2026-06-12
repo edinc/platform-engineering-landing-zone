@@ -11,9 +11,9 @@ Next free number: **0054**
 | 0001 | Primary IaC | Accepted | [`0001-iac.md`](0001-iac.md) |
 | 0002 | GitOps engine | Seeded in plan | Pending |
 | 0003 | Cluster ingress | Seeded in plan | Pending |
-| 0004 | Service mesh | Seeded in plan | Pending |
-| 0005 | Azure-resource provisioning from cluster | Seeded in plan | Pending |
-| 0006 | Secrets in cluster | Seeded in plan | Pending |
+| 0004 | Service mesh | Accepted | [`0004-no-mesh.md`](0004-no-mesh.md) |
+| 0005 | Azure-resource provisioning from cluster | Accepted | [`0005-aso-boundary.md`](0005-aso-boundary.md) |
+| 0006 | Secrets in cluster | Accepted | [`0006-secrets-in-cluster.md`](0006-secrets-in-cluster.md) |
 | 0007 | Image signing | Accepted | [`0007-image-signing.md`](0007-image-signing.md) |
 | 0008 | Subscription vending | Accepted | [`0008-subscription-vending.md`](0008-subscription-vending.md) |
 | 0009 | AKS dataplane | Seeded in plan | Pending |
@@ -43,7 +43,7 @@ Next free number: **0054**
 | 0033 | AKS namespace as workload-scope vending unit | Accepted | [`0033-aks-namespace-vending.md`](0033-aks-namespace-vending.md) |
 | 0034 | Vending request schema | Accepted | [`0034-vending-request-schema.md`](0034-vending-request-schema.md) |
 | 0035 | Dependency updater strategy | Accepted | [`0035-dependency-updater-strategy.md`](0035-dependency-updater-strategy.md) |
-| 0036 | Kyverno as single in-cluster policy engine | Seeded in Stage 07 | Pending |
+| 0036 | Kyverno as single in-cluster policy engine | Accepted | [`0036-kyverno-single-engine.md`](0036-kyverno-single-engine.md) |
 | 0037 | OTel resource attributes and log fields | Seeded in Stage 08 | Pending |
 | 0038 | SLO tooling | Seeded in Stage 08 | Pending |
 | 0039 | On-call tooling | Seeded in Stage 08 | Pending |

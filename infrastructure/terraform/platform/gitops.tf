@@ -1,0 +1,76 @@
+locals {
+  gitops_enabled = var.enable_aks && var.enable_gitops
+  gitops_repository_url = (
+    var.cluster_state_repository_url != "" ? var.cluster_state_repository_url : "https://github.com/${var.github_owner}/platform-cluster-state"
+  )
+  gitops_root_path = (
+    var.cluster_state_root_path != "" ? var.cluster_state_root_path : "clusters/overlays/${var.profile}"
+  )
+}
+
+resource "azurerm_kubernetes_cluster_extension" "flux" {
+  count = local.gitops_enabled ? 1 : 0
+
+  name              = "flux"
+  cluster_id        = azurerm_kubernetes_cluster.platform[0].id
+  extension_type    = "microsoft.flux"
+  release_train     = "Stable"
+  release_namespace = var.gitops_flux_namespace
+  configuration_settings = {
+    "multiTenancy.enforce"                          = "true"
+    "kustomize-controller.strict-substitution-mode" = "true"
+    "helm-controller.detectDrift"                   = "true"
+  }
+}
+
+resource "azurerm_kubernetes_flux_configuration" "platform" {
+  count = local.gitops_enabled ? 1 : 0
+
+  name                              = "platform-${var.profile}"
+  cluster_id                        = azurerm_kubernetes_cluster.platform[0].id
+  namespace                         = var.gitops_flux_namespace
+  scope                             = "cluster"
+  continuous_reconciliation_enabled = true
+
+  git_repository {
+    url                      = local.gitops_repository_url
+    reference_type           = "branch"
+    reference_value          = var.cluster_state_branch
+    provider                 = var.gitops_repository_provider == "" ? null : var.gitops_repository_provider
+    sync_interval_in_seconds = var.gitops_sync_interval_seconds
+    timeout_in_seconds       = var.gitops_timeout_seconds
+  }
+
+  kustomizations {
+    name                       = "cluster-${var.profile}"
+    path                       = local.gitops_root_path
+    garbage_collection_enabled = true
+    retry_interval_in_seconds  = var.gitops_sync_interval_seconds
+    sync_interval_in_seconds   = var.gitops_sync_interval_seconds
+    timeout_in_seconds         = var.gitops_timeout_seconds
+    wait                       = true
+
+    post_build {
+      substitute = {
+        application_insights_ingestion_endpoint = var.application_insights_ingestion_endpoint
+        aso_client_id                           = var.aso_workload_identity_client_id
+        azure_dns_resource_group_name           = var.azure_dns_resource_group_name
+        cert_manager_client_id                  = var.cert_manager_workload_identity_client_id
+        cluster_state_branch                    = var.cluster_state_branch
+        cluster_state_repository_provider       = var.gitops_repository_provider == "" ? "generic" : lower(var.gitops_repository_provider)
+        cluster_state_repository_url            = local.gitops_repository_url
+        cluster_state_root_path                 = local.gitops_root_path
+        external_dns_client_id                  = var.external_dns_workload_identity_client_id
+        external_secrets_client_id              = var.external_secrets_workload_identity_client_id
+        platform_key_vault_name                 = local.key_vault_name
+        platform_root_domain                    = var.platform_root_domain
+        platform_subscription_id                = var.subscription_id
+        platform_tenant_id                      = var.tenant_id
+      }
+    }
+  }
+
+  depends_on = [
+    azurerm_kubernetes_cluster_extension.flux,
+  ]
+}

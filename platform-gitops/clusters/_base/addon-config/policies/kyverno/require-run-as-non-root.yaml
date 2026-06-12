@@ -1,0 +1,38 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-run-as-non-root
+  annotations:
+    policies.kyverno.io/title: Require runAsNonRoot
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-pod-run-as-non-root
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - flux-system
+                - cert-manager
+                - external-dns
+                - external-secrets
+                - kyverno
+                - azureserviceoperator-system
+                - keda
+                - ingress-nginx
+                - observability
+      validate:
+        message: Pods must set spec.securityContext.runAsNonRoot to true.
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true

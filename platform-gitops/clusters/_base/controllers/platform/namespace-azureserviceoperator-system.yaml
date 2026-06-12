@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: azureserviceoperator-system
+  labels:
+    app: azure-service-operator
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted

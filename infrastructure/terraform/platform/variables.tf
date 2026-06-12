@@ -251,6 +251,167 @@ variable "enable_managed_prometheus" {
   default     = false
 }
 
+variable "enable_gitops" {
+  type        = bool
+  description = "Whether to install the Microsoft-managed Flux extension and root Flux configuration for the platform cluster."
+  default     = false
+}
+
+variable "gitops_flux_namespace" {
+  type        = string
+  description = "Namespace where the AKS Flux extension installs Flux controllers."
+  default     = "flux-system"
+
+  validation {
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", var.gitops_flux_namespace))
+    error_message = "gitops_flux_namespace must be a DNS-safe lowercase namespace name."
+  }
+}
+
+variable "cluster_state_repository_url" {
+  type        = string
+  description = "HTTPS or SSH URL for the Flux-watched platform-cluster-state repository. Defaults to github_owner/platform-cluster-state when empty."
+  default     = ""
+
+  validation {
+    condition = (
+      var.cluster_state_repository_url == "" ||
+      can(regex("^(https://|ssh://|git@).+", var.cluster_state_repository_url))
+    )
+    error_message = "cluster_state_repository_url must be empty or start with https://, ssh://, or git@."
+  }
+}
+
+variable "cluster_state_branch" {
+  type        = string
+  description = "Branch in platform-cluster-state reconciled by the platform Flux configuration."
+  default     = "main"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_./-]+$", var.cluster_state_branch))
+    error_message = "cluster_state_branch must contain only letters, numbers, underscores, dots, slashes, and hyphens."
+  }
+}
+
+variable "cluster_state_root_path" {
+  type        = string
+  description = "Path in platform-cluster-state reconciled by the root Flux Kustomization. Defaults to clusters/overlays/<profile> when empty."
+  default     = ""
+
+  validation {
+    condition = (
+      var.cluster_state_root_path == "" ||
+      can(regex("^clusters/overlays/(demo|nonprod|prod)$", var.cluster_state_root_path))
+    )
+    error_message = "cluster_state_root_path must be empty or one of clusters/overlays/demo, clusters/overlays/nonprod, or clusters/overlays/prod."
+  }
+}
+
+variable "gitops_repository_provider" {
+  type        = string
+  description = "Optional OIDC provider for Flux Git repository auth. Use GitHub, Azure, or Generic only when the cluster-state repository supports it."
+  default     = ""
+
+  validation {
+    condition     = contains(["", "GitHub", "Azure", "Generic"], var.gitops_repository_provider)
+    error_message = "gitops_repository_provider must be empty, GitHub, Azure, or Generic."
+  }
+}
+
+variable "platform_root_domain" {
+  type        = string
+  description = "Root DNS zone for platform hostnames, for example platform.contoso.com."
+  default     = ""
+
+  validation {
+    condition     = var.platform_root_domain == "" || can(regex("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$", var.platform_root_domain))
+    error_message = "platform_root_domain must be empty or a valid DNS name."
+  }
+}
+
+variable "azure_dns_resource_group_name" {
+  type        = string
+  description = "Resource group that owns the Azure DNS zones used by cert-manager and external-dns."
+  default     = ""
+}
+
+variable "cert_manager_workload_identity_client_id" {
+  type        = string
+  description = "Managed identity client ID used by cert-manager for Azure DNS and Key Vault CSI access."
+  default     = ""
+
+  validation {
+    condition     = var.cert_manager_workload_identity_client_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.cert_manager_workload_identity_client_id))
+    error_message = "cert_manager_workload_identity_client_id must be empty or a GUID."
+  }
+}
+
+variable "external_dns_workload_identity_client_id" {
+  type        = string
+  description = "Managed identity client ID used by external-dns for Azure DNS writes."
+  default     = ""
+
+  validation {
+    condition     = var.external_dns_workload_identity_client_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.external_dns_workload_identity_client_id))
+    error_message = "external_dns_workload_identity_client_id must be empty or a GUID."
+  }
+}
+
+variable "external_secrets_workload_identity_client_id" {
+  type        = string
+  description = "Managed identity client ID used by External Secrets Operator for Azure Key Vault reads when ClusterSecretStores are configured."
+  default     = ""
+
+  validation {
+    condition     = var.external_secrets_workload_identity_client_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.external_secrets_workload_identity_client_id))
+    error_message = "external_secrets_workload_identity_client_id must be empty or a GUID."
+  }
+}
+
+variable "aso_workload_identity_client_id" {
+  type        = string
+  description = "Managed identity client ID used by Azure Service Operator."
+  default     = ""
+
+  validation {
+    condition     = var.aso_workload_identity_client_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.aso_workload_identity_client_id))
+    error_message = "aso_workload_identity_client_id must be empty or a GUID."
+  }
+}
+
+variable "application_insights_ingestion_endpoint" {
+  type        = string
+  description = "Application Insights OTLP HTTP ingestion endpoint for the OpenTelemetry collector."
+  default     = ""
+
+  validation {
+    condition     = var.application_insights_ingestion_endpoint == "" || startswith(var.application_insights_ingestion_endpoint, "https://")
+    error_message = "application_insights_ingestion_endpoint must be empty or start with https://."
+  }
+}
+
+variable "gitops_sync_interval_seconds" {
+  type        = number
+  description = "Flux Git source and Kustomization sync interval in seconds."
+  default     = 300
+
+  validation {
+    condition     = var.gitops_sync_interval_seconds >= 60
+    error_message = "gitops_sync_interval_seconds must be at least 60."
+  }
+}
+
+variable "gitops_timeout_seconds" {
+  type        = number
+  description = "Flux Git source and Kustomization reconciliation timeout in seconds."
+  default     = 600
+
+  validation {
+    condition     = var.gitops_timeout_seconds >= 60
+    error_message = "gitops_timeout_seconds must be at least 60."
+  }
+}
+
 variable "enable_acr" {
   type        = bool
   description = "Whether to create Azure Container Registry."

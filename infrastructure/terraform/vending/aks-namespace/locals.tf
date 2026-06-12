@@ -1,5 +1,6 @@
 locals {
-  identity_name = "id-pe-${var.environment}-${var.team_name}-${var.namespace}"
+  identity_name             = "id-pe-${var.environment}-${var.team_name}-${var.namespace}"
+  flux_service_account_name = "tenant-${var.team_name}-${var.environment}-${var.namespace}"
 
   labels = merge(
     var.extra_labels,
@@ -23,7 +24,9 @@ locals {
   output_root = startswith(var.output_directory, "/") ? var.output_directory : "${path.module}/${var.output_directory}"
 
   parent_output_directory    = abspath("${local.output_root}/tenants/${var.team_name}/${var.environment}")
-  namespace_output_directory = "${local.parent_output_directory}/${var.namespace}"
+  tenant_output_directory    = "${local.parent_output_directory}/${var.namespace}"
+  namespace_output_directory = "${local.tenant_output_directory}/bootstrap"
+  workload_output_directory  = "${local.tenant_output_directory}/workloads"
 
   manifests = {
     "namespace.yaml" = yamlencode({
@@ -75,22 +78,7 @@ locals {
       roleRef = {
         kind     = "ClusterRole"
         apiGroup = "rbac.authorization.k8s.io"
-        name     = "edit"
-      }
-    })
-
-    "networkpolicy-default-deny.yaml" = yamlencode({
-      apiVersion = "networking.k8s.io/v1"
-      kind       = "NetworkPolicy"
-      metadata = {
-        name        = "default-deny"
-        namespace   = var.namespace
-        labels      = local.labels
-        annotations = local.annotations
-      }
-      spec = {
-        podSelector = {}
-        policyTypes = ["Ingress", "Egress"]
+        name     = "view"
       }
     })
 
@@ -133,6 +121,39 @@ locals {
       }
     })
 
+    "flux-serviceaccount.yaml" = yamlencode({
+      apiVersion = "v1"
+      kind       = "ServiceAccount"
+      metadata = {
+        name      = local.flux_service_account_name
+        namespace = "flux-system"
+        labels    = local.labels
+      }
+    })
+
+    "flux-rolebinding.yaml" = yamlencode({
+      apiVersion = "rbac.authorization.k8s.io/v1"
+      kind       = "RoleBinding"
+      metadata = {
+        name        = "rb-${var.namespace}-flux-reconciler"
+        namespace   = var.namespace
+        labels      = local.labels
+        annotations = local.annotations
+      }
+      subjects = [
+        {
+          kind      = "ServiceAccount"
+          name      = local.flux_service_account_name
+          namespace = "flux-system"
+        }
+      ]
+      roleRef = {
+        kind     = "ClusterRole"
+        apiGroup = "rbac.authorization.k8s.io"
+        name     = "platform:tenant-flux-reconciler"
+      }
+    })
+
     "kustomization.yaml" = yamlencode({
       apiVersion = "kustomize.config.k8s.io/v1beta1"
       kind       = "Kustomization"
@@ -140,9 +161,10 @@ locals {
         "namespace.yaml",
         "resourcequota.yaml",
         "rbac.yaml",
-        "networkpolicy-default-deny.yaml",
         "networkpolicy-egress-allowlist.yaml",
         "serviceaccount.yaml",
+        "flux-serviceaccount.yaml",
+        "flux-rolebinding.yaml",
       ]
     })
   }
@@ -157,10 +179,11 @@ locals {
       annotations = local.annotations
     }
     spec = {
-      interval = "5m"
-      prune    = true
-      wait     = true
-      path     = "./tenants/${var.team_name}/${var.environment}/${var.namespace}"
+      interval           = "5m"
+      prune              = true
+      serviceAccountName = local.flux_service_account_name
+      wait               = true
+      path               = "./tenants/${var.team_name}/${var.environment}/${var.namespace}/workloads"
       sourceRef = {
         kind = "GitRepository"
         name = "platform-cluster-state"

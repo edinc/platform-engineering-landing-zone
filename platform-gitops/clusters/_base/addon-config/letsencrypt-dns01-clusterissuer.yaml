@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-dns01
+  annotations:
+    platform.example.io/issuer-purpose: public-wildcard
+spec:
+  acme:
+    email: platform-engineering@${platform_root_domain}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-dns01-account-key
+    solvers:
+      - dns01:
+          azureDNS:
+            hostedZoneName: ${platform_root_domain}
+            resourceGroupName: ${azure_dns_resource_group_name}
+            subscriptionID: ${platform_subscription_id}
+            environment: AzurePublicCloud
+            managedIdentity:
+              clientID: ${cert_manager_client_id}
