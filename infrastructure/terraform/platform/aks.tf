@@ -181,6 +181,21 @@ resource "azurerm_kubernetes_cluster_node_pool" "default_user" {
   }
 }
 
+resource "azapi_update_resource" "aks_node_auto_provisioning" {
+  count = var.enable_aks && var.enable_aks_node_auto_provisioning ? 1 : 0
+
+  type        = "Microsoft.ContainerService/managedClusters@2025-05-01"
+  resource_id = azurerm_kubernetes_cluster.platform[0].id
+
+  body = {
+    properties = {
+      nodeProvisioningProfile = {
+        mode = "Auto"
+      }
+    }
+  }
+}
+
 resource "azurerm_role_assignment" "aks_acr_pull" {
   count = var.enable_aks && var.enable_acr ? 1 : 0
 

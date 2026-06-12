@@ -1,0 +1,4 @@
+stage: 08
+status: executable
+executable_location: .github/workflows/ttl-sweep.yml
+description: Scheduled Azure CLI TTL sweep that opens decommission PRs for expired demo resources.

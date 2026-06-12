@@ -73,6 +73,31 @@ output "front_door_profile_id" {
   description = "Front Door Premium profile ID, or null when disabled."
 }
 
+output "aks_node_auto_provisioning_enabled" {
+  value       = var.enable_aks && var.enable_aks_node_auto_provisioning
+  description = "Whether Stage 08 AKS Node Auto-Provisioning is enabled for the platform cluster."
+}
+
+output "stage08_action_group_ids" {
+  value       = { for severity, action_group in azurerm_monitor_action_group.stage08 : severity => action_group.id }
+  description = "Azure Monitor Action Group IDs keyed by severity for Stage 08 alert routing."
+}
+
+output "stage08_prometheus_rule_group_id" {
+  value       = try(azurerm_monitor_alert_prometheus_rule_group.platform_slos[0].id, null)
+  description = "Managed Prometheus alert rule group ID for Stage 08 platform SLO alerts, or null when alerting is disabled."
+}
+
+output "cost_allocator_function_app_id" {
+  value       = try(module.cost_allocator[0].function_app_id, null)
+  description = "Stage 08 cost allocator Function App ID, or null when disabled."
+}
+
+output "cost_allocator_showback_container_id" {
+  value       = try(module.cost_allocator[0].showback_container_id, null)
+  description = "Stage 08 cost showback output container ID, or null when disabled."
+}
+
 output "private_endpoint_ids" {
   value       = { for key, endpoint in azurerm_private_endpoint.platform : key => endpoint.id }
   description = "Private Endpoint IDs keyed by service."

@@ -15,8 +15,10 @@ spec:
         name: open-telemetry
         namespace: flux-system
   values:
+    image:
+      repository: otel/opentelemetry-collector-contrib
     mode: deployment
-    replicaCount: 2
+    replicaCount: 1
     presets:
       kubernetesAttributes:
         enabled: true
@@ -42,18 +44,47 @@ spec:
             http: {}
       processors:
         batch: {}
+        k8sattributes:
+          auth_type: serviceAccount
+          extract:
+            labels:
+              - from: namespace
+                key: team
+                tag_name: team
+              - from: namespace
+                key: product
+                tag_name: product
+              - from: pod
+                key: app
+                tag_name: service.name
+              - from: pod
+                key: app.kubernetes.io/version
+                tag_name: version
         memory_limiter:
           check_interval: 5s
           limit_percentage: 80
           spike_limit_percentage: 25
+        resource/platform:
+          attributes:
+            - action: insert
+              key: service.namespace
+              value: platform
+            - action: upsert
+              key: deployment.environment
+              value: ${platform_profile}
         tail_sampling:
           decision_wait: 10s
+          num_traces: 50000
           policies:
             - name: errors
               type: status_code
               status_code:
                 status_codes:
                   - ERROR
+            - name: baseline
+              type: probabilistic
+              probabilistic:
+                sampling_percentage: ${otel_trace_sampling_percentage}
       exporters:
         otlphttp/azure:
           endpoint: ${application_insights_ingestion_endpoint}
@@ -64,6 +95,8 @@ spec:
               - otlp
             processors:
               - memory_limiter
+              - k8sattributes
+              - resource/platform
               - tail_sampling
               - batch
             exporters:
