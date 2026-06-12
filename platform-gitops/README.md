@@ -10,6 +10,11 @@ repository. Terraform copies this directory into `platform-cluster-state` and
 mirrors the tested Kyverno policies from `policies/kyverno/` into
 `clusters/_base/policies/kyverno/`.
 
+Stage 08 extends the seed with observability and SRE primitives under
+`clusters/_base/addon-config/observability`: OTel conventions, Sloth SLOs,
+Prometheus alert rules with `runbook_url` annotations, dashboards-as-code, KEDA
+scale-to-zero patterns, and rightsizing automation.
+
 ## Layout
 
 | Path | Purpose |
@@ -17,6 +22,7 @@ mirrors the tested Kyverno policies from `policies/kyverno/` into
 | `clusters/_base/` | Shared platform add-ons installed by Flux. |
 | `clusters/_base/controllers/` | Namespaces, Helm repositories, and controller HelmReleases that establish CRDs. |
 | `clusters/_base/addon-config/` | CRD-backed resources and Kyverno policies applied after controllers are ready. |
+| `clusters/_base/addon-config/observability/` | Stage 08 observability, SLO, alerting, and FinOps manifests. |
 | `clusters/overlays/demo` | Demo overlay with cost-conscious defaults. |
 | `clusters/overlays/nonprod` | Non-production overlay with enforcement enabled. |
 | `clusters/overlays/prod` | Production overlay with HA/security-oriented patches. |
@@ -32,7 +38,7 @@ Before setting `enable_gitops = true` in the platform Terraform stack, confirm:
    and strict post-build substitution replaces the cluster-state source URL,
    branch, provider, DNS, Key Vault, and Workload Identity values.
 4. The Stage 05 `vend-namespace.yml` workflow can open a PR into `tenants/`.
-5. `make stage07-contracts policy-test-kyverno kubeconform` passes in this repo.
+5. `make stage07-contracts stage08-contracts policy-test-kyverno kubeconform` passes in this repo.
 
 The tree under `platform-gitops/` is a seed template. Terraform mirrors
 `policies/kyverno/*.yaml` into

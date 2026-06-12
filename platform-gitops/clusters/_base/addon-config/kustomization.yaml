@@ -5,7 +5,17 @@ resources:
   - letsencrypt-dns01-clusterissuer.yaml
   - platform-private-ca-clusterissuer.yaml
   - platform-private-ca-sync-deployment.yaml
+  - observability/otel-conventions-configmap.yaml
+  - observability/rightsizing/platform-key-vault-secretstore.yaml
+  - observability/rightsizing/platform-rightsizing-github-externalsecret.yaml
+  - observability/rightsizing/vpa-rightsizing-reporter-configmap.yaml
+  - observability/rightsizing/vpa-rightsizing-reporter-serviceaccount.yaml
+  - observability/rightsizing/vpa-rightsizing-reporter-clusterrole.yaml
+  - observability/rightsizing/vpa-rightsizing-reporter-clusterrolebinding.yaml
   - observability/dashboards/kube-system-dashboard.yaml
+  - observability/dashboards/platform-slos-dashboard.yaml
+  - observability/keda/keda-scale-to-zero-pattern.yaml
+  - observability/rightsizing/vpa-rightsizing-reporter-cronjob.yaml
   - policies/kyverno/disallow-host-namespaces.yaml
   - policies/kyverno/disallow-host-path-volumes.yaml
   - policies/kyverno/disallow-latest-image-tag.yaml

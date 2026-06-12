@@ -78,20 +78,24 @@ variable "subnet_address_prefixes" {
   type        = map(string)
   description = "Address prefixes for Stage 04 platform subnets."
   default = {
-    aks-system         = "10.30.0.0/22"
-    aks-user           = "10.30.4.0/22"
-    private-endpoints  = "10.30.8.0/24"
-    postgres-delegated = "10.30.9.0/24"
-    aca-infra          = "10.30.10.0/23"
-    shared-ingress     = "10.30.12.0/24"
+    aks-system           = "10.30.0.0/22"
+    aks-user             = "10.30.4.0/22"
+    private-endpoints    = "10.30.8.0/24"
+    postgres-delegated   = "10.30.9.0/24"
+    aca-infra            = "10.30.10.0/23"
+    shared-ingress       = "10.30.12.0/24"
+    function-integration = "10.30.13.0/27"
   }
 
   validation {
-    condition = alltrue([
-      for name in ["aks-system", "aks-user", "private-endpoints", "postgres-delegated", "aca-infra", "shared-ingress"] :
-      contains(keys(var.subnet_address_prefixes), name)
-    ])
-    error_message = "subnet_address_prefixes must include aks-system, aks-user, private-endpoints, postgres-delegated, aca-infra, and shared-ingress."
+    condition = alltrue(concat(
+      [
+        for name in ["aks-system", "aks-user", "private-endpoints", "postgres-delegated", "aca-infra", "shared-ingress"] :
+        contains(keys(var.subnet_address_prefixes), name)
+      ],
+      var.enable_cost_allocator ? [contains(keys(var.subnet_address_prefixes), "function-integration")] : [],
+    ))
+    error_message = "subnet_address_prefixes must include aks-system, aks-user, private-endpoints, postgres-delegated, aca-infra, and shared-ingress. enable_cost_allocator also requires function-integration."
   }
 }
 
@@ -251,6 +255,26 @@ variable "enable_managed_prometheus" {
   default     = false
 }
 
+variable "azure_monitor_workspace_id" {
+  type        = string
+  description = "Azure Monitor workspace resource ID used by Managed Prometheus alert rule groups."
+  default     = ""
+
+  validation {
+    condition = (
+      var.azure_monitor_workspace_id == "" ||
+      can(regex("^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.Monitor/accounts/[^/]+$", var.azure_monitor_workspace_id))
+    )
+    error_message = "azure_monitor_workspace_id must be empty or a full Azure Monitor workspace resource ID."
+  }
+}
+
+variable "enable_aks_node_auto_provisioning" {
+  type        = bool
+  description = "Whether to enable AKS Node Auto-Provisioning on the platform cluster. Use after validating regional quota and AKS API support."
+  default     = false
+}
+
 variable "enable_gitops" {
   type        = bool
   description = "Whether to install the Microsoft-managed Flux extension and root Flux configuration for the platform cluster."
@@ -390,6 +414,17 @@ variable "application_insights_ingestion_endpoint" {
   }
 }
 
+variable "otel_trace_sampling_percentage" {
+  type        = number
+  description = "Baseline OpenTelemetry trace sampling percentage substituted into the collector. Use 100 for demo/dev and 10 for nonprod/prod."
+  default     = null
+
+  validation {
+    condition     = var.otel_trace_sampling_percentage == null || (var.otel_trace_sampling_percentage >= 0 && var.otel_trace_sampling_percentage <= 100)
+    error_message = "otel_trace_sampling_percentage must be null or a value between 0 and 100."
+  }
+}
+
 variable "gitops_sync_interval_seconds" {
   type        = number
   description = "Flux Git source and Kustomization sync interval in seconds."
@@ -506,6 +541,89 @@ variable "enable_aca_environment" {
   type        = bool
   description = "Whether to create the ACA managed environment substrate."
   default     = true
+}
+
+variable "enable_alerting_action_groups" {
+  type        = bool
+  description = "Whether to create Stage 08 Azure Monitor Action Groups for SEV1/SEV2/SEV3 routing."
+  default     = false
+}
+
+variable "enable_cost_allocator" {
+  type        = bool
+  description = "Whether to deploy the Stage 08 cost allocator Function App that consumes the existing Cost Management export container."
+  default     = false
+}
+
+variable "cost_export_storage_container_id" {
+  type        = string
+  description = "Existing ALZ-owned Cost Management export storage container resource ID consumed by the cost allocator."
+  default     = ""
+
+  validation {
+    condition = (
+      var.cost_export_storage_container_id == "" ||
+      can(regex("^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.Storage/storageAccounts/[^/]+/blobServices/default/containers/[^/]+$", var.cost_export_storage_container_id))
+    )
+    error_message = "cost_export_storage_container_id must be empty or a full storage container resource ID."
+  }
+}
+
+variable "cost_export_root_folder" {
+  type        = string
+  description = "Root folder path inside the existing Cost Management export container."
+  default     = "subscription"
+}
+
+variable "cost_allocator_function_package_path" {
+  type        = string
+  description = "Optional local ZIP package path for the cost allocator Function App deployment."
+  default     = null
+}
+
+variable "cost_allocator_public_network_access_enabled" {
+  type        = bool
+  description = "Whether the cost allocator Function App and storage allow public network access. Set false only after private endpoints and Function VNet integration are wired."
+  default     = false
+}
+
+variable "cost_allocator_application_insights_connection_string" {
+  type        = string
+  description = "Optional Application Insights connection string for cost allocator telemetry."
+  default     = ""
+  sensitive   = true
+}
+
+variable "alerting_teams_webhook_url" {
+  type        = string
+  description = "Demo-profile Teams webhook URL for Azure Monitor Action Group notifications. Supply out of band; never commit a real URL."
+  default     = ""
+  sensitive   = true
+
+  validation {
+    condition     = var.alerting_teams_webhook_url == "" || startswith(var.alerting_teams_webhook_url, "https://")
+    error_message = "alerting_teams_webhook_url must be empty or start with https://."
+  }
+}
+
+variable "alerting_email_receivers" {
+  type = list(object({
+    name          = string
+    email_address = string
+  }))
+  description = "Optional email receivers added to every Stage 08 Action Group."
+  default     = []
+}
+
+variable "alerting_pagerduty_itsm" {
+  type = object({
+    workspace_id         = string
+    connection_id        = string
+    region               = string
+    ticket_configuration = string
+  })
+  description = "PagerDuty ITSM connector settings for non-demo Action Groups. workspace_id format is '<subscription id>|<workspace id>'."
+  default     = null
 }
 
 variable "owner" {

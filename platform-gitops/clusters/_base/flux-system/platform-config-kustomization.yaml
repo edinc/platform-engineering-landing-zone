@@ -26,9 +26,11 @@ spec:
       external_dns_client_id: ${external_dns_client_id}
       external_secrets_client_id: ${external_secrets_client_id}
       platform_key_vault_name: ${platform_key_vault_name}
+      platform_profile: ${platform_profile}
       platform_root_domain: ${platform_root_domain}
       platform_subscription_id: ${platform_subscription_id}
       platform_tenant_id: ${platform_tenant_id}
+      otel_trace_sampling_percentage: ${otel_trace_sampling_percentage}
   prune: true
   retryInterval: 1m
   serviceAccountName: platform-reconciler

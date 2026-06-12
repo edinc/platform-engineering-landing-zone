@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vpa-rightsizing-reporter
+  namespace: observability
+  labels:
+    app: vpa-rightsizing-reporter
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+data:
+  reporter.py: |
+    import json
+    import os
+    import ssl
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+
+    def required(name):
+        value = os.environ.get(name, "")
+        if not value:
+            raise RuntimeError(f"Missing required environment variable: {name}")
+        return value
+
+
+    def request_json(url, token, method="GET", payload=None, cafile=None):
+        data = None if payload is None else json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(url, data=data, method=method)
+        request.add_header("Accept", "application/vnd.github+json" if "api.github.com" in url else "application/json")
+        request.add_header("Authorization", f"Bearer {token}")
+        if data is not None:
+            request.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(request, context=ssl.create_default_context(cafile=cafile)) as response:
+            body = response.read()
+            return json.loads(body.decode("utf-8")) if body else {}
+
+
+    def kubernetes_get(path):
+        host = required("KUBERNETES_SERVICE_HOST")
+        port = os.environ.get("KUBERNETES_SERVICE_PORT", "443")
+        token = open("/var/run/secrets/kubernetes.io/serviceaccount/token", encoding="utf-8").read()
+        return request_json(
+            f"https://{host}:{port}{path}",
+            token,
+            cafile="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+        )
+
+
+    def github_issue_exists(repo, token, title):
+        encoded = urllib.parse.quote(f'repo:{repo} is:issue is:open in:title "{title}"')
+        result = request_json(f"https://api.github.com/search/issues?q={encoded}", token)
+        return result.get("total_count", 0) > 0
+
+
+    def main():
+        repo = required("GITHUB_REPOSITORY")
+        token = required("GITHUB_TOKEN")
+        items = kubernetes_get("/apis/autoscaling.k8s.io/v1/verticalpodautoscalers").get("items", [])
+        for item in items:
+            namespace = item["metadata"].get("namespace", "default")
+            name = item["metadata"]["name"]
+            recommendations = item.get("status", {}).get("recommendation", {}).get("containerRecommendations", [])
+            if not recommendations:
+                continue
+            title = f"Rightsizing recommendation: {namespace}/{name}"
+            if github_issue_exists(repo, token, title):
+                continue
+            body = [
+                "Stage 08 VPA rightsizing found updated recommendations.",
+                "",
+                f"- Namespace: `{namespace}`",
+                f"- VPA: `{name}`",
+                "",
+                "```json",
+                json.dumps(recommendations, indent=2),
+                "```",
+            ]
+            request_json(
+                f"https://api.github.com/repos/{repo}/issues",
+                token,
+                method="POST",
+                payload={"title": title, "body": "\n".join(body), "labels": ["finops", "rightsizing"]},
+            )
+
+
+    if __name__ == "__main__":
+        main()
