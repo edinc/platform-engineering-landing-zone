@@ -1,0 +1,29 @@
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: sample-service-availability
+  namespace: sample-service
+  labels:
+    app.kubernetes.io/name: sample-service
+    team: platform-engineering
+    product: landing-zone
+    costCenter: cc-platform
+    dataClassification: internal
+spec:
+  service: sample-service
+  labels:
+    repo: edinc/platform-engineering-landing-zone
+  slos:
+    - name: availability
+      objective: 99.5
+      sli:
+        events:
+          errorQuery: sum(rate(http_server_requests_total{namespace="sample-service",service="sample-service",status=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(http_server_requests_total{namespace="sample-service",service="sample-service"}[{{.window}}]))
+      alerting:
+        name: SampleServiceAvailabilityBurn
+        labels:
+          severity: sev2
+        annotations:
+          runbook_url: docs/runbooks/sre/platform-slo-burn.md
+          dashboard_url: grafana/d/platform-slos

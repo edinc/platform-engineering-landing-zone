@@ -9,13 +9,14 @@ TERRAFORM_DIRS := $(shell find infrastructure/terraform -type f -name '*.tf' -no
 BOOTSTRAP_DIR := infrastructure/terraform/_bootstrap
 # The _bootstrap stack uses a remote backend and import-based adoption, so it is
 # driven by the dedicated bootstrap-* targets rather than the generic plan/apply.
-PLANNABLE_TERRAFORM_DIRS := $(filter-out $(BOOTSTRAP_DIR),$(TERRAFORM_DIRS))
+PLANNABLE_TERRAFORM_DIRS := $(filter-out $(BOOTSTRAP_DIR) infrastructure/terraform/_modules/%,$(TERRAFORM_DIRS))
 HELM_CHART_DIRS := $(shell find . -type f -name 'Chart.yaml' -not -path './.git/*' -exec dirname {} \; 2>/dev/null | sort -u)
 K8S_MANIFESTS := $(shell find platform-gitops templates -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null | sort)
+STAGE08_ALERT_RULES := $(shell { find platform-gitops/clusters/_base/addon-config/observability -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null; printf '%s\n' infrastructure/terraform/platform/monitoring.tf; } | sort)
 CONTRACT_REQUESTS := $(shell find docs/contracts -type f \( -path '*/examples/*.yaml' -o -name 'vending-request.yaml' \) 2>/dev/null | sort)
 CONTRACT_NEGATIVE_REQUESTS := $(shell find docs/contracts/tests -type f -name '*.yaml' 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts alert-runbook-lint finops-cost-test azure-test-stage08 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -38,7 +39,7 @@ lint: pre-commit terraform-fmt tflint ## Run local linting checks.
 pre-commit: ## Run pre-commit hooks across tracked files.
 	$(MISE_EXEC) pre-commit run --all-files
 
-validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts ## Run validation checks that do not deploy resources.
+validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts ## Run validation checks that do not deploy resources.
 
 terraform-fmt: ## Check Terraform formatting.
 	@if [ -z "$(TERRAFORM_DIRS)" ]; then \
@@ -128,6 +129,18 @@ workflow-contracts: ## Validate Stage 06 reusable workflow contracts.
 
 stage07-contracts: ## Validate Stage 07 GitOps, Flux, and Kyverno contracts.
 	$(PYTHON) scripts/gitops/validate_stage07_gitops.py
+
+stage08-contracts: alert-runbook-lint finops-cost-test ## Validate Stage 08 observability, SRE, and FinOps contracts.
+	$(PYTHON) scripts/observability/validate_stage08_observability.py
+
+alert-runbook-lint: ## Ensure Prometheus alert rules carry runbook_url annotations.
+	$(PYTHON) scripts/observability/lint_alert_runbooks.py $(STAGE08_ALERT_RULES)
+
+finops-cost-test: ## Test Stage 08 cost showback allocation logic.
+	$(PYTHON) scripts/finops/test_cost_showback.py
+
+azure-test-stage08: ## Run Azure CLI read-only validation for deployed Stage 08 resources.
+	bash scripts/azure/validate_stage08_azure.sh
 
 policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
 	$(MISE_EXEC) conftest test --namespace terraform.tags --policy policies/rego policies/rego/fixtures/compliant-terraform-plan.json

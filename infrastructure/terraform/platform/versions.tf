@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.14"
     }
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.1"
+    }
   }
 
   # Stage 04 platform shared-services state. Backend settings are supplied at

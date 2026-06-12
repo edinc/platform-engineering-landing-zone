@@ -1,0 +1,33 @@
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: "${{ values.component_id }}-availability"
+  namespace: "${{ values.namespace }}"
+  labels:
+    app.kubernetes.io/name: "${{ values.component_id }}"
+    app.kubernetes.io/managed-by: backstage
+    team: "${{ values.team }}"
+    product: "${{ values.product }}"
+    costCenter: "${{ values.cost_center }}"
+    dataClassification: "${{ values.data_classification }}"
+spec:
+  service: "${{ values.component_id }}"
+  labels:
+    repo: "${{ values.repo }}"
+  slos:
+    - name: availability
+      objective: ${{ values.slo_availability_target }}
+      description: "${{ values.component_id }} returns non-5xx responses."
+      sli:
+        events:
+          errorQuery: sum(rate(http_server_requests_total{namespace="${{ values.namespace }}",service="${{ values.component_id }}",status=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(http_server_requests_total{namespace="${{ values.namespace }}",service="${{ values.component_id }}"}[{{.window}}]))
+      alerting:
+        name: "${{ values.component_id }}AvailabilityBurn"
+        labels:
+          severity: sev2
+          team: "${{ values.team }}"
+          product: "${{ values.product }}"
+        annotations:
+          runbook_url: "${{ values.runbook_url }}"
+          dashboard_url: "${{ values.dashboard_url }}"

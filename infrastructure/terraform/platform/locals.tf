@@ -8,6 +8,16 @@ locals {
   key_vault_name   = "kv-pe-${var.profile}-${var.location_short}-${var.name_suffix}"
   service_bus_name = "sb-${local.name_prefix}-${var.name_suffix}"
   postgres_name    = "pg-${local.name_prefix}-${var.name_suffix}"
+  action_group_name = {
+    sev1 = "ag-${local.name_prefix}-sev1"
+    sev2 = "ag-${local.name_prefix}-sev2"
+    sev3 = "ag-${local.name_prefix}-sev3"
+  }
+  otel_trace_sampling_percentage = (
+    var.otel_trace_sampling_percentage != null ? var.otel_trace_sampling_percentage : (
+      var.profile == "demo" ? 100 : 10
+    )
+  )
 
   acr_geo_replication_locations = (
     length(var.acr_geo_replication_locations) > 0 ? var.acr_geo_replication_locations : (
@@ -31,6 +41,7 @@ locals {
     var.enable_acr ? { acr = ["privatelink.azurecr.io"] } : {},
     var.enable_key_vault ? { key_vault = ["privatelink.vaultcore.azure.net"] } : {},
     var.enable_service_bus ? { service_bus = ["privatelink.servicebus.windows.net"] } : {},
+    var.enable_cost_allocator && !var.cost_allocator_public_network_access_enabled ? { cost_allocator = ["privatelink.blob.core.windows.net", "privatelink.queue.core.windows.net", "privatelink.table.core.windows.net", "privatelink.azurewebsites.net"] } : {},
   )
 
   private_endpoint_specs = merge(
@@ -81,14 +92,26 @@ locals {
         ]
       }
     }
+    function-integration = {
+      name = "app-service"
+      service_delegation = {
+        name = "Microsoft.Web/serverFarms"
+        actions = [
+          "Microsoft.Network/virtualNetworks/subnets/action",
+        ]
+      }
+    }
   }
 
-  route_table_subnet_keys = [
-    "aks-system",
-    "aks-user",
-    "aca-infra",
-    "shared-ingress",
-  ]
+  route_table_subnet_keys = concat(
+    [
+      "aks-system",
+      "aks-user",
+      "aca-infra",
+      "shared-ingress",
+    ],
+    var.enable_cost_allocator && contains(keys(var.subnet_address_prefixes), "function-integration") ? ["function-integration"] : [],
+  )
 
   diagnostic_targets = var.log_analytics_workspace_id == "" ? {} : merge(
     var.enable_acr ? {

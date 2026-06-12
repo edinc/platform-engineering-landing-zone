@@ -44,10 +44,10 @@ Next free number: **0054**
 | 0034 | Vending request schema | Accepted | [`0034-vending-request-schema.md`](0034-vending-request-schema.md) |
 | 0035 | Dependency updater strategy | Accepted | [`0035-dependency-updater-strategy.md`](0035-dependency-updater-strategy.md) |
 | 0036 | Kyverno as single in-cluster policy engine | Accepted | [`0036-kyverno-single-engine.md`](0036-kyverno-single-engine.md) |
-| 0037 | OTel resource attributes and log fields | Seeded in Stage 08 | Pending |
-| 0038 | SLO tooling | Seeded in Stage 08 | Pending |
-| 0039 | On-call tooling | Seeded in Stage 08 | Pending |
-| 0040 | Status page tooling | Seeded in Stage 08 | Pending |
+| 0037 | OTel resource attributes and log fields | Accepted | [`0037-otel-conventions.md`](0037-otel-conventions.md) |
+| 0038 | SLO tooling | Accepted | [`0038-slo-tooling.md`](0038-slo-tooling.md) |
+| 0039 | On-call tooling | Accepted | [`0039-on-call-tooling.md`](0039-on-call-tooling.md) |
+| 0040 | Status page tooling | Accepted | [`0040-status-page-tooling.md`](0040-status-page-tooling.md) |
 | 0041 | Backstage RBAC | Seeded in Stage 09 | Pending |
 | 0042 | TechDocs storage | Seeded in Stage 09 | Pending |
 | 0043 | Ownership matrix | Seeded in Stage 10 | Pending |

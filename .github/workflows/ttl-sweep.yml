@@ -1,0 +1,129 @@
+name: Demo TTL sweep (Stage 08)
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment tag value to sweep.
+        required: false
+        default: demo
+      dry_run:
+        description: Only report expired resources; do not open a PR.
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: ttl-sweep-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: Find expired demo resources
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: finops
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      SWEEP_ENVIRONMENT: ${{ inputs.environment || 'demo' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Validate required variables
+        run: |
+          set -euo pipefail
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID SWEEP_ENVIRONMENT; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing variables: ${missing[*]}."
+            exit 1
+          fi
+          case "$SWEEP_ENVIRONMENT" in
+            demo|nonprod)
+              ;;
+            *)
+              echo "::error::TTL sweep may only target demo or nonprod."
+              exit 1
+              ;;
+          esac
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover expired resources
+        id: expired
+        run: |
+          set -euo pipefail
+          mkdir -p decommission
+          az resource list \
+            --tag "env=${SWEEP_ENVIRONMENT}" \
+            --query "[?tags.expiresOn != null].{id:id,name:name,type:type,resourceGroup:resourceGroup,expiresOn:tags.expiresOn,owner:tags.owner,team:tags.team,product:tags.product}" \
+            -o json > .tools-expiring.json
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import date
+
+          with open(".tools-expiring.json", encoding="utf-8") as handle:
+              resources = json.load(handle)
+
+          today = date.today()
+          expired = []
+          for resource in resources:
+              try:
+                  expires_on = date.fromisoformat(resource["expiresOn"][:10])
+              except (TypeError, ValueError):
+                  continue
+              if expires_on < today:
+                  expired.append(resource)
+
+          with open("decommission/expired-demo-resources.json", "w", encoding="utf-8") as handle:
+              json.dump({"generatedOn": today.isoformat(), "resources": expired}, handle, indent=2)
+              handle.write("\n")
+          print(f"expired_count={len(expired)}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"count={len(expired)}\n")
+          PY
+
+      - name: Stop when nothing expired
+        if: ${{ steps.expired.outputs.count == '0' || inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          cat decommission/expired-demo-resources.json
+
+      - name: Open decommission PR
+        if: ${{ steps.expired.outputs.count != '0' && !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="ttl-sweep/${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add decommission/expired-demo-resources.json
+          git commit -m "chore: request demo TTL decommission"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${branch}"
+          gh pr create \
+            --title "chore: decommission expired demo resources" \
+            --body "Stage 08 TTL sweep found expired ${SWEEP_ENVIRONMENT} resources. Review the generated manifest and remove the resources through Terraform or Flux-owned desired state." \
+            --base main \
+            --head "$branch"

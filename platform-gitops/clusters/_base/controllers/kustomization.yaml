@@ -19,6 +19,7 @@ resources:
   - platform/helmrepository-kedacore.yaml
   - platform/helmrepository-ingress-nginx.yaml
   - platform/helmrepository-open-telemetry.yaml
+  - platform/helmrepository-fairwinds-stable.yaml
   - platform/secrets-store-csi-driver.yaml
   - platform/csi-secrets-store-provider-azure.yaml
   - platform/external-secrets.yaml
@@ -29,5 +30,6 @@ resources:
   - platform/keda.yaml
   - platform/ingress-nginx.yaml
   - platform/ama-metrics-settings-configmap.yaml
+  - platform/vpa.yaml
   - platform/opentelemetry-collector.yaml
   - platform/opentelemetry-collector-node.yaml

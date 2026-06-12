@@ -1,14 +1,17 @@
 resource "terraform_data" "input_guard" {
   input = {
-    enable_aks                   = var.enable_aks
-    enable_acr                   = var.enable_acr
-    enable_key_vault             = var.enable_key_vault
-    enable_postgres              = var.enable_postgres
-    enable_service_bus           = var.enable_service_bus
-    enable_private_endpoints     = var.enable_private_endpoints
-    log_analytics_workspace_id   = var.log_analytics_workspace_id
-    private_dns_zone_ids         = var.private_dns_zone_ids
-    postgres_password_is_present = var.postgres_administrator_password != null
+    enable_aks                        = var.enable_aks
+    enable_acr                        = var.enable_acr
+    enable_key_vault                  = var.enable_key_vault
+    enable_postgres                   = var.enable_postgres
+    enable_service_bus                = var.enable_service_bus
+    enable_private_endpoints          = var.enable_private_endpoints
+    log_analytics_workspace_id        = var.log_analytics_workspace_id
+    private_dns_zone_ids              = var.private_dns_zone_ids
+    postgres_password_is_present      = var.postgres_administrator_password != null
+    enable_alerting_action_groups     = var.enable_alerting_action_groups
+    enable_aks_node_auto_provisioning = var.enable_aks_node_auto_provisioning
+    enable_cost_allocator             = var.enable_cost_allocator
   }
 
   lifecycle {
@@ -71,6 +74,52 @@ resource "terraform_data" "input_guard" {
     precondition {
       condition     = !var.enable_gitops || can(regex("^clusters/overlays/${var.profile}$", local.gitops_root_path))
       error_message = "enable_gitops requires the Flux root path to match clusters/overlays/<profile>."
+    }
+
+    precondition {
+      condition     = !var.enable_aks_node_auto_provisioning || var.enable_aks
+      error_message = "enable_aks_node_auto_provisioning requires enable_aks."
+    }
+
+    precondition {
+      condition = (
+        !var.enable_alerting_action_groups ||
+        (var.profile == "demo" && var.alerting_teams_webhook_url != "") ||
+        (var.profile != "demo" && var.alerting_pagerduty_itsm != null)
+      )
+      error_message = "enable_alerting_action_groups requires alerting_teams_webhook_url for demo and alerting_pagerduty_itsm for nonprod/prod."
+    }
+
+    precondition {
+      condition     = !var.enable_alerting_action_groups || var.azure_monitor_workspace_id != ""
+      error_message = "enable_alerting_action_groups requires azure_monitor_workspace_id so Managed Prometheus rules can route to Action Groups."
+    }
+
+    precondition {
+      condition     = !var.enable_alerting_action_groups || var.enable_managed_prometheus
+      error_message = "enable_alerting_action_groups requires enable_managed_prometheus so platform SLO rules have a metrics source."
+    }
+
+    precondition {
+      condition     = !var.enable_cost_allocator || var.cost_export_storage_container_id != ""
+      error_message = "enable_cost_allocator requires cost_export_storage_container_id."
+    }
+
+    precondition {
+      condition     = !var.enable_cost_allocator || var.cost_allocator_function_package_path != null
+      error_message = "enable_cost_allocator requires cost_allocator_function_package_path pointing at the packaged Function App."
+    }
+
+    precondition {
+      condition = (
+        !var.enable_cost_allocator ||
+        var.cost_allocator_public_network_access_enabled ||
+        contains(keys(var.private_dns_zone_ids), "privatelink.blob.core.windows.net") &&
+        contains(keys(var.private_dns_zone_ids), "privatelink.queue.core.windows.net") &&
+        contains(keys(var.private_dns_zone_ids), "privatelink.table.core.windows.net") &&
+        contains(keys(var.private_dns_zone_ids), "privatelink.azurewebsites.net")
+      )
+      error_message = "enable_cost_allocator with public access disabled requires private DNS zones for blob, queue, table, and azurewebsites private endpoints."
     }
 
     precondition {
