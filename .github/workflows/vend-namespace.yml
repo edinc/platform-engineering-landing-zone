@@ -409,11 +409,21 @@ jobs:
           git config user.name "platform-vending-bot[bot]"
           git config user.email "platform-vending-bot[bot]@users.noreply.github.com"
 
-          mkdir -p "$cluster_state_path"
+          mkdir -p "$cluster_state_path/bootstrap" "$cluster_state_path/workloads"
           mkdir -p "$(dirname "$cluster_state_flux_file")"
-          rsync -a --delete "${manifest_dir}/" "${cluster_state_path}/"
+          rsync -a --delete "${manifest_dir}/bootstrap/" "${cluster_state_path}/bootstrap/"
+          if [ ! -f "${cluster_state_path}/workloads/kustomization.yaml" ]; then
+            cp "${manifest_dir}/workloads/kustomization.yaml" "${cluster_state_path}/workloads/kustomization.yaml"
+          fi
           cp "$flux_file" "$cluster_state_flux_file"
-          git add "$cluster_state_path" "$cluster_state_flux_file"
+          tenant_index="clusters/overlays/${environment}/tenants/kustomization.yaml"
+          mkdir -p "$(dirname "$tenant_index")"
+          if [ ! -f "$tenant_index" ]; then
+            printf 'apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nresources: []\n' > "$tenant_index"
+          fi
+          tenant_bootstrap="../../../../tenants/${team}/${environment}/${namespace}/bootstrap"
+          python3 "$GITHUB_WORKSPACE/scripts/gitops/update_tenant_index.py" "$tenant_index" "$tenant_bootstrap" "$(basename "$cluster_state_flux_file")"
+          git add "$cluster_state_path" "$cluster_state_flux_file" "$tenant_index"
           if git diff --cached --quiet; then
             echo "::notice::No cluster-state manifest changes to commit."
             exit 0

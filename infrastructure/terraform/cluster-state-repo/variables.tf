@@ -43,3 +43,9 @@ variable "required_status_checks" {
   description = "Status check contexts required by branch protection. Empty keeps the seed repo usable before Stage 06 workflows exist."
   default     = []
 }
+
+variable "stage07_seed_files_enabled" {
+  type        = bool
+  description = "Whether Terraform should write the expanded Stage 07 seed files directly to the default branch. Enable only during first repository creation before branch protection is active; use PR-based GitOps promotion afterwards."
+  default     = false
+}

@@ -1,0 +1,64 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-cert-manager-issuers
+  annotations:
+    policies.kyverno.io/title: Restrict cert-manager issuers
+    policies.kyverno.io/category: Network Security
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: ingress-tls-hosts-stay-in-namespace-subdomain
+      match:
+        any:
+          - resources:
+              kinds:
+                - Ingress
+      preconditions:
+        any:
+          - key: "{{ request.object.metadata.annotations.\"cert-manager.io/cluster-issuer\" || '' }}"
+            operator: NotEquals
+            value: ""
+          - key: "{{ request.object.metadata.annotations.\"cert-manager.io/issuer\" || '' }}"
+            operator: NotEquals
+            value: ""
+      validate:
+        message: Ingress TLS hosts using ClusterIssuers must stay under <namespace>.${platform_root_domain}.
+        pattern:
+          spec:
+            =(tls):
+              - hosts:
+                  - "*.{{ request.object.metadata.namespace }}.${platform_root_domain}"
+    - name: certificate-issuerref-uses-approved-clusterissuer
+      match:
+        any:
+          - resources:
+              kinds:
+                - Certificate
+      validate:
+        message: Certificates must use an approved ClusterIssuer.
+        deny:
+          conditions:
+            any:
+              - key: "{{ request.object.spec.issuerRef.kind || '' }}"
+                operator: NotEquals
+                value: ClusterIssuer
+              - key: "{{ request.object.spec.issuerRef.name || '' }}"
+                operator: NotIn
+                value:
+                  - letsencrypt-dns01
+                  - platform-private-ca
+    - name: certificate-dnsnames-stay-in-namespace-subdomain
+      match:
+        any:
+          - resources:
+              kinds:
+                - Certificate
+      validate:
+        message: Certificate DNS names must stay under <namespace>.${platform_root_domain}.
+        pattern:
+          spec:
+            dnsNames:
+              - "*.{{ request.object.metadata.namespace }}.${platform_root_domain}"

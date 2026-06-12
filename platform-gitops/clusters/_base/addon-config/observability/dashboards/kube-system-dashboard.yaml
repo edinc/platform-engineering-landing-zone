@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-kube-system
+  namespace: observability
+  labels:
+    app: managed-grafana
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+    grafana_dashboard: "1"
+data:
+  kube-system.json: |
+    {
+      "title": "AKS kube-system baseline",
+      "schemaVersion": 39,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "kube-system CPU usage",
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"kube-system\"}[5m]))"
+            }
+          ]
+        }
+      ]
+    }

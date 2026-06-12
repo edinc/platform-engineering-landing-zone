@@ -43,6 +43,37 @@ resource "terraform_data" "input_guard" {
     }
 
     precondition {
+      condition     = !var.enable_gitops || var.enable_aks
+      error_message = "enable_gitops requires enable_aks."
+    }
+
+    precondition {
+      condition     = !var.enable_gitops || var.enable_key_vault
+      error_message = "enable_gitops requires enable_key_vault because Stage 07 cert-manager and CSI integrations use the platform Key Vault."
+    }
+
+    precondition {
+      condition = (
+        !var.enable_gitops ||
+        alltrue([
+          var.platform_root_domain != "",
+          var.azure_dns_resource_group_name != "",
+          var.cert_manager_workload_identity_client_id != "",
+          var.external_dns_workload_identity_client_id != "",
+          var.external_secrets_workload_identity_client_id != "",
+          var.aso_workload_identity_client_id != "",
+          var.application_insights_ingestion_endpoint != "",
+        ])
+      )
+      error_message = "enable_gitops requires platform_root_domain, azure_dns_resource_group_name, cert_manager_workload_identity_client_id, external_dns_workload_identity_client_id, external_secrets_workload_identity_client_id, aso_workload_identity_client_id, and application_insights_ingestion_endpoint."
+    }
+
+    precondition {
+      condition     = !var.enable_gitops || can(regex("^clusters/overlays/${var.profile}$", local.gitops_root_path))
+      error_message = "enable_gitops requires the Flux root path to match clusters/overlays/<profile>."
+    }
+
+    precondition {
       condition     = !var.enable_aca_environment || var.firewall_private_ip_address != ""
       error_message = "enable_aca_environment requires firewall_private_ip_address so the internal ACA environment has an explicit outbound path."
     }

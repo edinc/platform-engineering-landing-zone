@@ -15,7 +15,7 @@ K8S_MANIFESTS := $(shell find platform-gitops templates -type f \( -name '*.yaml
 CONTRACT_REQUESTS := $(shell find docs/contracts -type f \( -path '*/examples/*.yaml' -o -name 'vending-request.yaml' \) 2>/dev/null | sort)
 CONTRACT_NEGATIVE_REQUESTS := $(shell find docs/contracts/tests -type f -name '*.yaml' 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -38,7 +38,7 @@ lint: pre-commit terraform-fmt tflint ## Run local linting checks.
 pre-commit: ## Run pre-commit hooks across tracked files.
 	$(MISE_EXEC) pre-commit run --all-files
 
-validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts ## Run validation checks that do not deploy resources.
+validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts ## Run validation checks that do not deploy resources.
 
 terraform-fmt: ## Check Terraform formatting.
 	@if [ -z "$(TERRAFORM_DIRS)" ]; then \
@@ -125,6 +125,9 @@ contract-test: ## Validate public request contracts and negative fixtures.
 
 workflow-contracts: ## Validate Stage 06 reusable workflow contracts.
 	$(PYTHON) scripts/workflows/validate_stage06_workflows.py
+
+stage07-contracts: ## Validate Stage 07 GitOps, Flux, and Kyverno contracts.
+	$(PYTHON) scripts/gitops/validate_stage07_gitops.py
 
 policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
 	$(MISE_EXEC) conftest test --namespace terraform.tags --policy policies/rego policies/rego/fixtures/compliant-terraform-plan.json

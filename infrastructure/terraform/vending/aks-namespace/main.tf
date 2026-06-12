@@ -42,7 +42,7 @@ resource "azurerm_role_assignment" "key_vault_secrets_user" {
 
 resource "azurerm_role_assignment" "aks_namespace_writer" {
   scope                = "${var.aks_cluster_id}/namespaces/${var.namespace}"
-  role_definition_name = "Azure Kubernetes Service RBAC Writer"
+  role_definition_name = "Azure Kubernetes Service RBAC Viewer"
   principal_id         = var.entra_group_object_id
   principal_type       = "Group"
 }
@@ -63,11 +63,23 @@ resource "local_file" "manifests" {
   ]
 }
 
+resource "local_file" "workload_kustomization" {
+  filename             = "${local.workload_output_directory}/kustomization.yaml"
+  content              = "apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nresources: []\n"
+  file_permission      = "0644"
+  directory_permission = "0755"
+
+  depends_on = [local_file.manifests]
+}
+
 resource "local_file" "flux_kustomization" {
   filename             = "${local.parent_output_directory}/${var.namespace}-flux-kustomization.yaml"
   content              = "${local.flux_kustomization}\n"
   file_permission      = "0644"
   directory_permission = "0755"
 
-  depends_on = [local_file.manifests]
+  depends_on = [
+    local_file.manifests,
+    local_file.workload_kustomization,
+  ]
 }

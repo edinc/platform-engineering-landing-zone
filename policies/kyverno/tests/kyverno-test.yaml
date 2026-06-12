@@ -1,17 +1,90 @@
-name: require-standard-labels
+name: stage07-kyverno-baseline
 policies:
   - ../require-standard-labels.yaml
+  - ../disallow-latest-image-tag.yaml
+  - ../require-resource-requests-limits.yaml
+  - ../disallow-privileged-containers.yaml
+  - ../require-run-as-non-root.yaml
+  - ../require-read-only-root-filesystem.yaml
+  - ../require-pod-security-restricted.yaml
 resources:
-  - resources/pod-with-labels.yaml
+  - resources/pod-compliant.yaml
   - resources/pod-missing-labels.yaml
+  - resources/pod-latest-image.yaml
+  - resources/pod-missing-resources.yaml
+  - resources/pod-privileged.yaml
+  - resources/pod-root-user.yaml
+  - resources/pod-writable-root.yaml
+  - resources/namespace-restricted.yaml
+  - resources/namespace-missing-psa.yaml
 results:
   - policy: require-standard-labels
-    rule: require-app-kubernetes-labels
-    resource: pod-with-labels
+    rule: require-platform-labels
+    resource: pod-compliant
     kind: Pod
     result: pass
   - policy: require-standard-labels
-    rule: require-app-kubernetes-labels
+    rule: require-platform-labels
     resource: pod-missing-labels
     kind: Pod
+    result: fail
+  - policy: disallow-latest-image-tag
+    rule: disallow-latest-containers
+    resource: pod-compliant
+    kind: Pod
+    result: pass
+  - policy: disallow-latest-image-tag
+    rule: disallow-latest-containers
+    resource: pod-latest-image
+    kind: Pod
+    result: fail
+  - policy: require-resource-requests-limits
+    rule: require-container-resources
+    resource: pod-compliant
+    kind: Pod
+    result: pass
+  - policy: require-resource-requests-limits
+    rule: require-container-resources
+    resource: pod-missing-resources
+    kind: Pod
+    result: fail
+  - policy: disallow-privileged-containers
+    rule: disallow-privileged
+    resource: pod-compliant
+    kind: Pod
+    result: pass
+  - policy: disallow-privileged-containers
+    rule: disallow-privileged
+    resource: pod-privileged
+    kind: Pod
+    result: fail
+  - policy: require-run-as-non-root
+    rule: require-pod-run-as-non-root
+    resource: pod-compliant
+    kind: Pod
+    result: pass
+  - policy: require-run-as-non-root
+    rule: require-pod-run-as-non-root
+    resource: pod-root-user
+    kind: Pod
+    result: fail
+  - policy: require-read-only-root-filesystem
+    rule: require-read-only-root-filesystem
+    resource: pod-compliant
+    kind: Pod
+    result: pass
+  - policy: require-read-only-root-filesystem
+    rule: require-read-only-root-filesystem
+    resource: pod-writable-root
+    kind: Pod
+    result: fail
+  - policy: require-pod-security-restricted
+    rule: require-restricted-psa
+    resource: team-payments
+    kind: Namespace
+    result: pass
+  - policy: require-pod-security-restricted
+    rule: require-restricted-psa
+    resource: team-missing-psa
+    kind: Namespace
     result: fail
