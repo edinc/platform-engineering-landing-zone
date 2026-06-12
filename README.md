@@ -10,12 +10,12 @@ establishing the repository foundation, conventions, and quality gates.
 
 ## Current stage
 
-Stage 06 - CI/CD and software supply chain.
+Stage 07 - GitOps and in-cluster platform.
 
-This stage introduces OIDC-backed reusable GitHub Actions workflows for
-Terraform, policy checks, container build/sign/SBOM, Helm publishing,
-TechDocs publishing, GitOps PR creation, quay imports, and digest-pinned image
-promotion.
+This stage introduces Microsoft-managed Flux for AKS, the
+`platform-cluster-state` seed layout, Kyverno admission policies, Workload
+Identity-based secret/cert integrations, ASO, KEDA, ingress-nginx, and the first
+observability add-ons.
 
 ## Local setup
 

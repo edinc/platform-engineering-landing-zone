@@ -10,13 +10,19 @@ blast radius than the Terraform/source repository.
 | Capability | Resource |
 |------------|----------|
 | Repository | `github_repository` |
-| Seed layout | `github_repository_file` for `clusters/_base`, overlays, `tenants`, README, and CODEOWNERS |
+| Seed layout | `github_repository_file` for `platform-gitops/` seed content, `policies/kyverno/` mirrored under `clusters/_base/addon-config/policies/kyverno/`, and CODEOWNERS |
 | Default branch | `github_branch_default` |
 | Branch protection | `github_branch_protection` with PR review requirement; status checks are opt-in until Stage 06 workflows exist |
 
-Seed files are created before branch protection is enforced and then treated as
-bootstrap content. Later changes to the protected default branch must flow
-through PRs rather than direct Terraform commits.
+Seed files are bootstrap-only. By default Terraform preserves the original
+placeholder seed keys so existing state is not destroyed. Set
+`stage07_seed_files_enabled = true` only on first repository creation before
+branch protection exists. Later changes to the protected default branch must
+flow through PRs rather than direct Terraform commits. Stage 07 promotes
+`platform-gitops/` from a placeholder into the cluster-state seed and mirrors
+the tested Kyverno bundle into
+`clusters/_base/addon-config/policies/kyverno/` so the ordered
+`platform-config` Flux Kustomization can apply the admission bundle.
 
 ## Prerequisites
 

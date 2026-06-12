@@ -1,0 +1,52 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-default-network-policy
+  annotations:
+    policies.kyverno.io/title: Require default NetworkPolicy
+    policies.kyverno.io/category: Network Security
+    policies.kyverno.io/severity: medium
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: require-default-deny-after-generation
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+      exclude:
+        any:
+          - resources:
+              names:
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - flux-system
+                - cert-manager
+                - external-dns
+                - external-secrets
+                - kyverno
+                - azureserviceoperator-system
+                - keda
+                - ingress-nginx
+                - observability
+      preconditions:
+        all:
+          - key: "{{ request.operation }}"
+            operator: Equals
+            value: UPDATE
+      context:
+        - name: defaultDenyName
+          apiCall:
+            urlPath: "/apis/networking.k8s.io/v1/namespaces/{{ request.object.metadata.name }}/networkpolicies/default-deny"
+            jmesPath: "metadata.name || ''"
+      validate:
+        message: Namespaces must keep the generated default-deny NetworkPolicy.
+        deny:
+          conditions:
+            any:
+              - key: "{{ defaultDenyName }}"
+                operator: NotEquals
+                value: default-deny

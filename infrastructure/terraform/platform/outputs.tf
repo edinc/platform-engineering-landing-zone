@@ -23,6 +23,21 @@ output "aks_oidc_issuer_url" {
   description = "AKS OIDC issuer URL for Stage 07 workload identity federated credentials."
 }
 
+output "gitops_flux_extension_id" {
+  value       = try(azurerm_kubernetes_cluster_extension.flux[0].id, null)
+  description = "Microsoft-managed Flux extension ID, or null when GitOps is disabled."
+}
+
+output "gitops_flux_configuration_id" {
+  value       = try(azurerm_kubernetes_flux_configuration.platform[0].id, null)
+  description = "Root Flux configuration ID, or null when GitOps is disabled."
+}
+
+output "gitops_cluster_state_root_path" {
+  value       = local.gitops_root_path
+  description = "platform-cluster-state path reconciled by the root Flux Kustomization."
+}
+
 output "acr_id" {
   value       = try(azurerm_container_registry.platform[0].id, null)
   description = "Azure Container Registry ID, or null when disabled."

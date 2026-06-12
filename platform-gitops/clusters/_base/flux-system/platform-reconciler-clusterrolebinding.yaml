@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: platform-reconciler-cluster-admin
+  labels:
+    app: flux
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+subjects:
+  - kind: ServiceAccount
+    name: platform-reconciler
+    namespace: flux-system
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: cluster-admin

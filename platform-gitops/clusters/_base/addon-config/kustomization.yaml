@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - platform-private-ca-secretproviderclass.yaml
+  - letsencrypt-dns01-clusterissuer.yaml
+  - platform-private-ca-clusterissuer.yaml
+  - platform-private-ca-sync-deployment.yaml
+  - observability/dashboards/kube-system-dashboard.yaml
+  - policies/kyverno/disallow-host-namespaces.yaml
+  - policies/kyverno/disallow-host-path-volumes.yaml
+  - policies/kyverno/disallow-latest-image-tag.yaml
+  - policies/kyverno/disallow-privileged-containers.yaml
+  - policies/kyverno/generate-default-network-policy.yaml
+  - policies/kyverno/require-default-network-policy.yaml
+  - policies/kyverno/require-pod-security-restricted.yaml
+  - policies/kyverno/require-read-only-root-filesystem.yaml
+  - policies/kyverno/require-resource-requests-limits.yaml
+  - policies/kyverno/require-run-as-non-root.yaml
+  - policies/kyverno/require-standard-labels.yaml
+  - policies/kyverno/restrict-cert-manager-issuers.yaml
+  - policies/kyverno/restrict-external-dns-hostnames.yaml
+  - policies/kyverno/verify-cosign-signatures.yaml

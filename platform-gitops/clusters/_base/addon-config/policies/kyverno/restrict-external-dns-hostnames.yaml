@@ -1,0 +1,90 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-external-dns-hostnames
+  annotations:
+    policies.kyverno.io/title: Restrict ExternalDNS hostnames
+    policies.kyverno.io/category: Network Security
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: ingress-hostname-annotation-single-value
+      match:
+        any:
+          - resources:
+              kinds:
+                - Ingress
+      preconditions:
+        all:
+          - key: "{{ request.object.metadata.annotations.\"platform.example.io/external-dns\" || '' }}"
+            operator: Equals
+            value: enabled
+      validate:
+        message: ExternalDNS Ingress hostname annotations must not contain comma-separated names.
+        deny:
+          conditions:
+            any:
+              - key: "{{ contains(request.object.metadata.annotations.\"external-dns.alpha.kubernetes.io/hostname\" || '', ',') }}"
+                operator: Equals
+                value: true
+    - name: ingress-hosts-stay-in-namespace-subdomain
+      match:
+        any:
+          - resources:
+              kinds:
+                - Ingress
+      preconditions:
+        all:
+          - key: "{{ request.object.metadata.annotations.\"platform.example.io/external-dns\" || '' }}"
+            operator: Equals
+            value: enabled
+      validate:
+        message: ExternalDNS Ingress hosts must stay under <namespace>.${platform_root_domain}.
+        pattern:
+          metadata:
+            =(annotations):
+              =(external-dns.alpha.kubernetes.io/hostname): "*.{{ request.object.metadata.namespace }}.${platform_root_domain}"
+          spec:
+            rules:
+              - host: "*.{{ request.object.metadata.namespace }}.${platform_root_domain}"
+            =(tls):
+              - =(hosts):
+                  - "*.{{ request.object.metadata.namespace }}.${platform_root_domain}"
+    - name: service-hostname-annotation-single-value
+      match:
+        any:
+          - resources:
+              kinds:
+                - Service
+      preconditions:
+        all:
+          - key: "{{ request.object.metadata.annotations.\"platform.example.io/external-dns\" || '' }}"
+            operator: Equals
+            value: enabled
+      validate:
+        message: ExternalDNS Service hostname annotations must not contain comma-separated names.
+        deny:
+          conditions:
+            any:
+              - key: "{{ contains(request.object.metadata.annotations.\"external-dns.alpha.kubernetes.io/hostname\" || '', ',') }}"
+                operator: Equals
+                value: true
+    - name: service-hostname-stays-in-namespace-subdomain
+      match:
+        any:
+          - resources:
+              kinds:
+                - Service
+      preconditions:
+        all:
+          - key: "{{ request.object.metadata.annotations.\"platform.example.io/external-dns\" || '' }}"
+            operator: Equals
+            value: enabled
+      validate:
+        message: ExternalDNS Service hostnames must stay under <namespace>.${platform_root_domain}.
+        pattern:
+          metadata:
+            annotations:
+              external-dns.alpha.kubernetes.io/hostname: "*.{{ request.object.metadata.namespace }}.${platform_root_domain}"

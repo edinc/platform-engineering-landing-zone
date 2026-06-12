@@ -14,6 +14,7 @@ and [ADR-0050](../../../docs/adr/0050-aca-managed-environment.md).
 |------------|----------|-------|
 | Platform spoke network | `azurerm_virtual_network`, subnets, NSGs, optional UDR | UDR points to the Stage 03 firewall when `firewall_private_ip_address` is set. |
 | AKS | `azurerm_kubernetes_cluster`, user pool, AKS identity | Private, local accounts disabled, Entra/Azure RBAC, Workload Identity, OIDC, Azure CNI Overlay + Cilium, image cleaner, stable auto-upgrade channel. |
+| GitOps | `azurerm_kubernetes_cluster_extension`, `azurerm_kubernetes_flux_configuration` | Optional Stage 07 Microsoft-managed Flux extension and one root Kustomization per environment. |
 | ACR | `azurerm_container_registry`, cache rules | Premium, public access disabled, admin disabled, retention 14d, optional geo-replication. |
 | Key Vault | `azurerm_key_vault` | RBAC mode, purge protection, soft-delete 90d, public access disabled. |
 | Postgres | `azurerm_postgresql_flexible_server` | Optional until a secret source is wired; delegated subnet, private DNS, backstage database. |
@@ -59,6 +60,22 @@ CI validates credential-free with `terraform init -backend=false`.
 | `log_analytics_workspace_id` | Enables Defender/OMS/ACA logging integrations. |
 | `aks_host_encryption_enabled` | Keep `true` for production; set `false` only in demo subscriptions where EncryptionAtHost is unavailable. |
 
+## Stage 07 GitOps inputs
+
+Set `enable_gitops = true` after the `platform-cluster-state` repository exists
+and its seed content has been merged. By default the root Flux Kustomization
+watches `https://github.com/<github_owner>/platform-cluster-state` at
+`clusters/overlays/<profile>`. Private repositories must use a supported
+provider-backed auth path through `gitops_repository_provider`; static
+in-cluster Git credentials are intentionally not part of this stack.
+
+The root Flux configuration uses strict post-build substitution to inject
+environment-specific values into the cluster-state seed. `enable_gitops = true`
+therefore requires the root domain, DNS resource group, controller Workload
+Identity client IDs, and Application Insights ingestion endpoint inputs.
+The Microsoft Flux extension explicitly keeps `multiTenancy.enforce = true`; do
+not disable it for workload tenant reconciliation.
+
 ## Validation
 
 ```bash
@@ -73,8 +90,8 @@ make lint checkov
 | 1 | AKS private/RBAC/WI/Defender/planned-maintenance/image-cleaner baseline | Implemented for private/RBAC/WI/OIDC/Cilium/image-cleaner/maintenance; Defender is enabled when a workspace is supplied; AKS Backup remains follow-up. |
 | 2 | ACR Artifact Cache and quay import workflow | Cache rule contract added for unauthenticated supported sources; Docker Hub requires credentials and quay import uses `workflows/import-quay.yml`; ACR trusted-service bypass stays enabled so `az acr import` can run while public access is disabled. |
 | 3 | Backstage Postgres DB private | Optional Postgres + `backstage` database implemented; CMK rotation remains follow-up. |
-| 4 | Front Door + ingress-nginx PLS | Front Door Premium + WAF shell implemented; ingress-nginx/PLS origin waits for in-cluster Stage 07. |
-| 5 | Cluster-state repo | Implemented in sibling `../cluster-state-repo/` composition. |
+| 4 | Front Door + ingress-nginx PLS | Front Door Premium + WAF shell implemented; ingress-nginx is seeded for Flux in Stage 07 and PLS origin remains a later hardening step. |
+| 5 | Cluster-state repo | Implemented in sibling `../cluster-state-repo/` composition; Stage 07 adds the Flux root configuration contract. |
 | 6 | ACA managed environment | Implemented; app smoke test waits for golden-path/runtime stage. |
 | 7 | Service Bus namespace | Implemented with public access and local auth disabled. |
 | 8 | DR matrix | Added in `docs/runbooks/dr-matrix.md`; Stage 12 validates drills. |
