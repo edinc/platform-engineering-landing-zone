@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-platform-conventions
+  namespace: observability
+  labels:
+    app: opentelemetry
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+data:
+  required-resource-attributes: |
+    service.name
+    service.namespace
+    team
+    product
+    deployment.environment
+    version
+  structured-log-fields: |
+    timestamp
+    severity
+    message
+    trace_id
+    span_id
+    service.name
+    service.namespace
+    team
+    product
+    deployment.environment
+    version
+  language-libraries: |
+    node: pino
+    python: structlog
+    dotnet: serilog
+  sampling-policy: |
+    demo: 100 percent
+    nonprod: 10 percent head-based in SDKs plus collector baseline
+    prod: collector tail sampling keeps errors and a 10 percent baseline

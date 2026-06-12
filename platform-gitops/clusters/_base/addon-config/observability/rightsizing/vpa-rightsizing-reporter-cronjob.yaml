@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vpa-rightsizing-reporter
+  namespace: observability
+  labels:
+    app: vpa-rightsizing-reporter
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+spec:
+  schedule: "0 7 * * 1"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: vpa-rightsizing-reporter
+            team: platform-engineering
+            costCenter: cc-platform
+            dataClassification: internal
+        spec:
+          serviceAccountName: vpa-rightsizing-reporter
+          restartPolicy: Never
+          volumes:
+            - name: reporter
+              configMap:
+                name: vpa-rightsizing-reporter
+          containers:
+            - name: reporter
+              image: docker.io/library/python@sha256:6e86e32da1c9df234051a7cb4e6a8eff89cebc457da8dec8890fc4f376d6053d
+              imagePullPolicy: IfNotPresent
+              command:
+                - python
+              args:
+                - /opt/rightsizing/reporter.py
+              env:
+                - name: GITHUB_REPOSITORY
+                  valueFrom:
+                    secretKeyRef:
+                      name: platform-rightsizing-github
+                      key: repository
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: platform-rightsizing-github
+                      key: token
+              volumeMounts:
+                - name: reporter
+                  mountPath: /opt/rightsizing
+                  readOnly: true
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                runAsGroup: 65532
+                runAsUser: 65532
+                seccompProfile:
+                  type: RuntimeDefault
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi

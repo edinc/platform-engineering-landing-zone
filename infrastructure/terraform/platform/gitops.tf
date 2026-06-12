@@ -62,7 +62,9 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
         cluster_state_root_path                 = local.gitops_root_path
         external_dns_client_id                  = var.external_dns_workload_identity_client_id
         external_secrets_client_id              = var.external_secrets_workload_identity_client_id
+        otel_trace_sampling_percentage          = tostring(local.otel_trace_sampling_percentage)
         platform_key_vault_name                 = local.key_vault_name
+        platform_profile                        = var.profile
         platform_root_domain                    = var.platform_root_domain
         platform_subscription_id                = var.subscription_id
         platform_tenant_id                      = var.tenant_id

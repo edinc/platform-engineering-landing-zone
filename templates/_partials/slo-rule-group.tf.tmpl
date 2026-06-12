@@ -1,0 +1,33 @@
+resource "azurerm_monitor_alert_prometheus_rule_group" "${{ values.component_id }}_slo" {
+  name                = "amprg-${{ values.component_id }}-slo"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  cluster_name        = var.aks_cluster_name
+  description         = "Golden-path SLO alerts for ${{ values.component_id }}."
+  rule_group_enabled  = true
+  interval            = "PT1M"
+  scopes              = [var.azure_monitor_workspace_id]
+  tags                = var.tags
+
+  rule {
+    alert      = "${{ values.component_id }}AvailabilityBurn"
+    enabled    = true
+    expression = "sum(rate(http_server_requests_total{namespace=\"${{ values.namespace }}\",service=\"${{ values.component_id }}\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_total{namespace=\"${{ values.namespace }}\",service=\"${{ values.component_id }}\"}[5m])) > (1 - (${{ values.slo_availability_target }} / 100))"
+    for        = "PT10M"
+    severity   = 2
+
+    action {
+      action_group_id = var.sev2_action_group_id
+    }
+
+    annotations = {
+      runbook_url   = "${{ values.runbook_url }}"
+      dashboard_url = "${{ values.dashboard_url }}"
+    }
+
+    labels = {
+      team    = "${{ values.team }}"
+      product = "${{ values.product }}"
+    }
+  }
+}

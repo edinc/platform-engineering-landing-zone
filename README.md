@@ -10,12 +10,11 @@ establishing the repository foundation, conventions, and quality gates.
 
 ## Current stage
 
-Stage 07 - GitOps and in-cluster platform.
+Stage 08 - Observability, SRE, and FinOps.
 
-This stage introduces Microsoft-managed Flux for AKS, the
-`platform-cluster-state` seed layout, Kyverno admission policies, Workload
-Identity-based secret/cert integrations, ASO, KEDA, ingress-nginx, and the first
-observability add-ons.
+This stage makes observability, SLOs, alert routing, status-page readiness, and
+cost allocation first-class platform primitives before Backstage and golden-path
+templates ship.
 
 ## Local setup
 
