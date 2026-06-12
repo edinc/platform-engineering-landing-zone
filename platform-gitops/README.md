@@ -1,8 +1,41 @@
-# Platform GitOps source
+# Platform cluster-state seed
 
-Cluster desired state is expected to live in a separate Flux-watched repository
-to limit blast radius. This directory records the intended bootstrap contract
-and links to that repository when it exists.
+This directory is the source template for the separate
+`platform-cluster-state` repository created by the Stage 04
+`infrastructure/terraform/cluster-state-repo` stack.
 
-Stage 07 will add the Flux bootstrap workflow and cluster-state repository
-contract.
+Stage 07 installs the Microsoft-managed Flux extension on AKS and points one
+root Flux Kustomization at `clusters/overlays/<env>` in that separate
+repository. Terraform copies this directory into `platform-cluster-state` and
+mirrors the tested Kyverno policies from `policies/kyverno/` into
+`clusters/_base/policies/kyverno/`.
+
+## Layout
+
+| Path | Purpose |
+|------|---------|
+| `clusters/_base/` | Shared platform add-ons installed by Flux. |
+| `clusters/_base/controllers/` | Namespaces, Helm repositories, and controller HelmReleases that establish CRDs. |
+| `clusters/_base/addon-config/` | CRD-backed resources and Kyverno policies applied after controllers are ready. |
+| `clusters/overlays/demo` | Demo overlay with cost-conscious defaults. |
+| `clusters/overlays/nonprod` | Non-production overlay with enforcement enabled. |
+| `clusters/overlays/prod` | Production overlay with HA/security-oriented patches. |
+| `tenants/` | Target for Stage 05 namespace vending and later golden paths. |
+
+## Stage 07 dependency check
+
+Before setting `enable_gitops = true` in the platform Terraform stack, confirm:
+
+1. The `platform-cluster-state` repository exists and contains this seed layout.
+2. The target overlay path exists for the platform profile.
+3. Private repository access is configured through a supported Flux provider,
+   and strict post-build substitution replaces the cluster-state source URL,
+   branch, provider, DNS, Key Vault, and Workload Identity values.
+4. The Stage 05 `vend-namespace.yml` workflow can open a PR into `tenants/`.
+5. `make stage07-contracts policy-test-kyverno kubeconform` passes in this repo.
+
+The tree under `platform-gitops/` is a seed template. Terraform mirrors
+`policies/kyverno/*.yaml` into
+`clusters/_base/addon-config/policies/kyverno/` when creating
+`platform-cluster-state`; keep the mirrored seed copies in this directory
+aligned with the tested source files when changing policy content.

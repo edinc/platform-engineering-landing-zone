@@ -1,0 +1,46 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-host-namespaces
+  annotations:
+    policies.kyverno.io/title: Disallow host namespaces
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: disallow-host-namespace-sharing
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - flux-system
+                - cert-manager
+                - external-dns
+                - external-secrets
+                - kyverno
+                - azureserviceoperator-system
+                - keda
+                - ingress-nginx
+                - observability
+      validate:
+        message: Pods must not share hostNetwork, hostPID, or hostIPC.
+        deny:
+          conditions:
+            any:
+              - key: "{{ request.object.spec.hostNetwork || false }}"
+                operator: Equals
+                value: true
+              - key: "{{ request.object.spec.hostPID || false }}"
+                operator: Equals
+                value: true
+              - key: "{{ request.object.spec.hostIPC || false }}"
+                operator: Equals
+                value: true

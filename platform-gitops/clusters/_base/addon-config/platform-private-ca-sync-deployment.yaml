@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-private-ca-sync
+  namespace: cert-manager
+  labels:
+    app: platform-private-ca-sync
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform-private-ca-sync
+  template:
+    metadata:
+      labels:
+        app: platform-private-ca-sync
+        team: platform-engineering
+        costCenter: cc-platform
+        dataClassification: internal
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: cert-manager
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: sync
+          image: mcr.microsoft.com/oss/kubernetes/pause:3.10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi
+          volumeMounts:
+            - name: private-ca
+              mountPath: /mnt/private-ca
+              readOnly: true
+      volumes:
+        - name: private-ca
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: platform-private-ca

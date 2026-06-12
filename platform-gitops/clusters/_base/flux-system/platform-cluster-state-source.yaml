@@ -1,0 +1,16 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: platform-cluster-state
+  namespace: flux-system
+  labels:
+    app: flux
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+spec:
+  interval: 5m
+  provider: ${cluster_state_repository_provider}
+  ref:
+    branch: ${cluster_state_branch}
+  url: ${cluster_state_repository_url}

@@ -16,3 +16,5 @@ catalog with incident response, restore drills, and DR procedures.
 | [`release.md`](release.md) | Signed image, Helm artifact, and PR-based promotion operations | 06 |
 | [`renovate.md`](renovate.md) | Renovate dependency update operations | 06 |
 | [`ghas-cost.md`](ghas-cost.md) | GHAS and CodeQL opt-in and cost controls | 06 |
+| [`secret-rotation.md`](secret-rotation.md) | Key Vault-backed secret and certificate rotation contract | 07 |
+| [`cert-management.md`](cert-management.md) | cert-manager issuer choice and troubleshooting | 07 |

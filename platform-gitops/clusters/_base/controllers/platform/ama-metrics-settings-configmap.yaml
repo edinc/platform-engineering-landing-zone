@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ama-metrics-settings-configmap
+  namespace: kube-system
+  labels:
+    app: managed-prometheus
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+data:
+  schema-version: v1
+  config-version: ver1
+  default-scrape-settings-enabled: |-
+    kubelet = true
+    coredns = true
+    cadvisor = true
+    kubeproxy = true
+    apiserver = true
+    kubestate = true
+    nodeexporter = true
+  pod-annotation-based-scraping: |-
+    podannotationnamespaceregex = ".*"

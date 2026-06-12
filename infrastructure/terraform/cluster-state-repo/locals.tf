@@ -1,5 +1,8 @@
 locals {
-  seed_files = {
+  seed_source_dir   = abspath("${path.module}/../../../platform-gitops")
+  seed_source_files = sort(fileset(local.seed_source_dir, "**/*"))
+
+  legacy_seed_files = {
     "README.md"                          = <<-EOT
       # Platform cluster state
 
@@ -20,4 +23,20 @@ locals {
     "clusters/overlays/prod/.gitkeep"    = ""
     "tenants/.gitkeep"                   = ""
   }
+
+  stage07_seed_files = merge(
+    {
+      ".github/CODEOWNERS" = join("\n", var.codeowners)
+    },
+    {
+      for relative_path in local.seed_source_files :
+      relative_path => file("${local.seed_source_dir}/${relative_path}")
+    },
+    {
+      for relative_path in sort(fileset("${path.module}/../../../policies/kyverno", "*.yaml")) :
+      "clusters/_base/addon-config/policies/kyverno/${relative_path}" => file("${path.module}/../../../policies/kyverno/${relative_path}")
+    }
+  )
+
+  seed_files = var.stage07_seed_files_enabled ? local.stage07_seed_files : local.legacy_seed_files
 }

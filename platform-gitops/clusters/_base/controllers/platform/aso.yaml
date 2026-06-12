@@ -1,0 +1,27 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: azure-service-operator
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: azureserviceoperator-system
+  chart:
+    spec:
+      chart: azure-service-operator
+      version: "2.9.0"
+      sourceRef:
+        kind: HelmRepository
+        name: aso2
+        namespace: flux-system
+  values:
+    crdPattern: "servicebus.azure.com/*;keyvault.azure.com/*;dbforpostgresql.azure.com/*;storage.azure.com/*"
+    azureSubscriptionID: ${platform_subscription_id}
+    azureTenantID: ${platform_tenant_id}
+    azureClientID: ${aso_client_id}
+    useWorkloadIdentityAuth: true
+    podLabels:
+      azure.workload.identity/use: "true"
+    serviceAccount:
+      annotations:
+        azure.workload.identity/client-id: ${aso_client_id}

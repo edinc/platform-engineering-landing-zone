@@ -4,8 +4,8 @@ output "namespace" {
 }
 
 output "manifest_directory" {
-  value       = local.namespace_output_directory
-  description = "Directory containing rendered Flux-compatible tenant manifests."
+  value       = local.tenant_output_directory
+  description = "Directory containing rendered Flux-compatible tenant bootstrap and workload manifests."
 }
 
 output "flux_kustomization_file" {
@@ -30,17 +30,17 @@ output "workload_identity_principal_id" {
 
 output "aks_namespace_writer_assignment_id" {
   value       = azurerm_role_assignment.aks_namespace_writer.id
-  description = "Namespace-scoped AKS Azure RBAC Writer assignment for the team's Entra group."
+  description = "Namespace-scoped AKS Azure RBAC Viewer assignment for the team's Entra group. Writes flow through GitOps."
 }
 
 output "cluster_state_path" {
   value       = "tenants/${var.team_name}/${var.environment}/${var.namespace}"
-  description = "Destination namespace path in platform-cluster-state."
+  description = "Destination tenant path in platform-cluster-state."
 }
 
 output "cluster_state_flux_file" {
-  value       = "tenants/${var.team_name}/${var.environment}/${var.namespace}-flux-kustomization.yaml"
-  description = "Destination Flux Kustomization file in platform-cluster-state."
+  value       = "clusters/overlays/${var.environment}/tenants/${var.team_name}-${var.namespace}-flux-kustomization.yaml"
+  description = "Destination Flux Kustomization file in platform-cluster-state, indexed by the environment overlay."
 }
 
 output "backend_config_hint" {
