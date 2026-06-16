@@ -49,7 +49,7 @@ resource "azurerm_storage_account" "tfstate" {
   }
 
   network_rules {
-    default_action = "Deny"
+    default_action = var.firewall_default_action
     bypass         = ["AzureServices"]
     ip_rules       = local.firewall_ip_rules
   }
@@ -58,7 +58,21 @@ resource "azurerm_storage_account" "tfstate" {
     # CMK association is managed by azurerm_storage_account_customer_managed_key.
     # AzureRM also reads it back as a nested storage account block, so ignoring
     # the read-only mirror prevents a follow-up plan from removing the CMK.
-    ignore_changes = [customer_managed_key]
+    # Defender for Storage may add Microsoft-managed scanner private-link access
+    # to the state account; preserve that provider-managed hardening hook instead
+    # of removing it during bootstrap drift reconciliation.
+    ignore_changes = [
+      customer_managed_key,
+      network_rules[0].private_link_access,
+    ]
+
+    precondition {
+      condition = (
+        var.firewall_default_action == "Deny" ||
+        local.firewall_allow_permitted
+      )
+      error_message = "firewall_default_action = Allow is only permitted for local recovery/integration when local_recovery_mode_enabled is true, runner_ip_cidrs is empty, and local_recovery_mode_acknowledgement matches the documented phrase."
+    }
   }
 
   tags = local.tags

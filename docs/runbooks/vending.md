@@ -122,7 +122,7 @@ as the template.
 1. Open a PR with the request.
 2. Confirm `vend-namespace.yml` validates the schema and plans the Azure
    workload identity, ACR role assignment, Key Vault role assignment,
-   namespace-scoped AKS RBAC Viewer assignment, and rendered manifests.
+   namespace-scoped AKS RBAC Reader assignment, and rendered manifests.
 3. Merge after approval. The workflow applies the identity/role resources, fetches
    the GitHub App private key from Key Vault, opens a `platform-cluster-state` PR
    under `tenants/<team>/<env>/`, indexes the privileged namespace bootstrap
@@ -131,7 +131,7 @@ as the template.
    The workflow syncs only the generated `bootstrap/` directory with `--delete`;
    tenant-owned `workloads/` files are never deleted by namespace re-vending.
    Tenant write access is intentionally GitOps-first; direct Entra access is
-   viewer-only, the native Kubernetes RoleBinding is read-only, and
+   reader-only, the native Kubernetes RoleBinding is read-only, and
    NetworkPolicy changes remain platform-controlled.
 4. Review and merge the cluster-state PR after its CI passes.
 5. Stage 07 validates Flux reconciliation and Kyverno policy enforcement through
