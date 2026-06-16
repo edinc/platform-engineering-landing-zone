@@ -1,0 +1,17 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: backstage-chart
+  namespace: backstage
+  labels:
+    app: backstage
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+spec:
+  interval: 5m
+  provider: azure
+  serviceAccountName: backstage
+  url: oci://${platform_acr_login_server}/helm/backstage
+  ref:
+    digest: ${backstage_chart_digest}

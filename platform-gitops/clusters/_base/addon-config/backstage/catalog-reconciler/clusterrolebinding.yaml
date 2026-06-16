@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backstage-catalog-reconciler
+  labels:
+    app: backstage-catalog-reconciler
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: backstage-catalog-reconciler
+subjects:
+  - kind: ServiceAccount
+    name: backstage-catalog-reconciler
+    namespace: backstage

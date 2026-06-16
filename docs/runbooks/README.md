@@ -18,3 +18,5 @@ catalog with incident response, restore drills, and DR procedures.
 | [`ghas-cost.md`](ghas-cost.md) | GHAS and CodeQL opt-in and cost controls | 06 |
 | [`secret-rotation.md`](secret-rotation.md) | Key Vault-backed secret and certificate rotation contract | 07 |
 | [`cert-management.md`](cert-management.md) | cert-manager issuer choice and troubleshooting | 07 |
+| [`platform-slos.md`](platform-slos.md) | Platform SLO targets, monthly review cadence, and alert requirements | 08 |
+| [`backstage-ops.md`](backstage-ops.md) | Backstage upgrade, restore, TechDocs, Kubernetes plugin, RBAC, and catalog reconciliation operations | 09 |

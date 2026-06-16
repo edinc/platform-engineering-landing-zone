@@ -1,0 +1,152 @@
+app:
+  title: Azure Platform Engineering Portal
+  baseUrl: ${BACKSTAGE_BASE_URL}
+
+organization:
+  name: Platform Engineering
+
+backend:
+  baseUrl: ${BACKSTAGE_BACKEND_BASE_URL}
+  listen:
+    port: 7007
+  csp:
+    connect-src:
+      - "'self'"
+      - "http:"
+      - "https:"
+  cors:
+    origin: ${BACKSTAGE_BASE_URL}
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  auth:
+    externalAccess:
+      - type: jwks
+        options:
+          url: ${BACKSTAGE_K8S_SERVICE_ACCOUNT_JWKS_URL}
+          issuer: ${BACKSTAGE_K8S_SERVICE_ACCOUNT_ISSUER_URL}
+          audience: backstage
+          subjectPrefix: "system:serviceaccount:backstage:"
+        accessRestrictions:
+          - plugin: catalog
+            permission: catalog.entity.read
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      database: backstage
+      ssl:
+        rejectUnauthorized: true
+
+auth:
+  environment: production
+  providers:
+    microsoft:
+      production:
+        clientId: ${BACKSTAGE_MICROSOFT_AUTH_CLIENT_ID}
+        clientSecret: ${BACKSTAGE_MICROSOFT_AUTH_CLIENT_SECRET}
+        tenantId: ${AZURE_TENANT_ID}
+        signIn:
+          resolvers:
+            - resolver: emailMatchingUserEntityProfileEmail
+
+integrations:
+  github:
+    - host: github.com
+      apps:
+        - appId: ${GITHUB_APP_ID}
+          clientId: ${GITHUB_APP_CLIENT_ID}
+          clientSecret: ${GITHUB_APP_CLIENT_SECRET}
+          webhookSecret: ${GITHUB_APP_WEBHOOK_SECRET}
+          privateKey: ${GITHUB_APP_PRIVATE_KEY}
+
+catalog:
+  locations:
+    - type: file
+      target: ./catalog-info.yaml
+  import:
+    entityFilename: catalog-info.yaml
+  providers:
+    githubDiscovery:
+      platform:
+        organization: ${GITHUB_ORG}
+        catalogPath: /catalog-info.yaml
+        rules:
+          - allow: [Component, System, API, Resource, Domain]
+        schedule:
+          frequency: { minutes: 15 }
+          timeout: { minutes: 5 }
+    microsoftGraphOrg:
+      platform:
+        target: https://graph.microsoft.com/v1.0
+        authority: https://login.microsoftonline.com
+        tenantId: ${AZURE_TENANT_ID}
+        queryMode: advanced
+        rules:
+          - allow: [User, Group]
+        group:
+          filter: ${BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER}
+          select: [id, displayName, description]
+        userGroupMember:
+          filter: ${BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER}
+          path: /groups
+        schedule:
+          frequency: { minutes: 30 }
+          timeout: { minutes: 10 }
+  rules:
+    - allow: [Component, System, API, Resource, Domain]
+
+kubernetes:
+  serviceLocatorMethod:
+    type: multiTenant
+  clusterLocatorMethods:
+    - type: config
+      clusters:
+        - name: ${PLATFORM_ENV}
+          url: ${AKS_APISERVER_URL}
+          authProvider: azure
+          oidcTokenProvider: microsoft
+          dashboardUrl: ${AKS_DASHBOARD_URL}
+          dashboardApp: standard
+
+techdocs:
+  builder: external
+  generator:
+    runIn: local
+  publisher:
+    type: azureBlobStorage
+    azureBlobStorage:
+      containerName: ${TECHDOCS_STORAGE_CONTAINER_NAME}
+      credentials:
+        accountName: ${TECHDOCS_STORAGE_ACCOUNT_NAME}
+
+permission:
+  enabled: true
+  rbac:
+    groupsConfigMapName: backstage-rbac-groups
+    platformAdminsGroupRef: ${BACKSTAGE_PLATFORM_ADMINS_GROUP_REF}
+    platformOperatorsGroupRef: ${BACKSTAGE_PLATFORM_OPERATORS_GROUP_REF}
+    applicationTeamGroupRefs: ${BACKSTAGE_APPLICATION_TEAM_GROUP_REFS}
+    applicationTeamGroupMap: ${BACKSTAGE_APPLICATION_TEAM_GROUP_MAP}
+
+costInsights:
+  engineerCost: 200000
+  products:
+    platform:
+      name: Platform
+      aggregation: product
+      default: true
+  azure:
+    subscriptionId: ${AZURE_SUBSCRIPTION_ID}
+    showbackContainerUrl: ${COST_SHOWBACK_CONTAINER_URL}
+
+enabledPlugins:
+  - "@backstage/plugin-catalog"
+  - "@backstage/plugin-kubernetes"
+  - "@backstage/plugin-github-actions"
+  - "@backstage-community/plugin-flux"
+  - "@backstage/plugin-techdocs"
+  - "@backstage/plugin-scaffolder"
+  - "@backstage-community/plugin-cost-insights"
+  - "@backstage/plugin-permission-backend"

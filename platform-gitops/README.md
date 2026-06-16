@@ -15,6 +15,12 @@ Stage 08 extends the seed with observability and SRE primitives under
 Prometheus alert rules with `runbook_url` annotations, dashboards-as-code, KEDA
 scale-to-zero patterns, and rightsizing automation.
 
+Stage 09 adds an opt-in Backstage base under
+`clusters/_base/addon-config/backstage` plus per-environment overlays under
+`clusters/overlays/<env>/backstage`. Terraform enables it through a dedicated
+Backstage Flux configuration so the Stage 07/08 root platform reconciliation does
+not require portal inputs.
+
 ## Layout
 
 | Path | Purpose |
@@ -23,6 +29,8 @@ scale-to-zero patterns, and rightsizing automation.
 | `clusters/_base/controllers/` | Namespaces, Helm repositories, and controller HelmReleases that establish CRDs. |
 | `clusters/_base/addon-config/` | CRD-backed resources and Kyverno policies applied after controllers are ready. |
 | `clusters/_base/addon-config/observability/` | Stage 08 observability, SLO, alerting, and FinOps manifests. |
+| `clusters/_base/addon-config/backstage/` | Stage 09 Backstage MVP deployment and catalog drift reconciliation. |
+| `clusters/overlays/<env>/backstage/` | Environment overlays reconciled by the optional Stage 09 Backstage Flux configuration. |
 | `clusters/overlays/demo` | Demo overlay with cost-conscious defaults. |
 | `clusters/overlays/nonprod` | Non-production overlay with enforcement enabled. |
 | `clusters/overlays/prod` | Production overlay with HA/security-oriented patches. |
@@ -38,7 +46,7 @@ Before setting `enable_gitops = true` in the platform Terraform stack, confirm:
    and strict post-build substitution replaces the cluster-state source URL,
    branch, provider, DNS, Key Vault, and Workload Identity values.
 4. The Stage 05 `vend-namespace.yml` workflow can open a PR into `tenants/`.
-5. `make stage07-contracts stage08-contracts policy-test-kyverno kubeconform` passes in this repo.
+5. `make stage07-contracts stage08-contracts stage09-contracts policy-test-kyverno kubeconform` passes in this repo.
 
 The tree under `platform-gitops/` is a seed template. Terraform mirrors
 `policies/kyverno/*.yaml` into

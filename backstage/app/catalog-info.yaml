@@ -1,0 +1,152 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: platform-engineering-landing-zone
+  description: Azure Platform Engineering Landing Zone.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone
+spec:
+  owner: group:default/pe-platform-admins
+  domain: platform-engineering
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage
+  description: Developer portal for the platform.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/tree/main/backstage
+    backstage.io/kubernetes-id: backstage
+    github.com/project-slug: edinc/platform-engineering-landing-zone
+  tags: [portal, stage-09]
+spec:
+  type: website
+  lifecycle: production
+  owner: group:default/pe-platform-admins
+  system: platform-engineering-landing-zone
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: platform-shared-services
+  description: AKS, ACR, Key Vault, Postgres, Service Bus, and ACA shared services.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/platform
+    backstage.io/kubernetes-id: platform-shared-services
+spec:
+  type: infrastructure
+  lifecycle: production
+  owner: group:default/pe-platform-admins
+  system: platform-engineering-landing-zone
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: flux-gitops
+  description: Microsoft-managed Flux extension and platform cluster-state seed.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/tree/main/platform-gitops
+    backstage.io/kubernetes-id: flux-system
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/pe-platform-operators
+  system: platform-engineering-landing-zone
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: supply-chain-workflows
+  description: Reusable CI/CD, SBOM, signing, promotion, and GitOps workflows.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/tree/main/.github/workflows
+    github.com/project-slug: edinc/platform-engineering-landing-zone
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/pe-platform-operators
+  system: platform-engineering-landing-zone
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: observability-sre-finops
+  description: Stage 08 observability, SLO, alert routing, rightsizing, and cost showback.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/tree/main/platform-gitops/clusters/_base/addon-config/observability
+    backstage.io/kubernetes-id: observability
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/pe-platform-operators
+  system: platform-engineering-landing-zone
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: vending-workflows
+  description: Subscription and AKS namespace vending workflows.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/vending
+    github.com/project-slug: edinc/platform-engineering-landing-zone
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/pe-platform-operators
+  system: platform-engineering-landing-zone
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: techdocs-storage
+  description: Azure Blob publisher storage for Backstage TechDocs.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/techdocs.tf
+spec:
+  type: resource
+  lifecycle: production
+  owner: group:default/pe-platform-admins
+  system: platform-engineering-landing-zone
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: namespace-vending-contract
+  description: Versioned request contract for AKS namespace vending.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/tree/main/docs/contracts
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:default/pe-platform-operators
+  system: platform-engineering-landing-zone
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: Namespace vending contract
+      version: v1alpha1
+    paths: {}
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: platform-postgres
+  description: PostgreSQL Flexible Server database used by Backstage.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/postgres.tf
+spec:
+  type: database
+  owner: group:default/pe-platform-admins
+  system: platform-engineering-landing-zone
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: platform-acr
+  description: Azure Container Registry for platform images and Helm charts.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/acr.tf
+spec:
+  type: registry
+  owner: group:default/pe-platform-admins
+  system: platform-engineering-landing-zone

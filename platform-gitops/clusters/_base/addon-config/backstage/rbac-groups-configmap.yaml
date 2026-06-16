@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backstage-rbac-groups
+  namespace: backstage
+  labels:
+    app: backstage
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+data:
+  platformAdminsGroupRef: group:default/pe-platform-admins
+  platformOperatorsGroupRef: group:default/pe-platform-operators
+  applicationTeamGroupRefs: "${backstage_application_team_group_refs}"
+  applicationTeamGroupMap: >-
+    json:${backstage_application_team_group_map_json}

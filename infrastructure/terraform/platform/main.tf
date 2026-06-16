@@ -31,6 +31,11 @@ resource "terraform_data" "input_guard" {
     }
 
     precondition {
+      condition     = length(local.techdocs_storage_name) <= 24
+      error_message = "The derived TechDocs storage account name exceeds Azure's 24-character limit; shorten name_suffix, profile, or location_short."
+    }
+
+    precondition {
       condition     = length(local.postgres_name) <= 63
       error_message = "The derived PostgreSQL Flexible Server name exceeds Azure's 63-character limit; shorten name_suffix, profile, or location_short."
     }
@@ -69,6 +74,41 @@ resource "terraform_data" "input_guard" {
         ])
       )
       error_message = "enable_gitops requires platform_root_domain, azure_dns_resource_group_name, cert_manager_workload_identity_client_id, external_dns_workload_identity_client_id, external_secrets_workload_identity_client_id, aso_workload_identity_client_id, and application_insights_ingestion_endpoint."
+    }
+
+    precondition {
+      condition     = !var.enable_backstage || var.enable_gitops
+      error_message = "enable_backstage requires enable_gitops so Flux owns the Backstage deployment."
+    }
+
+    precondition {
+      condition = (
+        !var.enable_backstage ||
+        alltrue([
+          var.enable_acr,
+          var.enable_techdocs_storage,
+          var.platform_root_domain != "",
+          var.backstage_workload_identity_client_id != "",
+          var.backstage_workload_identity_principal_id != "",
+          var.backstage_catalog_reconciler_workload_identity_client_id != "",
+          var.backstage_catalog_reconciler_workload_identity_principal_id != "",
+          length(var.backstage_microsoft_graph_group_object_ids) > 0,
+          var.backstage_microsoft_auth_client_id != "",
+          var.backstage_chart_digest != "",
+          var.backstage_image_digest != "",
+          var.backstage_catalog_reconciler_image_digest != "",
+          try(azurerm_container_registry.platform[0].login_server, "") != "",
+          local.backstage_image_repository != "",
+          local.backstage_catalog_reconciler_image_repository != "",
+          local.backstage_postgres_host != "",
+          local.backstage_aks_apiserver_url != "",
+          local.backstage_kubernetes_service_account_issuer_url != "",
+          local.backstage_kubernetes_service_account_jwks_url != "",
+          local.backstage_cost_showback_container_url != "",
+          local.backstage_cost_showback_container_id != "",
+        ])
+      )
+      error_message = "enable_backstage requires enable_acr, enable_techdocs_storage, platform_root_domain, Backstage and catalog reconciler workload identity IDs, backstage_microsoft_graph_group_object_ids, backstage_microsoft_auth_client_id, backstage_chart_digest, backstage_image_digest, backstage_catalog_reconciler_image_digest, Backstage image repositories, Backstage Postgres host, AKS API server/OIDC issuer URL, and cost showback container URL/ID."
     }
 
     precondition {
@@ -135,6 +175,21 @@ resource "terraform_data" "input_guard" {
     precondition {
       condition     = !var.enable_postgres || contains(keys(var.private_dns_zone_ids), local.postgres_private_dns_zone_name)
       error_message = "enable_postgres requires private_dns_zone_ids to include privatelink.postgres.database.azure.com."
+    }
+
+    precondition {
+      condition     = !var.enable_techdocs_storage || var.backstage_workload_identity_principal_id != ""
+      error_message = "enable_techdocs_storage requires backstage_workload_identity_principal_id for Azure Blob data-plane RBAC."
+    }
+
+    precondition {
+      condition     = !var.enable_techdocs_storage || contains(keys(var.private_dns_zone_ids), "privatelink.blob.core.windows.net")
+      error_message = "enable_techdocs_storage requires private_dns_zone_ids to include privatelink.blob.core.windows.net."
+    }
+
+    precondition {
+      condition     = !var.enable_techdocs_storage || var.enable_private_endpoints
+      error_message = "enable_techdocs_storage requires enable_private_endpoints because TechDocs storage disables public network access."
     }
 
     precondition {
