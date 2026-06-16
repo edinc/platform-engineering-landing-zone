@@ -106,6 +106,10 @@ def validate_backstage_config() -> None:
         fail("GitHub org discovery must not import identity entities; use Microsoft Graph for User/Group")
     require_contains("backstage/app/app-config.yaml", "- allow: [User, Group]")
     require_contains("backstage/deploy/templates/configmap.yaml", "- allow: [User, Group]")
+    require_contains("backstage/app/app-config.yaml", "templates/onboard-team/template.yaml")
+    require_contains("backstage/app/app-config.yaml", "templates/request-egress-exception/template.yaml")
+    require_contains("backstage/deploy/templates/configmap.yaml", "templates/onboard-team/template.yaml")
+    require_contains("backstage/deploy/templates/configmap.yaml", "templates/request-egress-exception/template.yaml")
     require_contains("backstage/app/app-config.yaml", "credentials:\n        accountName:")
     require_contains("backstage/deploy/templates/configmap.yaml", "credentials:\n            accountName:")
     if "runtime-health-server" in package_json or (ROOT / "backstage/app/src/runtime-health-server.mjs").exists():

@@ -1,0 +1,63 @@
+name: Egress exception expiry sweep (Stage 10)
+
+on:
+  schedule:
+    - cron: "43 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only report expired exceptions; do not open a PR.
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: egress-exception-sweep-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: Remove expired egress exceptions
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Sweep expired exceptions
+        id: sweep
+        run: |
+          set -euo pipefail
+          python3 scripts/policy/sweep_expired_egress_exceptions.py | tee .tools-egress-sweep.out
+          count="$(sed -n 's/^expired_count=//p' .tools-egress-sweep.out | tail -1)"
+          echo "count=${count:-0}" >> "$GITHUB_OUTPUT"
+          cat decommission/expired-egress-exceptions.json
+
+      - name: Stop when nothing expired
+        if: ${{ steps.sweep.outputs.count == '0' || inputs.dry_run }}
+        run: git --no-pager diff -- decommission/expired-egress-exceptions.json
+
+      - name: Open cleanup PR
+        if: ${{ steps.sweep.outputs.count != '0' && !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="egress-expiry-sweep/${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add policies/azure/firewall/allowlist.json policies/azure/firewall/exception-patches platform-gitops/clusters/overlays/*/network/egress-exceptions decommission/expired-egress-exceptions.json
+          git commit -m "chore: remove expired egress exceptions"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${branch}"
+          gh pr create \
+            --title "chore: remove expired egress exceptions" \
+            --body "Stage 10 egress exception sweep removed expired firewall and Cilium exception artifacts. Review and merge to stop reconciling expired egress paths." \
+            --base main \
+            --head "$branch"

@@ -34,7 +34,7 @@ responsible / accountable / consulted / informed roles. Excerpt:
 | Hub VNet, Firewall, Private DNS | Platform team | Stage 03 |
 | AKS cluster | Platform team | Stage 04 |
 | ACR repo `<team>/*` | Owning app team | Vended |
-| AKS namespace `<team>-<env>` | Owning app team | Vended; RBAC scoped |
+| AKS namespace `<team>-<product>-<env>` | Owning app team | Vended; RBAC scoped |
 | Backstage Component | Owning app team | `spec.owner` mandatory |
 | Azure resources via ASO | Owning app team | `managedBy: aso` |
 | Azure resources via TF | Platform / vending PR | `managedBy: terraform` |
