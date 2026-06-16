@@ -1,0 +1,46 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: egress-${{ values.teamName }}-${{ values.environment }}-${{ values.exceptionSlug }}
+  namespace: ${{ values.namespace }}
+  labels:
+    platform.example.io/team: ${{ values.teamName }}
+    platform.example.io/egress-exception: ${{ values.exceptionSlug }}
+    platform.example.io/data-classification: ${{ values.dataClassification }}
+  annotations:
+    platform.example.io/expires-on: ${{ values.expiresOn }}
+    platform.example.io/justification: "${{ values.businessJustification }}"
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: ${{ values.appSelector }}
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+{% for fqdn in values.destinationFqdns %}
+{% if fqdn.startsWith('*.') %}
+              - matchPattern: "${{ fqdn }}"
+{% else %}
+              - matchName: "${{ fqdn }}"
+{% endif %}
+{% endfor %}
+    - toFQDNs:
+{% for fqdn in values.destinationFqdns %}
+{% if fqdn.startsWith('*.') %}
+        - matchPattern: "${{ fqdn }}"
+{% else %}
+        - matchName: "${{ fqdn }}"
+{% endif %}
+{% endfor %}
+      toPorts:
+        - ports:
+            - port: "${{ values.port }}"
+              protocol: TCP

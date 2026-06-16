@@ -1,0 +1,34 @@
+apiVersion: platform.example.io/v1alpha1
+kind: TeamOnboardingRequest
+metadata:
+  name: ${{ values.teamName }}
+  labels:
+    platform.example.io/requester: backstage
+spec:
+  team: ${{ values.teamName }}
+  product: ${{ values.productName }}
+  costCenter: ${{ values.costCenter }}
+  onCallRotationId: ${{ values.onCallRotationId }}
+  githubTeam: ${{ values.githubTeam }}
+  dataClassification: ${{ values.dataClassification }}
+  environments:
+{% for environment in values.environments %}
+    - ${{ environment }}
+{% endfor %}
+  regions:
+    - ${{ values.region }}
+  github:
+    owner: edinc
+    repositoryPermissions:
+      platform-engineering-landing-zone: pull
+  namespace:
+    serviceAccountName: ${{ values.serviceAccountName }}
+    resourceQuota:
+      cpuRequests: "1000m"
+      memoryRequests: 2Gi
+      cpuLimits: "2000m"
+      memoryLimits: 4Gi
+      pods: 25
+    egressAllowlist:
+      cidrs:
+        - 10.30.0.0/16

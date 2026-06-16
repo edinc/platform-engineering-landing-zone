@@ -20,3 +20,6 @@ catalog with incident response, restore drills, and DR procedures.
 | [`cert-management.md`](cert-management.md) | cert-manager issuer choice and troubleshooting | 07 |
 | [`platform-slos.md`](platform-slos.md) | Platform SLO targets, monthly review cadence, and alert requirements | 08 |
 | [`backstage-ops.md`](backstage-ops.md) | Backstage upgrade, restore, TechDocs, Kubernetes plugin, RBAC, and catalog reconciliation operations | 09 |
+| [`ownership-matrix.md`](ownership-matrix.md) | Canonical RACI for platform, workload, identity, GitOps, and cost artifacts | 10 |
+| [`team-onboarding.md`](team-onboarding.md) | Team onboarding request, idempotency, and partial-failure recovery | 10 |
+| [`team-decommissioning.md`](team-decommissioning.md) | Team sunset, ownership reassignment, namespace retirement, and access removal | 10 |
