@@ -40,11 +40,16 @@ resource "azurerm_role_assignment" "key_vault_secrets_user" {
   principal_type       = "ServicePrincipal"
 }
 
-resource "azurerm_role_assignment" "aks_namespace_writer" {
+resource "azurerm_role_assignment" "aks_namespace_reader" {
   scope                = "${var.aks_cluster_id}/namespaces/${var.namespace}"
-  role_definition_name = "Azure Kubernetes Service RBAC Viewer"
+  role_definition_name = "Azure Kubernetes Service RBAC Reader"
   principal_id         = var.entra_group_object_id
   principal_type       = "Group"
+}
+
+moved {
+  from = azurerm_role_assignment.aks_namespace_writer
+  to   = azurerm_role_assignment.aks_namespace_reader
 }
 
 resource "local_file" "manifests" {
@@ -57,7 +62,7 @@ resource "local_file" "manifests" {
 
   depends_on = [
     azurerm_federated_identity_credential.workload,
-    azurerm_role_assignment.aks_namespace_writer,
+    azurerm_role_assignment.aks_namespace_reader,
     azurerm_role_assignment.acr_pull,
     azurerm_role_assignment.key_vault_secrets_user,
   ]

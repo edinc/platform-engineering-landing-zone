@@ -60,6 +60,7 @@ CI validates credential-free with `terraform init -backend=false`.
 | `firewall_private_ip_address` | Enables platform subnet UDRs to Stage 03 Firewall. |
 | `log_analytics_workspace_id` | Enables Defender/OMS/ACA logging integrations. |
 | `aks_host_encryption_enabled` | Keep `true` for production; set `false` only in demo subscriptions where EncryptionAtHost is unavailable. |
+| `aks_os_disk_type` | Keep `Ephemeral` where the VM SKU supports it; use `Managed` only for constrained demo subscriptions whose allowed SKUs do not provide enough temp/cache disk. |
 
 ## Stage 07 GitOps inputs
 
