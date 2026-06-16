@@ -1,7 +1,7 @@
 apiVersion: platform.example.io/v1alpha1
 kind: NamespaceVendingRequest
 metadata:
-  name: payments-nonprod-namespace
+  name: payments-checkout-nonprod
 spec:
   team: payments
   product: checkout
@@ -20,7 +20,7 @@ spec:
     managedBy: terraform
     repo: edinc/platform-engineering-landing-zone
   namespace:
-    name: payments-checkout
+    name: payments-checkout-nonprod
     clusterEnvironment: nonprod
     entraGroupObjectId: 00000000-0000-0000-0000-000000000001
     serviceAccountName: checkout-api

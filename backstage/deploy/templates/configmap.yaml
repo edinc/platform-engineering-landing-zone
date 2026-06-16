@@ -71,6 +71,14 @@ data:
       locations:
         - type: file
           target: ./catalog-info.yaml
+        - type: url
+          target: https://github.com/{{ .Values.appConfig.githubOrg }}/platform-engineering-landing-zone/blob/main/templates/onboard-team/template.yaml
+          rules:
+            - allow: [Template]
+        - type: url
+          target: https://github.com/{{ .Values.appConfig.githubOrg }}/platform-engineering-landing-zone/blob/main/templates/request-egress-exception/template.yaml
+          rules:
+            - allow: [Template]
       import:
         entityFilename: catalog-info.yaml
       providers:

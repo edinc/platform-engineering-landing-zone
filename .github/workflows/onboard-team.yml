@@ -1,0 +1,374 @@
+name: Onboard team (Stage 10)
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_path:
+        description: Path to a TeamOnboardingRequest YAML file.
+        required: true
+        default: docs/contracts/examples/team-onboarding-request.yaml
+  pull_request:
+    paths:
+      - vending/requests/teams/**/*.yaml
+      - docs/contracts/examples/team-onboarding-request.yaml
+      - docs/contracts/team-onboarding-request.schema.json
+      - infrastructure/terraform/team-onboarding/**
+      - .github/workflows/onboard-team.yml
+  push:
+    branches:
+      - main
+    paths:
+      - vending/requests/teams/**/*.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: onboard-team-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-team-request:
+    name: Validate team request
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Resolve request
+        id: request
+        run: |
+          set -euo pipefail
+          matches="$(git diff --name-only "origin/${GITHUB_BASE_REF}"...HEAD | grep -E '^vending/requests/teams/.*\.ya?ml$' || true)"
+          count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+          if [ "$count" -gt 1 ]; then
+            echo "::error::Only one team onboarding request may change per PR/run; found $count."
+            printf '%s\n' "$matches"
+            exit 1
+          fi
+          request_path="$(printf '%s\n' "$matches" | sed '/^$/d' | head -1 || true)"
+          if [ -z "$request_path" ]; then
+            request_path="docs/contracts/examples/team-onboarding-request.yaml"
+          fi
+          case "$request_path" in
+            *[!A-Za-z0-9_./-]*|*..*)
+              echo "::error::Unsafe team onboarding request path: $request_path"
+              exit 1
+              ;;
+          esac
+          echo "path=$request_path" >> "$GITHUB_OUTPUT"
+
+      - name: Validate request schema
+        env:
+          REQUEST_PATH: ${{ steps.request.outputs.path }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/contracts
+          ruby -rjson -ryaml -e 'puts JSON.pretty_generate(YAML.safe_load_file(ARGV.fetch(0), aliases: false))' "$REQUEST_PATH" > .tools/tmp/contracts/team-request.json
+          python3 scripts/workflows/validate_team_onboarding_request.py .tools/tmp/contracts/team-request.json
+
+      - name: Terraform validate team stack
+        run: |
+          set -euo pipefail
+          mise exec -- terraform -chdir=infrastructure/terraform/team-onboarding init -backend=false -input=false
+          mise exec -- terraform -chdir=infrastructure/terraform/team-onboarding validate
+
+  onboard-team:
+    name: Apply team onboarding
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: vending
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
+      TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
+      TFSTATE_CONTAINER: ${{ vars.TEAM_ONBOARDING_TFSTATE_CONTAINER || 'team-onboarding' }}
+      PLATFORM_RESOURCE_GROUP_NAME: ${{ vars.PLATFORM_RESOURCE_GROUP_NAME }}
+      PLATFORM_AKS_CLUSTER_ID: ${{ vars.PLATFORM_AKS_CLUSTER_ID }}
+      PLATFORM_ACR_ID: ${{ vars.PLATFORM_ACR_ID }}
+      TEAM_ONBOARDING_APPROVED_REPOSITORIES: ${{ vars.TEAM_ONBOARDING_APPROVED_REPOSITORIES }}
+      TEAM_ONBOARDING_PR_LABELS: ${{ vars.TEAM_ONBOARDING_PR_LABELS }}
+      TEAM_ONBOARDING_PR_REVIEWERS: ${{ vars.TEAM_ONBOARDING_PR_REVIEWERS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Resolve request and action
+        id: request
+        env:
+          INPUT_REQUEST_PATH: ${{ inputs.request_path }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          action="plan"
+          case "${GITHUB_EVENT_NAME}" in
+            workflow_dispatch)
+              request_path="${INPUT_REQUEST_PATH}"
+              action="plan"
+              ;;
+            push)
+              matches="$(git diff --name-only "${PUSH_BEFORE}" "${PUSH_AFTER}" | grep -E '^vending/requests/teams/.*\.ya?ml$' || true)"
+              count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')"
+              if [ "$count" -ne 1 ]; then
+                echo "::error::Exactly one team onboarding request must change per push run; found $count."
+                printf '%s\n' "$matches"
+                exit 1
+              fi
+              request_path="$(printf '%s\n' "$matches" | sed '/^$/d' | head -1)"
+              action="apply"
+              ;;
+            *)
+              echo "::error::Unsupported event ${GITHUB_EVENT_NAME}."
+              exit 1
+              ;;
+          esac
+
+          if [ ! -f "$request_path" ]; then
+            echo "::error::Team onboarding request file not found: $request_path"
+            exit 1
+          fi
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "::error::Privileged team onboarding runs only from main."
+            exit 1
+          fi
+          case "$request_path" in
+            *[!A-Za-z0-9_./-]*|*..*)
+              echo "::error::Unsafe team onboarding request path: $request_path"
+              exit 1
+              ;;
+          esac
+
+          echo "path=$request_path" >> "$GITHUB_OUTPUT"
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+
+      - name: Validate request schema
+        env:
+          REQUEST_PATH: ${{ steps.request.outputs.path }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/tmp/contracts
+          ruby -rjson -ryaml -e 'puts JSON.pretty_generate(YAML.safe_load_file(ARGV.fetch(0), aliases: false))' "$REQUEST_PATH" > .tools/tmp/contracts/team-request.json
+          python3 scripts/workflows/validate_team_onboarding_request.py .tools/tmp/contracts/team-request.json
+          approved_repositories="${TEAM_ONBOARDING_APPROVED_REPOSITORIES:-platform-engineering-landing-zone}"
+          printf '%s' "$approved_repositories" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;/^$/d' > .tools/tmp/contracts/approved-team-repositories.txt
+          while IFS= read -r repository; do
+            if ! grep -Fx "$repository" .tools/tmp/contracts/approved-team-repositories.txt >/dev/null; then
+              echo "::error::Repository is not approved for team onboarding permissions: $repository"
+              exit 1
+            fi
+          done < <(jq -r '.spec.github.repositoryPermissions // {} | keys[]' .tools/tmp/contracts/team-request.json)
+
+      - name: Validate required variables
+        env:
+          PLATFORM_GITHUB_ADMIN_TOKEN_PRESENT: ${{ secrets.PLATFORM_GITHUB_ADMIN_TOKEN != '' && 'true' || '' }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT TFSTATE_CONTAINER; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ -z "${PLATFORM_GITHUB_ADMIN_TOKEN_PRESENT:-}" ]; then
+            missing+=("PLATFORM_GITHUB_ADMIN_TOKEN")
+          fi
+          if [ "${{ steps.request.outputs.action }}" = "apply" ]; then
+            for v in PLATFORM_RESOURCE_GROUP_NAME PLATFORM_AKS_CLUSTER_ID PLATFORM_ACR_ID; do
+              if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+            done
+          fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing GitHub Actions variables/secrets: ${missing[*]}."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Prepare Terraform inputs
+        id: tf
+        run: |
+          set -euo pipefail
+          stack="infrastructure/terraform/team-onboarding"
+          team="$(jq -r '.spec.team' .tools/tmp/contracts/team-request.json)"
+          backend_key="teams/${team}/terraform.tfstate"
+          jq \
+            --arg tenantId "$ARM_TENANT_ID" \
+            '{
+              tenant_id: $tenantId,
+              team_name: .spec.team,
+              product_name: .spec.product,
+              cost_center: .spec.costCenter,
+              on_call_rotation_id: .spec.onCallRotationId,
+              data_classification: .spec.dataClassification,
+              github_owner: .spec.github.owner,
+              github_team_name: .spec.githubTeam,
+              github_repository_permissions: (.spec.github.repositoryPermissions // {})
+            }' .tools/tmp/contracts/team-request.json > "$stack/request.auto.tfvars.json"
+          echo "backend_key=$backend_key" >> "$GITHUB_OUTPUT"
+
+      - name: Terraform init
+        working-directory: infrastructure/terraform/team-onboarding
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.request.outputs.action }}" = "apply" ]; then
+            {
+              printf 'resource_group_name  = "%s"\n' "$TFSTATE_RESOURCE_GROUP"
+              printf 'storage_account_name = "%s"\n' "$TFSTATE_STORAGE_ACCOUNT"
+              printf 'container_name       = "%s"\n' "$TFSTATE_CONTAINER"
+              printf 'key                  = "%s"\n' "${{ steps.tf.outputs.backend_key }}"
+              printf 'use_azuread_auth     = true\n'
+            } > backend.hcl
+            mise exec -- terraform init -input=false -backend-config=backend.hcl
+          else
+            mise exec -- terraform init -backend=false -input=false
+          fi
+
+      - name: Terraform validate
+        working-directory: infrastructure/terraform/team-onboarding
+        run: mise exec -- terraform validate
+
+      - name: Terraform plan
+        working-directory: infrastructure/terraform/team-onboarding
+        env:
+          GITHUB_TOKEN: ${{ secrets.PLATFORM_GITHUB_ADMIN_TOKEN }}
+        run: mise exec -- terraform plan -input=false -out=team-onboarding.tfplan
+
+      - name: Terraform apply
+        if: ${{ steps.request.outputs.action == 'apply' }}
+        working-directory: infrastructure/terraform/team-onboarding
+        env:
+          GITHUB_TOKEN: ${{ secrets.PLATFORM_GITHUB_ADMIN_TOKEN }}
+        run: mise exec -- terraform apply -input=false team-onboarding.tfplan
+
+      - name: Open namespace vending request PR
+        if: ${{ steps.request.outputs.action == 'apply' }}
+        env:
+          GH_TOKEN: ${{ secrets.PLATFORM_GITHUB_ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          team="$(jq -r '.spec.team' .tools/tmp/contracts/team-request.json)"
+          product="$(jq -r '.spec.product' .tools/tmp/contracts/team-request.json)"
+          cost_center="$(jq -r '.spec.costCenter' .tools/tmp/contracts/team-request.json)"
+          on_call="$(jq -r '.spec.onCallRotationId' .tools/tmp/contracts/team-request.json)"
+          classification="$(jq -r '.spec.dataClassification' .tools/tmp/contracts/team-request.json)"
+          service_account="$(jq -r '.spec.namespace.serviceAccountName' .tools/tmp/contracts/team-request.json)"
+          group_object_id="$(mise exec -- terraform -chdir=infrastructure/terraform/team-onboarding output -raw entra_group_object_id)"
+          labels="${TEAM_ONBOARDING_PR_LABELS:-vending,namespace,team-onboarding}"
+          reviewers="${TEAM_ONBOARDING_PR_REVIEWERS:-}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          base_ref="$(git rev-parse HEAD)"
+          jq -r '.spec.environments[]' .tools/tmp/contracts/team-request.json | while IFS= read -r environment; do
+            branch="onboard-${team}-${environment}-namespace"
+            git switch --detach "$base_ref"
+            git switch -c "$branch"
+            mkdir -p vending/requests/namespaces
+            namespace="${team}-${product}-${environment}"
+            request="vending/requests/namespaces/${namespace}.yaml"
+            REQUEST_PATH="$request" NAMESPACE="$namespace" ENVIRONMENT="$environment" GROUP_OBJECT_ID="$group_object_id" CONFIDENTIALITY="$([ "$environment" = "prod" ] && printf 'high' || printf 'medium')" ruby -rjson -ryaml -e '
+              request = JSON.parse(File.read(".tools/tmp/contracts/team-request.json"))
+              namespace = ENV.fetch("NAMESPACE")
+              environment = ENV.fetch("ENVIRONMENT")
+              data = {
+                "apiVersion" => "platform.example.io/v1alpha1",
+                "kind" => "NamespaceVendingRequest",
+                "metadata" => {
+                  "name" => namespace,
+                  "labels" => {"platform.example.io/requester" => "onboard-team"},
+                },
+                "spec" => {
+                  "team" => request.fetch("spec").fetch("team"),
+                  "product" => request.fetch("spec").fetch("product"),
+                  "costCenter" => request.fetch("spec").fetch("costCenter"),
+                  "onCallRotationId" => request.fetch("spec").fetch("onCallRotationId"),
+                  "dataClassification" => request.fetch("spec").fetch("dataClassification"),
+                  "environment" => environment,
+                  "regions" => request.fetch("spec").fetch("regions"),
+                  "tags" => {
+                    "owner" => request.fetch("spec").fetch("team"),
+                    "costCenter" => request.fetch("spec").fetch("costCenter"),
+                    "product" => request.fetch("spec").fetch("product"),
+                    "dataClassification" => request.fetch("spec").fetch("dataClassification"),
+                    "confidentiality" => ENV.fetch("CONFIDENTIALITY"),
+                    "managedBy" => "terraform",
+                    "repo" => ENV.fetch("GITHUB_REPOSITORY"),
+                  },
+                  "namespace" => {
+                    "name" => namespace,
+                    "clusterEnvironment" => environment,
+                    "entraGroupObjectId" => ENV.fetch("GROUP_OBJECT_ID"),
+                    "serviceAccountName" => request.fetch("spec").fetch("namespace").fetch("serviceAccountName"),
+                    "resourceQuota" => request.fetch("spec").fetch("namespace").fetch("resourceQuota"),
+                    "egressAllowlist" => request.fetch("spec").fetch("namespace").fetch("egressAllowlist"),
+                    "azure" => {
+                      "aksClusterId" => ENV.fetch("PLATFORM_AKS_CLUSTER_ID"),
+                      "acrId" => ENV.fetch("PLATFORM_ACR_ID"),
+                      "keyVaultSecretIds" => [],
+                      "resourceGroupName" => ENV.fetch("PLATFORM_RESOURCE_GROUP_NAME"),
+                    },
+                  },
+                },
+              }
+              File.write(ENV.fetch("REQUEST_PATH"), data.to_yaml)
+            '
+
+            git add "$request"
+            if git diff --cached --quiet; then
+              echo "Namespace request ${request} already matches ${branch}; skipping PR update."
+              continue
+            fi
+            git commit -m "chore: request ${environment} namespace for ${team}"
+            git push --force-with-lease origin "HEAD:${branch}"
+
+            pr_args=(
+              --title "Onboard ${team} ${environment} namespace"
+              --body "Generated by Stage 10 team onboarding after Terraform applied the Entra and GitHub team objects. Review this single namespace request before merging so Stage 05 vending applies it."
+              --base main
+              --head "$branch"
+            )
+            if [ -n "$labels" ]; then pr_args+=(--label "$labels"); fi
+            if [ -n "$reviewers" ]; then pr_args+=(--reviewer "$reviewers"); fi
+            existing_pr="$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')"
+            if [ -n "$existing_pr" ]; then
+              echo "Updated existing namespace PR #${existing_pr} for ${team}/${environment}."
+            else
+              gh pr create "${pr_args[@]}"
+            fi
+          done

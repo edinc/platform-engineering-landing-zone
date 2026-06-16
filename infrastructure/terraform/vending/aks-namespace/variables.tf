@@ -124,10 +124,10 @@ variable "key_vault_secret_ids" {
   description = "Key Vault secret resource IDs that grant Key Vault Secrets User to the workload identity."
 
   validation {
-    condition = length(var.key_vault_secret_ids) > 0 && alltrue([
+    condition = alltrue([
       for id in var.key_vault_secret_ids : can(regex("^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.KeyVault/vaults/[^/]+/secrets/[^/]+$", id))
     ])
-    error_message = "key_vault_secret_ids must contain full Key Vault secret resource IDs."
+    error_message = "key_vault_secret_ids must contain full Key Vault secret resource IDs when provided."
   }
 }
 
@@ -152,8 +152,12 @@ variable "egress_allowlist_cidrs" {
   description = "CIDR ranges allowed by the namespace outbound NetworkPolicy."
 
   validation {
-    condition     = length(var.egress_allowlist_cidrs) > 0 && alltrue([for cidr in var.egress_allowlist_cidrs : can(cidrhost(cidr, 0))])
-    error_message = "egress_allowlist_cidrs must contain at least one valid CIDR."
+    condition = length(var.egress_allowlist_cidrs) > 0 && alltrue([
+      for cidr in var.egress_allowlist_cidrs :
+      can(cidrhost(cidr, 0)) &&
+      can(regex("^(10\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|172\\.(1[6-9]|2[0-9]|3[0-1])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|192\\.168\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))/(1[6-9]|2[0-9]|3[0-2])$", cidr))
+    ])
+    error_message = "egress_allowlist_cidrs must contain RFC1918 IPv4 CIDRs with /16 or narrower prefixes. Use the egress exception workflow for public or broader access."
   }
 }
 
