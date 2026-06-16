@@ -23,8 +23,9 @@ catalog, Kubernetes view, GitHub workflows, TechDocs, and Cost Insights.
     via Workload Identity. Fallback: KV-stored, Renovate-rotated
     Postgres password injected via Secrets Store CSI.
 - **TechDocs storage**: **Azure Blob storage account** + container
-  `techdocs/`, Private Endpoint, RBAC for Backstage WI to read/write and
-  for Stage 06 `techdocs-publish.yml` workflow to write. Provisioned by
+  `techdocs/`, Private Endpoint, RBAC for Backstage WI to read published docs
+  and for Stage 06 `techdocs-publish.yml` workflow identities to write.
+  Provisioned by
   Terraform in `infrastructure/terraform/platform/techdocs.tf` (this
   stage; could also live with Stage 04 — placed here for ownership
   clarity).
@@ -50,11 +51,11 @@ catalog, Kubernetes view, GitHub workflows, TechDocs, and Cost Insights.
 
 - `@backstage/plugin-kubernetes` (multi-cluster). **Auth pattern**: the
   Backstage backend pod runs with **Workload Identity** federated to a
-  per-cluster managed identity granted **AKS Cluster User role** + a
-  custom AKS Cluster RBAC `ClusterRole` for read of Pods/Deployments/
-  Services/Ingresses. The plugin uses the WI-issued AAD token to
-  authenticate to each AKS API. **No long-lived kubeconfig** is stored
-  in Backstage's database.
+  per-cluster managed identity granted **AKS Cluster User role** and
+  **Azure Kubernetes Service RBAC Reader** through Azure RBAC. The plugin
+  uses the WI-issued AAD token to authenticate to each AKS API. **No
+  long-lived kubeconfig** is stored in Backstage's database, and no
+  separate in-cluster ClusterRole is used for this path.
 - `@backstage/plugin-github-actions`.
 - `@backstage-community/plugin-flux` for GitOps view.
 - `@backstage/plugin-techdocs` + Azure Blob TechDocs publisher (storage

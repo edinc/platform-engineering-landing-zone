@@ -16,3 +16,12 @@ module "cost_allocator" {
   application_insights_connection_string = var.cost_allocator_application_insights_connection_string
   tags                                   = local.tags
 }
+
+resource "azurerm_role_assignment" "backstage_cost_showback_reader" {
+  count = local.backstage_enabled ? 1 : 0
+
+  scope                = local.backstage_cost_showback_container_id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = var.backstage_workload_identity_principal_id
+  principal_type       = "ServicePrincipal"
+}

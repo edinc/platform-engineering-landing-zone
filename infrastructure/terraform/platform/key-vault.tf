@@ -22,3 +22,21 @@ resource "azurerm_key_vault" "platform" {
 
   tags = local.tags
 }
+
+resource "azurerm_role_assignment" "backstage_key_vault_secret_user" {
+  for_each = local.backstage_enabled ? local.backstage_key_vault_secret_names : toset([])
+
+  scope                = "${azurerm_key_vault.platform[0].id}/secrets/${each.value}"
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = var.backstage_workload_identity_principal_id
+  principal_type       = "ServicePrincipal"
+}
+
+resource "azurerm_role_assignment" "backstage_catalog_reconciler_key_vault_secret_user" {
+  for_each = local.backstage_enabled ? local.backstage_catalog_reconciler_key_vault_secret_names : toset([])
+
+  scope                = "${azurerm_key_vault.platform[0].id}/secrets/${each.value}"
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = var.backstage_catalog_reconciler_workload_identity_principal_id
+  principal_type       = "ServicePrincipal"
+}

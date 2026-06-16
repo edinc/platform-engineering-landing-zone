@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: platform-engineering-landing-zone
+  description: Azure Platform Engineering Landing Zone platform repository.
+  annotations:
+    backstage.io/source-location: url:https://github.com/edinc/platform-engineering-landing-zone
+    github.com/project-slug: edinc/platform-engineering-landing-zone
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/pe-platform-admins
+  system: platform-engineering-landing-zone

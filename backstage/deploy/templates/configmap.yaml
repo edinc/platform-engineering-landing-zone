@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "backstage.fullname" . }}-config
+  labels:
+    {{- include "backstage.labels" . | nindent 4 }}
+data:
+  app-config.production.yaml: |
+    app:
+      title: Azure Platform Engineering Portal
+      baseUrl: {{ .Values.appConfig.baseUrl | quote }}
+    organization:
+      name: Platform Engineering
+    backend:
+      baseUrl: {{ .Values.appConfig.baseUrl | quote }}
+      listen:
+        port: {{ .Values.service.port }}
+      csp:
+        connect-src:
+          - "'self'"
+          - "http:"
+          - "https:"
+      cors:
+        origin: {{ .Values.appConfig.baseUrl | quote }}
+        methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+        credentials: true
+      auth:
+        externalAccess:
+          - type: jwks
+            options:
+              url: {{ .Values.appConfig.kubernetesServiceAccountJwksUrl | quote }}
+              issuer: {{ .Values.appConfig.kubernetesServiceAccountIssuerUrl | quote }}
+              audience: backstage
+              subjectPrefix: "system:serviceaccount:backstage:"
+            accessRestrictions:
+              - plugin: catalog
+                permission: catalog.entity.read
+      database:
+        client: pg
+        connection:
+          host: {{ .Values.appConfig.postgresHost | quote }}
+          port: 5432
+          user: {{ .Values.appConfig.postgresUser | quote }}
+          password: ${POSTGRES_PASSWORD}
+          database: backstage
+          ssl:
+            rejectUnauthorized: true
+    auth:
+      session:
+        secret: ${BACKSTAGE_SESSION_SECRET}
+      environment: production
+      providers:
+        microsoft:
+          production:
+            clientId: {{ .Values.appConfig.microsoftAuthClientId | quote }}
+            tenantId: {{ .Values.appConfig.azureTenantId | quote }}
+            clientSecret: ${BACKSTAGE_MICROSOFT_AUTH_CLIENT_SECRET}
+            signIn:
+              resolvers:
+                - resolver: emailMatchingUserEntityProfileEmail
+    integrations:
+      github:
+        - host: github.com
+          apps:
+            - appId: ${GITHUB_APP_ID}
+              clientId: ${GITHUB_APP_CLIENT_ID}
+              clientSecret: ${GITHUB_APP_CLIENT_SECRET}
+              webhookSecret: ${GITHUB_APP_WEBHOOK_SECRET}
+              privateKey: ${GITHUB_APP_PRIVATE_KEY}
+    catalog:
+      locations:
+        - type: file
+          target: ./catalog-info.yaml
+      import:
+        entityFilename: catalog-info.yaml
+      providers:
+        githubDiscovery:
+          platform:
+            organization: {{ .Values.appConfig.githubOrg | quote }}
+            catalogPath: /catalog-info.yaml
+            rules:
+              - allow: [Component, System, API, Resource, Domain]
+            schedule:
+              frequency: { minutes: 15 }
+              timeout: { minutes: 5 }
+        microsoftGraphOrg:
+          platform:
+            target: https://graph.microsoft.com/v1.0
+            authority: https://login.microsoftonline.com
+            tenantId: {{ .Values.appConfig.azureTenantId | quote }}
+            queryMode: advanced
+            rules:
+              - allow: [User, Group]
+            group:
+              filter: ${BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER}
+              select: [id, displayName, description]
+            userGroupMember:
+              filter: ${BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER}
+              path: /groups
+            schedule:
+              frequency: { minutes: 30 }
+              timeout: { minutes: 10 }
+      rules:
+        - allow: [Component, System, API, Resource, Domain]
+    kubernetes:
+      serviceLocatorMethod:
+        type: multiTenant
+      clusterLocatorMethods:
+        - type: config
+          clusters:
+            - name: {{ .Values.appConfig.platformEnv | quote }}
+              url: {{ .Values.appConfig.aksApiServerUrl | quote }}
+              authProvider: azure
+              oidcTokenProvider: microsoft
+              dashboardApp: standard
+    techdocs:
+      builder: external
+      generator:
+        runIn: local
+      publisher:
+        type: azureBlobStorage
+        azureBlobStorage:
+          containerName: {{ .Values.appConfig.techdocsContainerName | quote }}
+          credentials:
+            accountName: {{ .Values.appConfig.techdocsStorageAccountName | quote }}
+    permission:
+      enabled: true
+      rbac:
+        platformAdminsGroupRef: ${BACKSTAGE_PLATFORM_ADMINS_GROUP_REF}
+        platformOperatorsGroupRef: ${BACKSTAGE_PLATFORM_OPERATORS_GROUP_REF}
+        applicationTeamGroupRefs: ${BACKSTAGE_APPLICATION_TEAM_GROUP_REFS}
+        applicationTeamGroupMap: ${BACKSTAGE_APPLICATION_TEAM_GROUP_MAP}
+    costInsights:
+      engineerCost: 200000
+      products:
+        platform:
+          name: Platform
+          aggregation: product
+          default: true
+      azure:
+        subscriptionId: {{ .Values.appConfig.azureSubscriptionId | quote }}
+        showbackContainerUrl: {{ .Values.appConfig.costShowbackContainerUrl | quote }}
+    enabledPlugins:
+      - "@backstage/plugin-catalog"
+      - "@backstage/plugin-kubernetes"
+      - "@backstage/plugin-github-actions"
+      - "@backstage-community/plugin-flux"
+      - "@backstage/plugin-techdocs"
+      - "@backstage/plugin-scaffolder"
+      - "@backstage-community/plugin-cost-insights"
+      - "@backstage/plugin-permission-backend"

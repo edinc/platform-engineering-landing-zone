@@ -1,0 +1,167 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "backstage.fullname" . }}
+  labels:
+    {{- include "backstage.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "backstage.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "backstage.labels" . | nindent 8 }}
+        backstage.io/kubernetes-id: backstage
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: backstage
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "--config"
+            - "/etc/backstage/app-config.production.yaml"
+          command:
+            - node
+            - scripts/start-backstage.mjs
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          env:
+            - name: PORT
+              value: {{ .Values.service.port | quote }}
+            - name: PLATFORM_ENV
+              value: {{ .Values.appConfig.platformEnv | quote }}
+            - name: PLATFORM_ROOT_DOMAIN
+              value: {{ .Values.appConfig.platformRootDomain | quote }}
+            - name: AZURE_TENANT_ID
+              value: {{ .Values.appConfig.azureTenantId | quote }}
+            - name: AZURE_CLIENT_ID
+              value: {{ .Values.serviceAccount.workloadIdentityClientId | quote }}
+            - name: AZURE_SUBSCRIPTION_ID
+              value: {{ .Values.appConfig.azureSubscriptionId | quote }}
+            - name: POSTGRES_AUTH_MODE
+              value: {{ .Values.appConfig.postgresAuthMode | quote }}
+            - name: BACKSTAGE_SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-runtime
+                  key: backstage-session-secret
+            - name: BACKSTAGE_PLATFORM_ADMINS_GROUP_REF
+              valueFrom:
+                configMapKeyRef:
+                  name: backstage-rbac-groups
+                  key: platformAdminsGroupRef
+            - name: BACKSTAGE_PLATFORM_OPERATORS_GROUP_REF
+              valueFrom:
+                configMapKeyRef:
+                  name: backstage-rbac-groups
+                  key: platformOperatorsGroupRef
+            - name: BACKSTAGE_APPLICATION_TEAM_GROUP_REFS
+              valueFrom:
+                configMapKeyRef:
+                  name: backstage-rbac-groups
+                  key: applicationTeamGroupRefs
+            - name: BACKSTAGE_APPLICATION_TEAM_GROUP_MAP
+              valueFrom:
+                configMapKeyRef:
+                  name: backstage-rbac-groups
+                  key: applicationTeamGroupMap
+            {{- if eq .Values.appConfig.postgresAuthMode "password" }}
+            - name: POSTGRES_PASSWORD_FILE
+              value: /mnt/secrets-store/password
+            {{- end }}
+            - name: BACKSTAGE_MICROSOFT_AUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-runtime
+                  key: microsoft-auth-client-secret
+            - name: BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER
+              value: {{ .Values.appConfig.microsoftGraphGroupFilter | quote }}
+            - name: GITHUB_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-runtime
+                  key: github-app-id
+            - name: GITHUB_APP_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-runtime
+                  key: github-app-client-id
+            - name: GITHUB_APP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-runtime
+                  key: github-app-client-secret
+            - name: GITHUB_APP_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-runtime
+                  key: github-app-webhook-secret
+            - name: GITHUB_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backstage-runtime
+                  key: github-app-private-key
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: backstage-config
+              mountPath: /etc/backstage
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            {{- if eq .Values.appConfig.postgresAuthMode "password" }}
+            - name: backstage-postgres-fallback
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /.backstage/health/v1/readiness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /.backstage/health/v1/liveness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: backstage-config
+          configMap:
+            name: {{ include "backstage.fullname" . }}-config
+        - name: tmp
+          emptyDir: {}
+        {{- if eq .Values.appConfig.postgresAuthMode "password" }}
+        - name: backstage-postgres-fallback
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: backstage-postgres-fallback
+        {{- end }}

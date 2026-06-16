@@ -16,7 +16,7 @@ STAGE08_ALERT_RULES := $(shell { find platform-gitops/clusters/_base/addon-confi
 CONTRACT_REQUESTS := $(shell find docs/contracts -type f \( -path '*/examples/*.yaml' -o -name 'vending-request.yaml' \) 2>/dev/null | sort)
 CONTRACT_NEGATIVE_REQUESTS := $(shell find docs/contracts/tests -type f -name '*.yaml' 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts alert-runbook-lint finops-cost-test azure-test-stage08 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts stage09-contracts alert-runbook-lint finops-cost-test azure-test-stage08 azure-test-stage09 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -39,7 +39,7 @@ lint: pre-commit terraform-fmt tflint ## Run local linting checks.
 pre-commit: ## Run pre-commit hooks across tracked files.
 	$(MISE_EXEC) pre-commit run --all-files
 
-validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts ## Run validation checks that do not deploy resources.
+validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts stage09-contracts ## Run validation checks that do not deploy resources.
 
 terraform-fmt: ## Check Terraform formatting.
 	@if [ -z "$(TERRAFORM_DIRS)" ]; then \
@@ -133,6 +133,9 @@ stage07-contracts: ## Validate Stage 07 GitOps, Flux, and Kyverno contracts.
 stage08-contracts: alert-runbook-lint finops-cost-test ## Validate Stage 08 observability, SRE, and FinOps contracts.
 	$(PYTHON) scripts/observability/validate_stage08_observability.py
 
+stage09-contracts: ## Validate Stage 09 Backstage MVP contracts.
+	$(PYTHON) scripts/backstage/validate_stage09_backstage.py
+
 alert-runbook-lint: ## Ensure Prometheus alert rules carry runbook_url annotations.
 	$(PYTHON) scripts/observability/lint_alert_runbooks.py $(STAGE08_ALERT_RULES)
 
@@ -141,6 +144,9 @@ finops-cost-test: ## Test Stage 08 cost showback allocation logic.
 
 azure-test-stage08: ## Run Azure CLI read-only validation for deployed Stage 08 resources.
 	bash scripts/azure/validate_stage08_azure.sh
+
+azure-test-stage09: ## Run Azure CLI read-only validation for deployed Stage 09 Backstage resources.
+	bash scripts/azure/validate_stage09_azure.sh
 
 policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
 	$(MISE_EXEC) conftest test --namespace terraform.tags --policy policies/rego policies/rego/fixtures/compliant-terraform-plan.json

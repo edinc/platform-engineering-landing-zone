@@ -1,0 +1,55 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: backstage
+  namespace: backstage
+  labels:
+    app: backstage
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+spec:
+  interval: 10m
+  chartRef:
+    kind: OCIRepository
+    name: backstage-chart
+    namespace: backstage
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    replicaCount: 2
+    image:
+      repository: ${backstage_image_repository}
+      digest: ${backstage_image_digest}
+    catalogReconciler:
+      image:
+        repository: ${backstage_catalog_reconciler_image_repository}
+        digest: ${backstage_catalog_reconciler_image_digest}
+    serviceAccount:
+      create: false
+      name: backstage
+      workloadIdentityClientId: ${backstage_client_id}
+    ingress:
+      host: backstage.${platform_profile}.${platform_root_domain}
+    appConfig:
+      baseUrl: https://backstage.${platform_profile}.${platform_root_domain}
+      postgresAuthMode: ${backstage_postgres_auth_mode}
+      aksApiServerUrl: ${backstage_aks_apiserver_url}
+      postgresHost: ${backstage_postgres_host}
+      postgresUser: ${backstage_postgres_user}
+      techdocsStorageAccountName: ${techdocs_storage_account_name}
+      techdocsContainerName: ${techdocs_storage_container_name}
+      githubOrg: ${github_owner}
+      platformEnv: ${platform_profile}
+      platformRootDomain: ${platform_root_domain}
+      microsoftAuthClientId: ${backstage_microsoft_auth_client_id}
+      microsoftGraphGroupFilter: ${backstage_microsoft_graph_group_filter}
+      kubernetesServiceAccountIssuerUrl: ${backstage_kubernetes_service_account_issuer_url}
+      kubernetesServiceAccountJwksUrl: ${backstage_kubernetes_service_account_jwks_url}
+      azureTenantId: ${platform_tenant_id}
+      azureSubscriptionId: ${platform_subscription_id}
+      costShowbackContainerUrl: ${backstage_cost_showback_url}

@@ -22,3 +22,8 @@ output "showback_container_id" {
   value       = "${azurerm_storage_account.this.id}/blobServices/default/containers/${azurerm_storage_container.showback.name}"
   description = "Showback output container resource ID."
 }
+
+output "showback_container_url" {
+  value       = "https://${azurerm_storage_account.this.name}.blob.core.windows.net/${azurerm_storage_container.showback.name}"
+  description = "Showback output container URL used by Backstage Cost Insights."
+}

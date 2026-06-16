@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backstage
+  labels:
+    kubernetes.io/metadata.name: backstage
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal

@@ -1,0 +1,72 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/edinc/platform-backstage
+  digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  pullPolicy: IfNotPresent
+
+catalogReconciler:
+  image:
+    repository: ghcr.io/edinc/platform-backstage-catalog-reconciler
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+
+serviceAccount:
+  create: true
+  name: backstage
+  workloadIdentityClientId: ""
+
+podLabels:
+  azure.workload.identity/use: "true"
+  team: platform-engineering
+  costCenter: cc-platform
+  dataClassification: internal
+
+service:
+  port: 7007
+
+ingress:
+  enabled: true
+  className: nginx
+  host: backstage.nonprod.platform.example.com
+  clusterIssuer: letsencrypt-dns01
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+appConfig:
+  baseUrl: https://backstage.nonprod.platform.example.com
+  postgresAuthMode: password
+  postgresHost: pg-pe-nonprod-weu-example.postgres.database.azure.com
+  postgresUser: backstage
+  aksApiServerUrl: https://aks-pe-nonprod-weu.privatelink.westeurope.azmk8s.io
+  techdocsStorageAccountName: stpenonprodweuexample
+  techdocsContainerName: techdocs
+  githubOrg: edinc
+  platformEnv: nonprod
+  platformRootDomain: platform.example.com
+  microsoftAuthClientId: ""
+  microsoftGraphGroupFilter: "id eq '00000000-0000-0000-0000-000000000000'"
+  kubernetesServiceAccountIssuerUrl: https://issuer.example.invalid
+  kubernetesServiceAccountJwksUrl: https://issuer.example.invalid/openid/v1/jwks
+  azureTenantId: ""
+  azureSubscriptionId: ""
+  costShowbackContainerUrl: ""
+
+extraEnv:
+  - name: NODE_OPTIONS
+    value: "--no-node-snapshot --max-old-space-size=512"

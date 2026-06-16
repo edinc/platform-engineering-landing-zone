@@ -3,8 +3,13 @@ repos:
     rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b # v5.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^backstage/app/\.yarn/releases/
       - id: end-of-file-fixer
+        exclude: ^backstage/app/\.yarn/releases/
       - id: check-yaml
+        args:
+          - --allow-multiple-documents
+        exclude: ^backstage/deploy/templates/
       - id: check-json
       - id: check-merge-conflict
       - id: mixed-line-ending
