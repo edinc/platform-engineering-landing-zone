@@ -12,7 +12,13 @@ locals {
   # a run (TF_VAR_runner_ip_cidrs). Terraform owns and drift-detects the full set
   # so allowed_ip_cidrs is actually enforced; the runner entry is removed again by
   # the workflow's always() cleanup. Replaced by Private Endpoints in Stage 03.
-  firewall_ip_rules = distinct(concat(var.allowed_ip_cidrs, var.runner_ip_cidrs))
+  firewall_ip_rules         = distinct(concat(var.allowed_ip_cidrs, var.runner_ip_cidrs))
+  local_recovery_ack_phrase = "I understand this temporarily opens bootstrap data planes for local integration or recovery only"
+  firewall_allow_permitted = (
+    var.local_recovery_mode_enabled &&
+    length(var.runner_ip_cidrs) == 0 &&
+    var.local_recovery_mode_acknowledgement == local.local_recovery_ack_phrase
+  )
 
   # Mandatory tag taxonomy (plan.md section 10). State holds platform secrets,
   # so it is classified confidential / high confidentiality.

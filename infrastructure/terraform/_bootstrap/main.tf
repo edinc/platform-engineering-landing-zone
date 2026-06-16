@@ -27,9 +27,19 @@ resource "azurerm_key_vault" "bootstrap" {
   public_network_access_enabled = true
 
   network_acls {
-    default_action = "Deny"
+    default_action = var.firewall_default_action
     bypass         = "AzureServices"
     ip_rules       = local.firewall_ip_rules
+  }
+
+  lifecycle {
+    precondition {
+      condition = (
+        var.firewall_default_action == "Deny" ||
+        local.firewall_allow_permitted
+      )
+      error_message = "firewall_default_action = Allow is only permitted for local recovery/integration when local_recovery_mode_enabled is true, runner_ip_cidrs is empty, and local_recovery_mode_acknowledgement matches the documented phrase."
+    }
   }
 
   tags = local.tags

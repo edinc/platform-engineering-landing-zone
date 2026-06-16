@@ -24,7 +24,7 @@ ASO-created resources must carry `managedBy: aso`. Stage 07 installs ASO and
 its curated CRDs, but tenant Flux RBAC does not grant ASO write access until a
 later stage adds admission policies that constrain Azure parent ownership. The
 vended team RoleBinding is read-only and direct Entra access is namespace-scoped
-AKS RBAC Viewer. Tenant users therefore cannot write ASO CRDs directly. Tenant
+AKS RBAC Reader. Tenant users therefore cannot write ASO CRDs directly. Tenant
 GitOps cannot write Key Vault secrets through ASO; secret consumption stays
 read-only through Key Vault CSI or ESO. Terraform remains the owner for
 subscription baseline, networking, AKS, ACR, Key Vault, Postgres server, Service

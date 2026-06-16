@@ -148,6 +148,29 @@ variable "allowed_ip_cidrs" {
   }
 }
 
+variable "firewall_default_action" {
+  type        = string
+  description = "Default firewall action for the bootstrap state account and seed Key Vault. Keep Deny for normal CI and production bootstrap; use Allow only as a temporary local recovery/integration setting when Azure data-plane egress cannot be represented as stable IP rules."
+  default     = "Deny"
+
+  validation {
+    condition     = contains(["Allow", "Deny"], var.firewall_default_action)
+    error_message = "firewall_default_action must be Allow or Deny."
+  }
+}
+
+variable "local_recovery_mode_enabled" {
+  type        = bool
+  description = "Temporary local-only guard for firewall_default_action = Allow. Keep false in CI and production bootstrap."
+  default     = false
+}
+
+variable "local_recovery_mode_acknowledgement" {
+  type        = string
+  description = "Required exact acknowledgement when local_recovery_mode_enabled is true and firewall_default_action is Allow."
+  default     = ""
+}
+
 variable "runner_ip_cidrs" {
   type        = list(string)
   description = "Ephemeral GitHub-hosted runner egress IP(s) the bootstrap workflow allowlists for the duration of a CI run (TF_VAR_runner_ip_cidrs). Merged with allowed_ip_cidrs so Terraform never evicts its own remote-state access mid-apply. Leave empty for local runs."

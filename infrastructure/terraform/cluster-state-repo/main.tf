@@ -1,3 +1,24 @@
+resource "terraform_data" "input_guard" {
+  input = {
+    repository_profile              = var.repository_profile
+    enable_branch_protection        = var.enable_branch_protection
+    branch_protection_bypass_reason = var.branch_protection_bypass_reason
+  }
+
+  lifecycle {
+    precondition {
+      condition = (
+        var.enable_branch_protection ||
+        (
+          var.repository_profile == "demo" &&
+          length(trimspace(var.branch_protection_bypass_reason)) >= 16
+        )
+      )
+      error_message = "enable_branch_protection may be false only for demo integration repositories with a non-empty branch_protection_bypass_reason."
+    }
+  }
+}
+
 resource "github_repository" "cluster_state" {
   #checkov:skip=CKV_GIT_3:Vulnerability alerts are enabled via github_repository_vulnerability_alerts because the inline argument is deprecated in provider v6.
   name                   = var.repository_name
@@ -38,6 +59,8 @@ resource "github_repository_file" "seed" {
 }
 
 resource "github_branch_protection" "main" {
+  count = var.enable_branch_protection ? 1 : 0
+
   repository_id  = github_repository.cluster_state.node_id
   pattern        = var.default_branch
   enforce_admins = true
@@ -59,4 +82,9 @@ resource "github_branch_protection" "main" {
   }
 
   depends_on = [github_repository_file.seed]
+}
+
+moved {
+  from = github_branch_protection.main
+  to   = github_branch_protection.main[0]
 }

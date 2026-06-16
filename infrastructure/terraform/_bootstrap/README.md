@@ -74,6 +74,12 @@ removes the runner entry afterward. Stage 03 retrofits Private Endpoints and
 disables public access (ADR-0048, ADR-0031). The intentional `checkov:skip`
 annotations in `main.tf` / `state.tf` document each Phase 1 deferral.
 
+`firewall_default_action` defaults to `Deny`. Use `Allow` only in a gitignored
+local `terraform.tfvars` with `local_recovery_mode_enabled = true` and the
+required acknowledgement for temporary local recovery/integration when Azure
+data-plane calls egress through changing service IPs; CI runner mode is guarded
+from using this bypass.
+
 ## Inputs
 
 See [`variables.tf`](./variables.tf) and
