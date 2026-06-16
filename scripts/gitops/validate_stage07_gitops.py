@@ -137,7 +137,7 @@ def validate_terraform_and_workflows() -> None:
     require_contains("infrastructure/terraform/platform/gitops.tf", "post_build")
     require_contains("infrastructure/terraform/platform/gitops.tf", "external_secrets_client_id")
     require_contains("infrastructure/terraform/platform/gitops.tf", "cluster_state_root_path")
-    require_contains("infrastructure/terraform/vending/aks-namespace/main.tf", "Azure Kubernetes Service RBAC Viewer")
+    require_contains("infrastructure/terraform/vending/aks-namespace/main.tf", "Azure Kubernetes Service RBAC Reader")
     require_contains("infrastructure/terraform/cluster-state-repo/locals.tf", "legacy_seed_files")
     require_contains("infrastructure/terraform/cluster-state-repo/variables.tf", "stage07_seed_files_enabled")
     require_contains("infrastructure/terraform/platform/variables.tf", "https://|ssh://|git@")

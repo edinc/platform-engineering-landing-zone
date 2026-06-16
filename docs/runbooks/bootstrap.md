@@ -100,6 +100,14 @@ If `BOOTSTRAP_ALLOWED_IP_CIDRS` is left unset, the firewalls keep only the
 just-in-time runner IP during each run, leaving **no standing human break-glass
 path** to the state account / Key Vault data plane until you add one.
 
+For local integration or recovery runs from environments whose Azure data-plane
+egress cannot be represented by stable IP rules, set
+`firewall_default_action = "Allow"` only in the gitignored local
+`terraform.tfvars`, together with `local_recovery_mode_enabled = true` and the
+exact acknowledgement required by `variables.tf`. The committed default remains
+`Deny`, and CI keeps the default-deny posture because runner IP mode is
+incompatible with the local recovery guard.
+
 There are no secrets to store — that is the point of OIDC (acceptance criterion 4).
 
 > Stage 02 was renamed from the previous `alz` stack to

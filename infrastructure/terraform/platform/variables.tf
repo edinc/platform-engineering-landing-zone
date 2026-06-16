@@ -225,6 +225,17 @@ variable "aks_host_encryption_enabled" {
   default     = true
 }
 
+variable "aks_os_disk_type" {
+  type        = string
+  description = "AKS node pool OS disk type. Keep Ephemeral where the chosen VM SKU supports it; use Managed only for constrained demo subscriptions whose allowed SKUs do not provide enough temp/cache disk."
+  default     = "Ephemeral"
+
+  validation {
+    condition     = contains(["Ephemeral", "Managed"], var.aks_os_disk_type)
+    error_message = "aks_os_disk_type must be Ephemeral or Managed."
+  }
+}
+
 variable "aks_service_cidr" {
   type        = string
   description = "Kubernetes service CIDR."

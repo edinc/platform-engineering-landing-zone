@@ -46,7 +46,6 @@ resource "azurerm_role_definition" "platform_operator" {
       "Microsoft.ContainerRegistry/registries/listCredentials/action",
       "Microsoft.ContainerRegistry/registries/regenerateCredential/action",
       "Microsoft.ContainerRegistry/registries/tokens/delete",
-      "Microsoft.ContainerRegistry/registries/tokens/listCredentials/action",
       "Microsoft.ContainerRegistry/registries/tokens/write",
       "Microsoft.Compute/galleries/share/action",
       "Microsoft.ContainerService/managedClusters/accessProfiles/listCredential/action",

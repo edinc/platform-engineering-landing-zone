@@ -11,6 +11,12 @@ resource "azurerm_public_ip" "firewall" {
 
   lifecycle {
     create_before_destroy = true
+    # Azure may read back platform-managed public IP tags/zones differently from
+    # the create request; avoid replacing stable firewall IPs for provider drift.
+    ignore_changes = [
+      ip_tags,
+      zones,
+    ]
   }
 }
 
@@ -27,6 +33,12 @@ resource "azurerm_public_ip" "firewall_management" {
 
   lifecycle {
     create_before_destroy = true
+    # Azure may read back platform-managed public IP tags/zones differently from
+    # the create request; avoid replacing stable firewall IPs for provider drift.
+    ignore_changes = [
+      ip_tags,
+      zones,
+    ]
   }
 }
 
@@ -160,6 +172,15 @@ resource "azurerm_public_ip" "demo_nat" {
   sku                 = "Standard"
   zones               = length(local.nat_gateway_zones) > 0 ? local.nat_gateway_zones : null
   tags                = local.tags
+
+  lifecycle {
+    # Azure may add public IP tags and normalize zone read-back for NAT IPs;
+    # replacing the IP would interrupt demo egress without improving posture.
+    ignore_changes = [
+      ip_tags,
+      zones,
+    ]
+  }
 }
 
 resource "azurerm_nat_gateway" "demo" {

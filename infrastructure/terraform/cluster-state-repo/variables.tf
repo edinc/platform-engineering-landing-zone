@@ -44,6 +44,29 @@ variable "required_status_checks" {
   default     = []
 }
 
+variable "repository_profile" {
+  type        = string
+  description = "Deployment profile for repository controls. Branch protection may only be disabled for demo integration repositories with an explicit bypass reason."
+  default     = "prod"
+
+  validation {
+    condition     = contains(["demo", "nonprod", "prod"], var.repository_profile)
+    error_message = "repository_profile must be demo, nonprod, or prod."
+  }
+}
+
+variable "enable_branch_protection" {
+  type        = bool
+  description = "Whether to configure default-branch protection. Keep true for organizations/plans that support branch protection on private repositories; set false only for constrained integration repos where GitHub rejects branch protection."
+  default     = true
+}
+
+variable "branch_protection_bypass_reason" {
+  type        = string
+  description = "Required reason when enable_branch_protection is false for a demo integration repository."
+  default     = ""
+}
+
 variable "stage07_seed_files_enabled" {
   type        = bool
   description = "Whether Terraform should write the expanded Stage 07 seed files directly to the default branch. Enable only during first repository creation before branch protection is active; use PR-based GitOps promotion afterwards."

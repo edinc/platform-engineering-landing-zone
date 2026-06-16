@@ -24,6 +24,13 @@ the tested Kyverno bundle into
 `clusters/_base/addon-config/policies/kyverno/` so the ordered
 `platform-config` Flux Kustomization can apply the admission bundle.
 
+`enable_branch_protection` defaults to `true`. Set it to `false` only for
+constrained integration repositories where GitHub rejects branch protection on a
+private repo. This bypass is guarded to the `demo` repository profile and
+requires `branch_protection_bypass_reason`; enforce reviews/branch controls
+manually or move the repo to a plan/organization that supports private-repo
+protection.
+
 ## Prerequisites
 
 - GitHub token with repository administration permissions for `github_owner`.

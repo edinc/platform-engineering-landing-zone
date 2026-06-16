@@ -81,7 +81,7 @@ resource "azurerm_kubernetes_cluster" "platform" {
     only_critical_addons_enabled = true
     host_encryption_enabled      = var.aks_host_encryption_enabled
     max_pods                     = 110
-    os_disk_type                 = "Ephemeral"
+    os_disk_type                 = var.aks_os_disk_type
     os_sku                       = "AzureLinux"
     temporary_name_for_rotation  = "syspooltmp"
 
@@ -180,7 +180,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "default_user" {
   min_count                   = var.aks_user_node_pool.min_count
   max_count                   = var.aks_user_node_pool.max_count
   node_count                  = var.aks_user_node_pool.min_count
-  os_disk_type                = "Ephemeral"
+  os_disk_type                = var.aks_os_disk_type
   os_sku                      = "AzureLinux"
   orchestrator_version        = var.kubernetes_version
   zones                       = var.availability_zones

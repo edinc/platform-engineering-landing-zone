@@ -28,9 +28,14 @@ output "workload_identity_principal_id" {
   description = "Principal ID granted ACR pull and Key Vault read roles."
 }
 
+output "aks_namespace_reader_assignment_id" {
+  value       = azurerm_role_assignment.aks_namespace_reader.id
+  description = "Namespace-scoped AKS Azure RBAC Reader assignment for the team's Entra group. Writes flow through GitOps."
+}
+
 output "aks_namespace_writer_assignment_id" {
-  value       = azurerm_role_assignment.aks_namespace_writer.id
-  description = "Namespace-scoped AKS Azure RBAC Viewer assignment for the team's Entra group. Writes flow through GitOps."
+  value       = azurerm_role_assignment.aks_namespace_reader.id
+  description = "Deprecated compatibility output. Use aks_namespace_reader_assignment_id; the assignment is intentionally read-only because writes flow through GitOps."
 }
 
 output "cluster_state_path" {
