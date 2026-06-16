@@ -414,6 +414,214 @@ variable "application_insights_ingestion_endpoint" {
   }
 }
 
+variable "backstage_workload_identity_client_id" {
+  type        = string
+  description = "Managed identity client ID used by the Backstage Kubernetes service account for Entra auth, Azure Blob TechDocs, and AKS API reads."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_workload_identity_client_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.backstage_workload_identity_client_id))
+    error_message = "backstage_workload_identity_client_id must be empty or a GUID."
+  }
+}
+
+variable "backstage_workload_identity_principal_id" {
+  type        = string
+  description = "Managed identity principal object ID used for Backstage Azure Blob TechDocs RBAC."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_workload_identity_principal_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.backstage_workload_identity_principal_id))
+    error_message = "backstage_workload_identity_principal_id must be empty or a GUID."
+  }
+}
+
+variable "backstage_catalog_reconciler_workload_identity_client_id" {
+  type        = string
+  description = "Managed identity client ID used by the Backstage catalog reconciler service account."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_catalog_reconciler_workload_identity_client_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.backstage_catalog_reconciler_workload_identity_client_id))
+    error_message = "backstage_catalog_reconciler_workload_identity_client_id must be empty or a GUID."
+  }
+}
+
+variable "backstage_catalog_reconciler_workload_identity_principal_id" {
+  type        = string
+  description = "Managed identity principal object ID used for catalog reconciler Key Vault RBAC."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_catalog_reconciler_workload_identity_principal_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.backstage_catalog_reconciler_workload_identity_principal_id))
+    error_message = "backstage_catalog_reconciler_workload_identity_principal_id must be empty or a GUID."
+  }
+}
+
+variable "backstage_application_team_group_refs" {
+  type        = string
+  description = "Comma-separated Backstage group refs allowed to receive app-team permissions, for example group:default/pe-app-team-payments."
+  default     = ""
+}
+
+variable "backstage_application_team_group_map_json" {
+  type        = string
+  description = "JSON object mapping Backstage app-team group refs to cost/team slugs, for example {\"group:default/pe-app-team-payments\":\"payments\"}."
+  default     = "{}"
+
+  validation {
+    condition     = can(jsondecode(var.backstage_application_team_group_map_json))
+    error_message = "backstage_application_team_group_map_json must be valid JSON."
+  }
+}
+
+variable "backstage_microsoft_graph_group_object_ids" {
+  type        = set(string)
+  description = "Immutable Entra group object IDs that Backstage may ingest from Microsoft Graph for RBAC identity data."
+  default     = []
+
+  validation {
+    condition     = alltrue([for id in var.backstage_microsoft_graph_group_object_ids : can(regex("^[0-9a-fA-F-]{36}$", id))])
+    error_message = "backstage_microsoft_graph_group_object_ids entries must be GUID object IDs."
+  }
+}
+
+variable "backstage_microsoft_auth_client_id" {
+  type        = string
+  description = "Microsoft Entra application client ID used by the Backstage Microsoft auth provider. This is separate from the pod Workload Identity client ID."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_microsoft_auth_client_id == "" || can(regex("^[0-9a-fA-F-]{36}$", var.backstage_microsoft_auth_client_id))
+    error_message = "backstage_microsoft_auth_client_id must be empty or a GUID."
+  }
+}
+
+variable "backstage_chart_version" {
+  type        = string
+  description = "Backstage Helm chart version published to the platform ACR OCI repository."
+  default     = "0.1.0"
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+([-+][A-Za-z0-9.-]+)?$", var.backstage_chart_version))
+    error_message = "backstage_chart_version must be a semantic version."
+  }
+}
+
+variable "backstage_chart_digest" {
+  type        = string
+  description = "Digest of the signed Backstage Helm chart promoted by the Stage 06 supply chain."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_chart_digest == "" || can(regex("^sha256:[a-f0-9]{64}$", var.backstage_chart_digest))
+    error_message = "backstage_chart_digest must be empty or a sha256 digest."
+  }
+}
+
+variable "backstage_image_repository" {
+  type        = string
+  description = "Backstage image repository. Defaults to <platform ACR login server>/platform/backstage when ACR is enabled."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_image_repository == "" || can(regex("^[A-Za-z0-9.-]+(/[A-Za-z0-9_.-]+)+$", var.backstage_image_repository))
+    error_message = "backstage_image_repository must be empty or a container repository path without tag or digest."
+  }
+}
+
+variable "backstage_image_digest" {
+  type        = string
+  description = "Digest of the signed Backstage image promoted by the Stage 06 supply chain."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_image_digest == "" || can(regex("^sha256:[a-f0-9]{64}$", var.backstage_image_digest))
+    error_message = "backstage_image_digest must be empty or a sha256 digest."
+  }
+}
+
+variable "backstage_catalog_reconciler_image_repository" {
+  type        = string
+  description = "Catalog reconciler image repository. Defaults to <platform ACR login server>/platform/backstage-catalog-reconciler when ACR is enabled."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_catalog_reconciler_image_repository == "" || can(regex("^[A-Za-z0-9.-]+(/[A-Za-z0-9_.-]+)+$", var.backstage_catalog_reconciler_image_repository))
+    error_message = "backstage_catalog_reconciler_image_repository must be empty or a container repository path without tag or digest."
+  }
+}
+
+variable "backstage_catalog_reconciler_image_digest" {
+  type        = string
+  description = "Digest of the signed catalog reconciler image promoted by the Stage 06 supply chain."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_catalog_reconciler_image_digest == "" || can(regex("^sha256:[a-f0-9]{64}$", var.backstage_catalog_reconciler_image_digest))
+    error_message = "backstage_catalog_reconciler_image_digest must be empty or a sha256 digest."
+  }
+}
+
+variable "backstage_postgres_host" {
+  type        = string
+  description = "Postgres host for Backstage. Defaults to the platform PostgreSQL Flexible Server FQDN when enable_postgres is true."
+  default     = ""
+}
+
+variable "backstage_postgres_user" {
+  type        = string
+  description = "Postgres user used by Backstage. Prefer an Entra-authenticated principal mapped to the Backstage workload identity."
+  default     = ""
+}
+
+variable "backstage_postgres_auth_mode" {
+  type        = string
+  description = "Backstage Postgres authentication mode. Use entra only after PostgreSQL Flexible Server Entra authentication and user mapping are configured."
+  default     = "password"
+
+  validation {
+    condition     = contains(["password", "entra"], var.backstage_postgres_auth_mode)
+    error_message = "backstage_postgres_auth_mode must be password or entra."
+  }
+}
+
+variable "backstage_aks_apiserver_url" {
+  type        = string
+  description = "AKS API server URL used by the Backstage Kubernetes plugin. Defaults to the private AKS FQDN when empty."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_aks_apiserver_url == "" || startswith(var.backstage_aks_apiserver_url, "https://")
+    error_message = "backstage_aks_apiserver_url must be empty or start with https://."
+  }
+}
+
+variable "backstage_cost_showback_container_url" {
+  type        = string
+  description = "Stage 08 cost showback container URL consumed by the Backstage Cost Insights configuration."
+  default     = ""
+
+  validation {
+    condition     = var.backstage_cost_showback_container_url == "" || startswith(var.backstage_cost_showback_container_url, "https://")
+    error_message = "backstage_cost_showback_container_url must be empty or start with https://."
+  }
+}
+
+variable "backstage_cost_showback_container_id" {
+  type        = string
+  description = "Stage 08 cost showback container resource ID used to grant Backstage read access. Defaults to the cost allocator module output when enabled."
+  default     = ""
+
+  validation {
+    condition = (
+      var.backstage_cost_showback_container_id == "" ||
+      can(regex("^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.Storage/storageAccounts/[^/]+/blobServices/default/containers/[^/]+$", var.backstage_cost_showback_container_id))
+    )
+    error_message = "backstage_cost_showback_container_id must be empty or a full storage container resource ID."
+  }
+}
+
 variable "otel_trace_sampling_percentage" {
   type        = number
   description = "Baseline OpenTelemetry trace sampling percentage substituted into the collector. Use 100 for demo/dev and 10 for nonprod/prod."
@@ -553,6 +761,40 @@ variable "enable_cost_allocator" {
   type        = bool
   description = "Whether to deploy the Stage 08 cost allocator Function App that consumes the existing Cost Management export container."
   default     = false
+}
+
+variable "enable_backstage" {
+  type        = bool
+  description = "Whether to deploy the Stage 09 Backstage MVP through a dedicated Flux configuration."
+  default     = false
+}
+
+variable "enable_techdocs_storage" {
+  type        = bool
+  description = "Whether to create the Stage 09 Azure Blob storage account and private container for Backstage TechDocs."
+  default     = false
+}
+
+variable "techdocs_storage_container_name" {
+  type        = string
+  description = "Blob container name used by Backstage TechDocs."
+  default     = "techdocs"
+
+  validation {
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", var.techdocs_storage_container_name))
+    error_message = "techdocs_storage_container_name must be a DNS-safe lowercase storage container name."
+  }
+}
+
+variable "techdocs_publisher_principal_ids" {
+  type        = set(string)
+  description = "Principal object IDs for Stage 06 TechDocs publisher workflows that can write to the TechDocs container."
+  default     = []
+
+  validation {
+    condition     = alltrue([for principal_id in var.techdocs_publisher_principal_ids : can(regex("^[0-9a-fA-F-]{36}$", principal_id))])
+    error_message = "techdocs_publisher_principal_ids entries must be GUID object IDs."
+  }
 }
 
 variable "cost_export_storage_container_id" {

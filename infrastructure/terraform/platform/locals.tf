@@ -4,10 +4,65 @@ locals {
     var.resource_group_name != "" ? var.resource_group_name : "rg-pe-${var.profile}-platform-${var.location_short}"
   )
 
-  acr_name         = "acrpe${var.profile}${var.location_short}${var.name_suffix}"
-  key_vault_name   = "kv-pe-${var.profile}-${var.location_short}-${var.name_suffix}"
-  service_bus_name = "sb-${local.name_prefix}-${var.name_suffix}"
-  postgres_name    = "pg-${local.name_prefix}-${var.name_suffix}"
+  acr_name              = "acrpe${var.profile}${var.location_short}${var.name_suffix}"
+  key_vault_name        = "kv-pe-${var.profile}-${var.location_short}-${var.name_suffix}"
+  service_bus_name      = "sb-${local.name_prefix}-${var.name_suffix}"
+  postgres_name         = "pg-${local.name_prefix}-${var.name_suffix}"
+  techdocs_storage_name = lower("stpe${var.profile}${var.location_short}${var.name_suffix}")
+  techdocs_container_name = (
+    var.techdocs_storage_container_name != "" ? var.techdocs_storage_container_name : "techdocs"
+  )
+  backstage_image_repository = (
+    var.backstage_image_repository != "" ? var.backstage_image_repository : try("${azurerm_container_registry.platform[0].login_server}/platform/backstage", "")
+  )
+  backstage_catalog_reconciler_image_repository = (
+    var.backstage_catalog_reconciler_image_repository != "" ? var.backstage_catalog_reconciler_image_repository : try("${azurerm_container_registry.platform[0].login_server}/platform/backstage-catalog-reconciler", "")
+  )
+  backstage_postgres_host = (
+    var.backstage_postgres_host != "" ? var.backstage_postgres_host : try(azurerm_postgresql_flexible_server.platform[0].fqdn, "")
+  )
+  backstage_postgres_user = (
+    var.backstage_postgres_user != "" ? var.backstage_postgres_user : (
+      var.backstage_postgres_auth_mode == "password" ? var.postgres_administrator_login : "backstage"
+    )
+  )
+  backstage_aks_apiserver_url = (
+    var.backstage_aks_apiserver_url != "" ? var.backstage_aks_apiserver_url : try("https://${azurerm_kubernetes_cluster.platform[0].private_fqdn}", "")
+  )
+  backstage_cost_showback_container_url = (
+    var.backstage_cost_showback_container_url != "" ? var.backstage_cost_showback_container_url : (
+      var.enable_cost_allocator ? try(module.cost_allocator[0].showback_container_url, "") : ""
+    )
+  )
+  backstage_cost_showback_container_id = (
+    var.backstage_cost_showback_container_id != "" ? var.backstage_cost_showback_container_id : (
+      var.enable_cost_allocator ? try(module.cost_allocator[0].showback_container_id, "") : ""
+    )
+  )
+  backstage_key_vault_secret_names = toset(concat(
+    [
+      "backstage-session-secret",
+      "backstage-microsoft-auth-client-secret",
+      "backstage-github-app-id",
+      "backstage-github-app-client-id",
+      "backstage-github-app-client-secret",
+      "backstage-github-app-webhook-secret",
+      "backstage-github-app-private-key",
+    ],
+    var.backstage_postgres_auth_mode == "password" ? ["backstage-postgres-password"] : [],
+  ))
+  backstage_catalog_reconciler_key_vault_secret_names = toset([
+    "backstage-catalog-reconciler-github-token",
+    "backstage-catalog-reconciler-teams-webhook-url",
+  ])
+  backstage_kubernetes_service_account_issuer_url = try(trimsuffix(azurerm_kubernetes_cluster.platform[0].oidc_issuer_url, "/"), "")
+  backstage_kubernetes_service_account_jwks_url = (
+    local.backstage_kubernetes_service_account_issuer_url != "" ? "${local.backstage_kubernetes_service_account_issuer_url}/openid/v1/jwks" : ""
+  )
+  backstage_microsoft_graph_group_filter = join(
+    " or ",
+    [for id in sort(tolist(var.backstage_microsoft_graph_group_object_ids)) : "id eq '${id}'"],
+  )
   action_group_name = {
     sev1 = "ag-${local.name_prefix}-sev1"
     sev2 = "ag-${local.name_prefix}-sev2"
@@ -41,6 +96,7 @@ locals {
     var.enable_acr ? { acr = ["privatelink.azurecr.io"] } : {},
     var.enable_key_vault ? { key_vault = ["privatelink.vaultcore.azure.net"] } : {},
     var.enable_service_bus ? { service_bus = ["privatelink.servicebus.windows.net"] } : {},
+    var.enable_techdocs_storage ? { techdocs = ["privatelink.blob.core.windows.net"] } : {},
     var.enable_cost_allocator && !var.cost_allocator_public_network_access_enabled ? { cost_allocator = ["privatelink.blob.core.windows.net", "privatelink.queue.core.windows.net", "privatelink.table.core.windows.net", "privatelink.azurewebsites.net"] } : {},
   )
 
@@ -64,6 +120,13 @@ locals {
         resource_id            = azurerm_servicebus_namespace.platform[0].id
         subresource_names      = ["namespace"]
         private_dns_zone_names = ["privatelink.servicebus.windows.net"]
+      }
+    } : {},
+    var.enable_private_endpoints && var.enable_techdocs_storage && contains(keys(var.private_dns_zone_ids), "privatelink.blob.core.windows.net") ? {
+      techdocs = {
+        resource_id            = azurerm_storage_account.techdocs[0].id
+        subresource_names      = ["blob"]
+        private_dns_zone_names = ["privatelink.blob.core.windows.net"]
       }
     } : {},
   )
@@ -131,6 +194,9 @@ locals {
     } : {},
     var.enable_postgres ? {
       postgres = azurerm_postgresql_flexible_server.platform[0].id
+    } : {},
+    var.enable_techdocs_storage ? {
+      techdocs_blob = "${azurerm_storage_account.techdocs[0].id}/blobServices/default"
     } : {},
   )
 

@@ -18,6 +18,7 @@ and [ADR-0050](../../../docs/adr/0050-aca-managed-environment.md).
 | ACR | `azurerm_container_registry`, cache rules | Premium, public access disabled, admin disabled, retention 14d, optional geo-replication. |
 | Key Vault | `azurerm_key_vault` | RBAC mode, purge protection, soft-delete 90d, public access disabled. |
 | Postgres | `azurerm_postgresql_flexible_server` | Optional until a secret source is wired; delegated subnet, private DNS, backstage database. |
+| TechDocs | `azurerm_storage_account.techdocs` | Optional Stage 09 Azure Blob publisher storage with private endpoint, shared keys disabled, and container-level RBAC for Backstage plus CI publishers. |
 | Service Bus | `azurerm_servicebus_namespace` | Premium, local auth disabled, public access disabled. |
 | ACA substrate | `azurerm_container_app_environment` | VNet-injected, internal load balancer, workload profiles for prod. |
 | Edge shell | Front Door Premium profile + WAF policy | WAF starts in Detection mode; origins/PLS are completed when ingress-nginx exists. |
@@ -75,6 +76,21 @@ therefore requires the root domain, DNS resource group, controller Workload
 Identity client IDs, and Application Insights ingestion endpoint inputs.
 The Microsoft Flux extension explicitly keeps `multiTenancy.enforce = true`; do
 not disable it for workload tenant reconciliation.
+
+## Stage 09 Backstage and TechDocs inputs
+
+Backstage is deployed by a dedicated Flux configuration so Stage 07/08 GitOps
+can remain enabled without deploying the portal. Set `enable_backstage = true`
+after the Stage 06-published Backstage image and chart have been promoted. The
+Backstage Flux configuration requires `backstage_workload_identity_client_id`,
+`backstage_workload_identity_principal_id`, `backstage_image_digest`,
+`backstage_chart_digest`, and either `backstage_postgres_host` or
+`enable_postgres = true`.
+
+Set `enable_techdocs_storage = true` to create the private Azure Blob publisher
+storage. That requires `private_dns_zone_ids["privatelink.blob.core.windows.net"]`,
+`backstage_workload_identity_principal_id` for portal reads, and any
+`techdocs_publisher_principal_ids` that should write generated TechDocs from CI.
 
 ## Validation
 

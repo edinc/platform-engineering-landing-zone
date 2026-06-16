@@ -24,7 +24,7 @@
             "context": "Stage 00 quality gates"
           },
           {
-            "context": "Node.js 20 pnpm stub (20.x)"
+            "context": "Backstage app contract (22.x)"
           }
         ]
       }

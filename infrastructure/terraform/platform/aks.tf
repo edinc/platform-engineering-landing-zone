@@ -28,6 +28,24 @@ resource "azurerm_role_assignment" "aks_network" {
   principal_type       = "ServicePrincipal"
 }
 
+resource "azurerm_role_assignment" "backstage_aks_cluster_user" {
+  count = local.backstage_enabled ? 1 : 0
+
+  scope                = azurerm_kubernetes_cluster.platform[0].id
+  role_definition_name = "Azure Kubernetes Service Cluster User Role"
+  principal_id         = var.backstage_workload_identity_principal_id
+  principal_type       = "ServicePrincipal"
+}
+
+resource "azurerm_role_assignment" "backstage_aks_rbac_reader" {
+  count = local.backstage_enabled ? 1 : 0
+
+  scope                = azurerm_kubernetes_cluster.platform[0].id
+  role_definition_name = "Azure Kubernetes Service RBAC Reader"
+  principal_id         = var.backstage_workload_identity_principal_id
+  principal_type       = "ServicePrincipal"
+}
+
 resource "azurerm_kubernetes_cluster" "platform" {
   #checkov:skip=CKV_AZURE_116:Azure Policy add-on installs Gatekeeper; Kyverno is the single in-cluster admission engine per ADR-0036.
   #checkov:skip=CKV_AZURE_117:AKS disk encryption set is a Stage 04 hardening follow-up once CMK lifecycle is fully wired.
