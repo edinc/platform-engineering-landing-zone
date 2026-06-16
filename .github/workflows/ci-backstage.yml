@@ -11,13 +11,13 @@ permissions:
   contents: read
 
 jobs:
-  node-stub:
-    name: Node.js 20 pnpm stub
+  app:
+    name: Backstage app contract
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version:
-          - 20.x
+          - 22.x
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -29,33 +29,116 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Stage 00 Backstage placeholder
+      - name: Enable Yarn
         run: |
-          if [ -f backstage/app/package.json ]; then
-            cd backstage/app
-            pnpm install --frozen-lockfile
-            pnpm test
-            pnpm build
-          else
-            echo "Backstage application is introduced in Stage 09; Stage 00 validates the CI stub only."
-          fi
+          corepack enable
+          corepack prepare yarn@4.4.1 --activate
 
-  environment-stub:
-    name: Environment protection stub
+      - name: Install Backstage app dependencies
+        working-directory: backstage/app
+        run: yarn install --immutable
+
+      - name: Test Backstage app
+        working-directory: backstage/app
+        run: yarn test
+
+      - name: Build Backstage app
+        working-directory: backstage/app
+        run: yarn tsc && yarn build:backend
+
+  helm:
+    name: Backstage Helm chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Lint Backstage Helm chart
+        run: mise exec -- helm lint backstage/deploy
+
+  contract:
+    name: Stage 09 contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Validate Stage 09 contracts
+        run: python3 scripts/backstage/validate_stage09_backstage.py
+
+  publish-image:
+    name: Publish Backstage image
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      id-token: write
+    needs:
+      - app
+      - contract
+    uses: ./.github/workflows/container-build-sign.yml
+    with:
+      image_name: platform/backstage
+      context: backstage/app
+      dockerfile: backstage/app/Dockerfile
+      environment: dev
+
+  publish-reconciler-image:
+    name: Publish Backstage catalog reconciler image
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      id-token: write
+    needs:
+      - contract
+    uses: ./.github/workflows/container-build-sign.yml
+    with:
+      image_name: platform/backstage-catalog-reconciler
+      context: backstage/catalog-reconciler
+      dockerfile: backstage/catalog-reconciler/Dockerfile
+      environment: dev
+
+  publish-chart:
+    name: Publish Backstage chart
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      id-token: write
+    needs:
+      - helm
+      - publish-image
+      - publish-reconciler-image
+    uses: ./.github/workflows/helm-publish.yml
+    with:
+      chart_path: backstage/deploy
+      environment: dev
+      oci_repository: helm
+
+  environment-reference:
+    name: Environment protection reference
     if: github.event_name == 'workflow_dispatch'
-    needs: node-stub
+    needs:
+      - app
+      - helm
+      - contract
     runs-on: ubuntu-latest
     strategy:
       matrix:
         environment:
-          - bootstrap
           - dev
           - nonprod
           - prod
     environment: ${{ matrix.environment }}
     steps:
       - name: Reference protected environment
-        run: echo "Referenced ${{ matrix.environment }} for Stage 00 environment setup."
+        run: |
+          echo "Referenced ${{ matrix.environment }} for Stage 09 Backstage deployment controls."

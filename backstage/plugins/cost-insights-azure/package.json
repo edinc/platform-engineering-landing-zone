@@ -1,0 +1,10 @@
+{
+  "name": "@platform/backstage-cost-insights-azure",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fallback Azure Cost Management adapter scaffold for Backstage Cost Insights.",
+  "type": "module",
+  "exports": {
+    ".": "./src/adapter.ts"
+  }
+}

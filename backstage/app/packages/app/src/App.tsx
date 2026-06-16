@@ -1,0 +1,91 @@
+import {
+  convertLegacyPageExtension,
+  convertLegacyAppOptions,
+  convertLegacyPlugin,
+} from '@backstage/core-compat-api';
+import {
+  configApiRef,
+  createApiFactory,
+  discoveryApiRef,
+  fetchApiRef,
+  microsoftAuthApiRef,
+} from '@backstage/core-plugin-api';
+import { SignInPage } from '@backstage/core-components';
+import { createApp } from '@backstage/frontend-defaults';
+import apiDocsPlugin from '@backstage/plugin-api-docs/alpha';
+import catalogPlugin from '@backstage/plugin-catalog/alpha';
+import catalogImportPlugin from '@backstage/plugin-catalog-import/alpha';
+import {
+  EntityGithubActionsContent,
+  githubActionsPlugin,
+} from '@backstage/plugin-github-actions';
+import kubernetesPlugin from '@backstage/plugin-kubernetes/alpha';
+import scaffolderPlugin from '@backstage/plugin-scaffolder/alpha';
+import techdocsPlugin from '@backstage/plugin-techdocs/alpha';
+import costInsightsPlugin from '@backstage-community/plugin-cost-insights/alpha';
+import { costInsightsApiRef } from '@backstage-community/plugin-cost-insights';
+import {
+  FluxRuntimePage,
+  fluxPlugin,
+} from '@backstage-community/plugin-flux';
+import { navModule } from './modules/nav';
+import { PlatformCostInsightsClient } from './apis/PlatformCostInsightsClient';
+
+const githubActionsFeature = convertLegacyPlugin(githubActionsPlugin, {
+  extensions: [
+    convertLegacyPageExtension(EntityGithubActionsContent, {
+      path: '/github-actions',
+    }),
+  ],
+});
+
+const fluxFeature = convertLegacyPlugin(fluxPlugin, {
+  extensions: [
+    convertLegacyPageExtension(FluxRuntimePage, {
+      path: '/flux',
+    }),
+  ],
+});
+
+export default createApp({
+  features: [
+    apiDocsPlugin,
+    catalogPlugin,
+    catalogImportPlugin,
+    costInsightsPlugin,
+    convertLegacyAppOptions({
+      components: {
+        SignInPage: props => (
+          <SignInPage
+            {...props}
+            auto
+            provider={{
+              id: 'microsoft-auth-provider',
+              title: 'Microsoft Entra ID',
+              message: 'Sign in with your Microsoft Entra account',
+              apiRef: microsoftAuthApiRef,
+            }}
+          />
+        ),
+      },
+      apis: [
+        createApiFactory({
+          api: costInsightsApiRef,
+          deps: {
+            configApi: configApiRef,
+            discoveryApi: discoveryApiRef,
+            fetchApi: fetchApiRef,
+          },
+          factory: ({ discoveryApi, fetchApi }) =>
+            new PlatformCostInsightsClient(discoveryApi, fetchApi),
+        }),
+      ],
+    }),
+    fluxFeature,
+    githubActionsFeature,
+    kubernetesPlugin,
+    scaffolderPlugin,
+    techdocsPlugin,
+    navModule,
+  ],
+});

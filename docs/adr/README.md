@@ -19,7 +19,7 @@ Next free number: **0054**
 | 0009 | AKS dataplane | Seeded in plan | Pending |
 | 0010 | AKS node auto-provisioning | Seeded in plan | Pending |
 | 0011 | Compliance baseline | Accepted | [`0011-compliance-baseline.md`](0011-compliance-baseline.md) |
-| 0012 | Backstage hosting | Seeded in plan | Pending |
+| 0012 | Backstage hosting | Accepted | [`0012-backstage-hosting.md`](0012-backstage-hosting.md) |
 | 0013 | Repository topology | Seeded in plan | Pending |
 | 0014 | Terraform state | Accepted | [`0014-terraform-state.md`](0014-terraform-state.md) |
 | 0015 | Internal API auth | Seeded in plan | Pending |
@@ -27,7 +27,7 @@ Next free number: **0054**
 | 0017 | DR posture | Seeded in plan | Pending |
 | 0018 | Developer inner loop | Seeded in plan | Pending |
 | 0019 | CI scanning | Accepted | [`0019-ci-scanning.md`](0019-ci-scanning.md) |
-| 0020 | Backstage build-vs-buy | Seeded in plan | Pending |
+| 0020 | Backstage build-vs-buy | Accepted | [`0020-build-vs-buy.md`](0020-build-vs-buy.md) |
 | 0021 | Pre-commit framework and local quality gates | Accepted | [`0021-pre-commit.md`](0021-pre-commit.md) |
 | 0022 | Conventional Commits and Release Please | Accepted | [`0022-conventional-commits-release-please.md`](0022-conventional-commits-release-please.md) |
 | 0023 | SCM branching and GitHub Environments | Accepted | [`0023-scm-branching.md`](0023-scm-branching.md) |
@@ -48,8 +48,8 @@ Next free number: **0054**
 | 0038 | SLO tooling | Accepted | [`0038-slo-tooling.md`](0038-slo-tooling.md) |
 | 0039 | On-call tooling | Accepted | [`0039-on-call-tooling.md`](0039-on-call-tooling.md) |
 | 0040 | Status page tooling | Accepted | [`0040-status-page-tooling.md`](0040-status-page-tooling.md) |
-| 0041 | Backstage RBAC | Seeded in Stage 09 | Pending |
-| 0042 | TechDocs storage | Seeded in Stage 09 | Pending |
+| 0041 | Backstage RBAC | Accepted | [`0041-backstage-rbac.md`](0041-backstage-rbac.md) |
+| 0042 | TechDocs storage | Accepted | [`0042-techdocs-storage.md`](0042-techdocs-storage.md) |
 | 0043 | Ownership matrix | Seeded in Stage 10 | Pending |
 | 0044 | Template versioning | Seeded in Stage 11 | Pending |
 | 0045 | Game-day cadence and scope | Seeded in Stage 12 | Pending |
@@ -59,7 +59,7 @@ Next free number: **0054**
 | 0049 | DDoS protection posture | Accepted | [`0049-ddos-protection.md`](0049-ddos-protection.md) |
 | 0050 | ACA managed environment as a platform shared service | Accepted | [`0050-aca-managed-environment.md`](0050-aca-managed-environment.md) |
 | 0051 | Cross-repo GitHub writes | Accepted | [`0051-cross-repo-github-writes.md`](0051-cross-repo-github-writes.md) |
-| 0052 | Backstage Postgres passwordless auth | Seeded in Stage 09 | Pending |
+| 0052 | Backstage Postgres passwordless auth | Accepted | [`0052-backstage-postgres-auth.md`](0052-backstage-postgres-auth.md) |
 | 0053 | ACA GitOps exception | Seeded in Stage 11 | Pending |
 
 ADR seeds 0002-0020 are defined in [`plan/plan.md` section 9](../../plan/plan.md#9-key-architecture-decisions-adr-seeds).

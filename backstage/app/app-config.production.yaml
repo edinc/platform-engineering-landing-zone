@@ -1,0 +1,28 @@
+app:
+  baseUrl: https://backstage.${PLATFORM_ENV}.${PLATFORM_ROOT_DOMAIN}
+
+backend:
+  baseUrl: https://backstage.${PLATFORM_ENV}.${PLATFORM_ROOT_DOMAIN}
+  database:
+    connection:
+      host: ${POSTGRES_HOST}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+
+auth:
+  session:
+    secret: ${BACKSTAGE_SESSION_SECRET}
+
+techdocs:
+  publisher:
+    azureBlobStorage:
+      containerName: techdocs
+      credentials:
+        accountName: ${TECHDOCS_STORAGE_ACCOUNT_NAME}
+
+permission:
+  rbac:
+    platformAdminsGroupRef: group:default/pe-platform-admins
+    platformOperatorsGroupRef: group:default/pe-platform-operators
+    applicationTeamGroupRefs: ${BACKSTAGE_APPLICATION_TEAM_GROUP_REFS}
+    applicationTeamGroupMap: ${BACKSTAGE_APPLICATION_TEAM_GROUP_MAP}

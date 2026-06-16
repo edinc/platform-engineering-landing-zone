@@ -33,6 +33,11 @@ output "gitops_flux_configuration_id" {
   description = "Root Flux configuration ID, or null when GitOps is disabled."
 }
 
+output "backstage_flux_configuration_id" {
+  value       = try(azurerm_kubernetes_flux_configuration.backstage[0].id, null)
+  description = "Stage 09 Backstage Flux configuration ID, or null when Backstage is disabled."
+}
+
 output "gitops_cluster_state_root_path" {
   value       = local.gitops_root_path
   description = "platform-cluster-state path reconciled by the root Flux Kustomization."
@@ -96,6 +101,16 @@ output "cost_allocator_function_app_id" {
 output "cost_allocator_showback_container_id" {
   value       = try(module.cost_allocator[0].showback_container_id, null)
   description = "Stage 08 cost showback output container ID, or null when disabled."
+}
+
+output "techdocs_storage_account_name" {
+  value       = try(azurerm_storage_account.techdocs[0].name, null)
+  description = "Stage 09 TechDocs storage account name, or null when disabled."
+}
+
+output "techdocs_storage_container_id" {
+  value       = try(azurerm_storage_container.techdocs[0].id, null)
+  description = "Stage 09 TechDocs Blob container resource ID, or null when disabled."
 }
 
 output "private_endpoint_ids" {
