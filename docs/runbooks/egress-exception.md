@@ -30,8 +30,11 @@ An exception request must include:
 
 ## Workflow
 
-1. **Request** - Open a PR or change request that updates the firewall allowlist
-   and, where applicable, the namespace NetworkPolicy/CiliumNetworkPolicy.
+1. **Request** - Use the Backstage `request-egress-exception` template or open a
+   PR that updates the firewall allowlist and, where applicable, the namespace
+   NetworkPolicy/CiliumNetworkPolicy. The template creates a reviewable patch
+   under `policies/azure/firewall/exception-patches/` plus a demo-profile Cilium
+   policy draft under    `platform-gitops/clusters/overlays/<environment>/network/egress-exceptions/`.
 2. **Review** - Platform and security reviewers check the destination scope,
    expiry, data classification, and whether a Private Endpoint or Azure-native
    integration can avoid public egress.
@@ -53,17 +56,33 @@ An exception request must include:
 | Broad wildcard or SaaS domain family | 30 days | Platform lead + security owner |
 | Incident/break-glass | 7 days | Incident commander, retro-reviewed |
 
+Backstage-generated egress exceptions use firewall collection priorities
+`800-899`. Keep priorities unique across active exception patches and active
+allowlist collections; recycle priorities only after the expiry sweep removes the
+old exception.
+
 ## Implementation checklist
 
 1. Add the narrowest FQDNs to `policies/azure/firewall/allowlist.json`; avoid
    `*`, top-level wildcards, and destinations that are not backed by evidence.
+   If the request came from Backstage, apply the generated patch into
+   `allowlist.json` before merging by copying only `name`, `priority`, `action`,
+   and `rules` from the generated `collection`; keep patch-only metadata in the
+   patch file for audit context.
 2. Run `make policy-test-azure`.
 3. For non-demo profiles, run Terraform validation/plan for
    `infrastructure/terraform/connectivity`.
 4. Add or update the namespace egress policy in the GitOps repo when the source
-   is Kubernetes.
+   is Kubernetes. Backstage requests generate
+   `platform-gitops/clusters/overlays/<environment>/network/egress-exceptions/<team>-<exception>.yaml`.
+   Add the new filename to
+   `platform-gitops/clusters/overlays/<environment>/network/egress-exceptions/kustomization.yaml`
+   and preserve existing entries so only the target environment reconciles the
+   active exception.
 5. Confirm logs show allowed traffic only from the approved source.
-6. Create a removal task dated before expiry.
+6. Confirm `egress-exception-sweep.yml` opens a cleanup PR after expiry, or
+   manually remove the firewall collection, generated patch, Cilium policy, and
+   kustomization entry before expiry.
 
 ## Demo profile note
 

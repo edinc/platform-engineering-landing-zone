@@ -25,7 +25,7 @@ Next free number: **0054**
 | 0015 | Internal API auth | Seeded in plan | Pending |
 | 0016 | Image promotion | Accepted | [`0016-image-promotion.md`](0016-image-promotion.md) |
 | 0017 | DR posture | Seeded in plan | Pending |
-| 0018 | Developer inner loop | Seeded in plan | Pending |
+| 0018 | Developer inner loop | Accepted | [`0018-inner-loop.md`](0018-inner-loop.md) |
 | 0019 | CI scanning | Accepted | [`0019-ci-scanning.md`](0019-ci-scanning.md) |
 | 0020 | Backstage build-vs-buy | Accepted | [`0020-build-vs-buy.md`](0020-build-vs-buy.md) |
 | 0021 | Pre-commit framework and local quality gates | Accepted | [`0021-pre-commit.md`](0021-pre-commit.md) |
@@ -50,7 +50,7 @@ Next free number: **0054**
 | 0040 | Status page tooling | Accepted | [`0040-status-page-tooling.md`](0040-status-page-tooling.md) |
 | 0041 | Backstage RBAC | Accepted | [`0041-backstage-rbac.md`](0041-backstage-rbac.md) |
 | 0042 | TechDocs storage | Accepted | [`0042-techdocs-storage.md`](0042-techdocs-storage.md) |
-| 0043 | Ownership matrix | Seeded in Stage 10 | Pending |
+| 0043 | Ownership matrix | Accepted | [`0043-ownership-matrix.md`](0043-ownership-matrix.md) |
 | 0044 | Template versioning | Seeded in Stage 11 | Pending |
 | 0045 | Game-day cadence and scope | Seeded in Stage 12 | Pending |
 | 0046 | Post-mortem retention and PII handling | Seeded in Stage 12 | Pending |

@@ -1,0 +1,31 @@
+{
+  "collection": {
+    "name": "team-${{ values.teamName }}-${{ values.environment }}-${{ values.exceptionSlug }}",
+    "priority": ${{ values.firewallPriority }},
+    "action": "Allow",
+    "rules": [
+      {
+        "name": "${{ values.teamName }}-${{ values.environment }}-${{ values.exceptionSlug }}",
+        "destination_fqdns": [
+{% for fqdn in values.destinationFqdns %}
+          "${{ fqdn }}"{% if not loop.last %},{% endif %}
+{% endfor %}
+        ],
+        "protocols": [
+          {
+            "type": "Https",
+            "port": ${{ values.port }}
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "team": "${{ values.teamName }}",
+      "namespace": "${{ values.namespace }}",
+      "dataClassification": "${{ values.dataClassification }}",
+      "expiresOn": "${{ values.expiresOn }}",
+      "businessJustification": "${{ values.businessJustification }}"
+    }
+  },
+  "applyTo": "policies/azure/firewall/allowlist.json"
+}

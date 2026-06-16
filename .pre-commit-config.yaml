@@ -9,8 +9,9 @@ repos:
       - id: check-yaml
         args:
           - --allow-multiple-documents
-        exclude: ^backstage/deploy/templates/
+        exclude: ^(backstage/deploy/templates/|templates/.*/skeleton/)
       - id: check-json
+        exclude: ^templates/.*/skeleton/
       - id: check-merge-conflict
       - id: mixed-line-ending
         args:

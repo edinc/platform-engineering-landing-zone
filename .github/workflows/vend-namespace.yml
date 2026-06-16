@@ -229,9 +229,12 @@ jobs:
         run: |
           set -euo pipefail
           missing=()
-          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT TFSTATE_CONTAINER AKS_OIDC_ISSUER_URL PLATFORM_AKS_CLUSTER_ID PLATFORM_ACR_ID PLATFORM_KEY_VAULT_SECRET_IDS PLATFORM_RESOURCE_GROUP_NAME; do
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT TFSTATE_CONTAINER AKS_OIDC_ISSUER_URL PLATFORM_AKS_CLUSTER_ID PLATFORM_ACR_ID PLATFORM_RESOURCE_GROUP_NAME; do
             if [ -z "${!v:-}" ]; then missing+=("$v"); fi
           done
+          if [ "$(jq '.spec.namespace.azure.keyVaultSecretIds | length' .tools/tmp/contracts/request.json)" -gt 0 ] && [ -z "${PLATFORM_KEY_VAULT_SECRET_IDS:-}" ]; then
+            missing+=("PLATFORM_KEY_VAULT_SECRET_IDS")
+          fi
           if [ "${{ steps.request.outputs.action }}" = "apply" ]; then
             for v in SEED_KEY_VAULT_NAME PLATFORM_VENDING_BOT_APP_ID PLATFORM_VENDING_BOT_INSTALLATION_ID PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME; do
               if [ -z "${!v:-}" ]; then missing+=("$v"); fi
@@ -264,7 +267,8 @@ jobs:
           fi
           approved_secret_ids=".tools/tmp/approved-key-vault-secret-ids.txt"
           printf '%s' "$PLATFORM_KEY_VAULT_SECRET_IDS" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;/^$/d' > "$approved_secret_ids"
-          if [ ! -s "$approved_secret_ids" ]; then
+          requested_secret_count="$(jq '.spec.namespace.azure.keyVaultSecretIds | length' .tools/tmp/contracts/request.json)"
+          if [ "$requested_secret_count" -gt 0 ] && [ ! -s "$approved_secret_ids" ]; then
             echo "::error::PLATFORM_KEY_VAULT_SECRET_IDS must contain at least one approved secret resource ID."
             exit 1
           fi
