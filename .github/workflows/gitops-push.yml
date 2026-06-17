@@ -90,6 +90,7 @@ jobs:
       PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME: ${{ vars.PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME }}
       CLUSTER_STATE_REPO_OWNER_VAR: ${{ vars.CLUSTER_STATE_REPO_OWNER }}
       CLUSTER_STATE_REPO_NAME_VAR: ${{ vars.CLUSTER_STATE_REPO_NAME }}
+      AZURE_CONFIG_DIR: ${{ github.workspace }}/.tools/tmp/azure-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
