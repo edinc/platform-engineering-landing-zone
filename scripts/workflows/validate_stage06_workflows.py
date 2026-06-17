@@ -116,6 +116,8 @@ def validate_workflow_specific_contracts() -> None:
         "value: ${{ jobs.publish.outputs.digest_ref }}",
         "digest_ref: ${{ steps.chart.outputs.digest_ref }}",
         "AZURE_CONFIG_DIR:",
+        "pushed_ref=",
+        "Unexpected pushed chart reference",
     ]:
         if fragment not in helm_publish:
             fail(f".github/workflows/helm-publish.yml must expose {fragment!r}")
