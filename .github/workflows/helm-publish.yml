@@ -140,7 +140,7 @@ jobs:
             echo "::error::Unable to determine packaged chart path."
             exit 1
           fi
-          push_output="$(mise exec -- helm push "$chart_package" "oci://${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}")"
+          push_output="$(mise exec -- helm push "$chart_package" "oci://${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}" 2>&1)"
           printf '%s\n' "$push_output"
           pushed_ref="$(printf '%s\n' "$push_output" | sed -n 's/^Pushed: //p' | tail -1)"
           digest="$(printf '%s\n' "$push_output" | sed -n 's/^Digest: //p' | tail -1)"
