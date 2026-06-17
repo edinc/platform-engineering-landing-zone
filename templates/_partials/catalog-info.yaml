@@ -1,0 +1,24 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "${{ values.componentId }}"
+  title: "${{ values.componentTitle }}"
+  description: "${{ values.description }}"
+  annotations:
+    backstage.io/source-location: "url:https://github.com/edinc/${{ values.repoName }}"
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-id: "${{ values.componentId }}"
+    github.com/project-slug: "edinc/${{ values.repoName }}"
+    pagerduty.com/service-id: "${{ values.onCallRotationId }}"
+    platform.example.io/on-call: "${{ values.onCallRotationId }}"
+    platform.example.io/team: "${{ values.teamName }}"
+    platform.example.io/product: "${{ values.productName }}"
+  tags:
+    - "${{ values.environment }}"
+    - "${{ values.dataClassification }}"
+    - golden-path
+spec:
+  type: service
+  lifecycle: production
+  owner: "group:default/pe-app-team-${{ values.teamName }}"
+  system: "${{ values.productName }}"

@@ -6,7 +6,7 @@ tenant_id       = "00000000-0000-0000-0000-000000000000"
 subscription_id = "11111111-1111-1111-1111-111111111111"
 
 # Existing ALZ shared services.
-log_analytics_workspace_id      = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-monitoring/providers/Microsoft.OperationalInsights/workspaces/log-platform-weu"
+log_analytics_workspace_id      = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-monitoring/providers/Microsoft.OperationalInsights/workspaces/log-platform-sec"
 enable_activity_log_diagnostics = true
 approved_log_analytics_workspace_subscription_ids = [
   "22222222-2222-2222-2222-222222222222",
@@ -32,7 +32,7 @@ defender_tiers = {
 # budget_contact_emails = ["platform-engineering@example.com"]
 
 # Optional Cost Management export to an existing ALZ/platform container.
-# cost_export_storage_container_id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-cost/providers/Microsoft.Storage/storageAccounts/stplatformcostweu/blobServices/default/containers/cost-exports"
+# cost_export_storage_container_id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-cost/providers/Microsoft.Storage/storageAccounts/stplatformcostsec/blobServices/default/containers/cost-exports"
 # approved_cost_export_storage_subscription_ids = ["22222222-2222-2222-2222-222222222222"]
 # cost_export_root_folder          = "subscriptions/11111111-1111-1111-1111-111111111111"
 # cost_export_recurrence_from      = "2026-07-01T00:00:00Z"

@@ -1,0 +1,19 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: checkout-extra-matcher
+  namespace: team-payments
+spec:
+  interval: 5m
+  url: oci://acrpedemosec.azurecr.io/helm/checkout
+  provider: azure
+  serviceAccountName: app
+  ref:
+    digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  verify:
+    provider: cosign
+    matchOIDCIdentity:
+      - issuer: ^https://token.actions.githubusercontent.com$
+        subject: ^https://github.com/edinc/platform-engineering-landing-zone/\.github/workflows/helm-publish\.yml@refs/heads/main$
+      - issuer: ^https://token.actions.githubusercontent.com$
+        subject: ^https://github.com/edinc/.*$

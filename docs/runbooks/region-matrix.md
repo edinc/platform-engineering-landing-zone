@@ -18,8 +18,8 @@ platform stack.
 
 | Profile | Primary | Paired/DR |
 |---------|---------|-----------|
-| demo | westeurope | n/a |
-| nonprod | westeurope | northeurope |
-| prod | westeurope | northeurope |
+| demo | swedencentral | n/a |
+| nonprod | swedencentral | swedensouth |
+| prod | swedencentral | swedensouth |
 
 Update this matrix before changing `location` or `paired_location` defaults.

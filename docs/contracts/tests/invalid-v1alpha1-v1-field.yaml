@@ -10,7 +10,7 @@ spec:
   dataClassification: confidential
   environment: nonprod
   regions:
-    - westeurope
+    - swedencentral
   tags:
     owner: payments
     costCenter: cc-payments

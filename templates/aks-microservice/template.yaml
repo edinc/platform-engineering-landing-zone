@@ -1,0 +1,174 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aks-microservice
+  title: AKS microservice
+  description: Create a secure AKS microservice repository with CI/CD, GitOps, SLOs, TechDocs, and on-call metadata.
+  deprecated: false
+  annotations:
+    scaffolder.platform.example.io/api-version: scaffolder.platform.example.io/v1
+  tags:
+    - stage-11
+    - golden-path
+    - team-scoped
+    - aks
+spec:
+  owner: group:default/pe-platform-admins
+  type: service
+  parameters:
+    - title: Service ownership
+      required:
+        - componentId
+        - componentTitle
+        - language
+        - teamName
+        - productName
+        - costCenter
+        - dataClassification
+        - confidentiality
+        - onCallRotationId
+      properties:
+        componentId:
+          title: Component ID
+          type: string
+          description: DNS-safe service slug. The generated repository is <team>-<component>.
+          pattern: "^[a-z][a-z0-9-]{1,38}[a-z0-9]$"
+          ui:autofocus: true
+        componentTitle:
+          title: Display name
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: "^[A-Za-z0-9][A-Za-z0-9 ._-]{1,62}[A-Za-z0-9]$"
+        language:
+          title: Runtime language
+          type: string
+          enum:
+            - node-ts
+            - python
+            - dotnet
+          default: node-ts
+        teamName:
+          title: Team name
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$"
+        productName:
+          title: Product
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{1,20}[a-z0-9]$"
+        costCenter:
+          title: Cost center
+          type: string
+          pattern: "^cc-[a-z0-9-]{2,32}$"
+        dataClassification:
+          title: Data classification
+          type: string
+          enum:
+            - public
+            - internal
+            - confidential
+            - restricted
+        confidentiality:
+          title: Confidentiality
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+          default: medium
+        onCallRotationId:
+          title: On-call rotation
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]{1,126}[A-Za-z0-9]$"
+    - title: Deployment defaults
+      required:
+        - environment
+        - namespace
+        - publicExposure
+        - port
+        - serviceAccountName
+        - sloAvailabilityTarget
+      properties:
+        environment:
+          title: Initial environment
+          type: string
+          enum:
+            - demo
+            - nonprod
+            - prod
+          default: demo
+        namespace:
+          title: Vended namespace
+          type: string
+          description: Existing namespace created by the AKS workload namespace template.
+          maxLength: 58
+          pattern: "^[a-z0-9][a-z0-9-]{1,56}[a-z0-9]$"
+        publicExposure:
+          title: Public ingress
+          type: boolean
+          default: false
+        port:
+          title: Container port
+          type: integer
+          default: 8080
+          minimum: 1024
+          maximum: 65535
+        serviceAccountName:
+          title: Vended workload service account
+          type: string
+          default: app
+          maxLength: 57
+          pattern: "^[a-z0-9][a-z0-9-]{1,55}[a-z0-9]$"
+        sloAvailabilityTarget:
+          title: Availability SLO target
+          type: number
+          default: 99.5
+          minimum: 95
+          maximum: 99.99
+  steps:
+    - id: fetch-base
+      name: Render repository
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: ${{ parameters.componentId }}
+        values:
+          stage11GoldenPath: "true"
+          goldenPathType: aks-microservice
+          componentId: ${{ parameters.componentId }}
+          componentTitle: ${{ parameters.componentTitle }}
+          description: ${{ parameters.componentTitle }} AKS microservice
+          language: ${{ parameters.language }}
+          teamName: ${{ parameters.teamName }}
+          productName: ${{ parameters.productName }}
+          costCenter: ${{ parameters.costCenter }}
+          dataClassification: ${{ parameters.dataClassification }}
+          confidentiality: ${{ parameters.confidentiality }}
+          onCallRotationId: ${{ parameters.onCallRotationId }}
+          environment: ${{ parameters.environment }}
+          namespace: ${{ parameters.namespace }}
+          publicExposure: ${{ parameters.publicExposure }}
+          port: ${{ parameters.port }}
+          serviceAccountName: ${{ parameters.serviceAccountName }}
+          sloAvailabilityTarget: ${{ parameters.sloAvailabilityTarget }}
+          repoName: ${{ parameters.teamName }}-${{ parameters.componentId }}
+    - id: publish-request
+      name: Open service repository request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=edinc&repo=platform-engineering-landing-zone
+        branchName: golden-path-aks-${{ parameters.teamName }}
+        title: Create AKS microservice for ${{ parameters.teamName }}
+        description: Stage 11 AKS microservice repository request. Platform reviewers create edinc/${{ parameters.teamName }}-${{ parameters.componentId }} with private visibility, branch protection, CODEOWNERS, app-team-${{ parameters.teamName }} push access, and the generated skeleton under golden-path-requests/aks/${{ parameters.teamName }}/${{ parameters.componentId }} in this PR.
+        targetPath: golden-path-requests/aks/${{ parameters.teamName }}
+        teamReviewers:
+          - pe-platform-admins
+          - pe-security-reviewers
+        labels:
+          - stage-11
+          - golden-path
+          - aks
+  output:
+    links:
+      - title: Golden-path repository request
+        url: ${{ steps['publish-request'].output.remoteUrl }}

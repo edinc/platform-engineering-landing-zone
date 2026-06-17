@@ -1,0 +1,20 @@
+apiVersion: platform.example.io/v1alpha1
+kind: ApplicationInsightsSLO
+metadata:
+  name: "${{ values.componentId }}-aca-slo"
+  labels:
+    team: "${{ values.teamName }}"
+    product: "${{ values.productName }}"
+    costCenter: "${{ values.costCenter }}"
+    dataClassification: "${{ values.dataClassification }}"
+spec:
+  service: "${{ values.componentId }}"
+  source: log-analytics-containerapp-console
+  queries:
+    availability: observability/app-insights-kql/availability.kql
+    failureRatio: observability/app-insights-kql/failure-ratio.kql
+    latencyP95: observability/app-insights-kql/latency-p95.kql
+  alerting:
+    severity: sev2
+    runbookUrl: "https://github.com/edinc/${{ values.repoName }}/blob/main/docs/runbook.md"
+    onCallRotationId: "${{ values.onCallRotationId }}"

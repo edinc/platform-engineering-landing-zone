@@ -32,13 +32,13 @@ variable "profile" {
 variable "location" {
   type        = string
   description = "Azure region for connectivity resources."
-  default     = "westeurope"
+  default     = "swedencentral"
 }
 
 variable "location_short" {
   type        = string
   description = "Short region token used in resource names."
-  default     = "weu"
+  default     = "sec"
 
   validation {
     condition     = can(regex("^[a-z0-9]{2,6}$", var.location_short))

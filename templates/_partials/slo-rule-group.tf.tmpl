@@ -1,18 +1,18 @@
-resource "azurerm_monitor_alert_prometheus_rule_group" "${{ values.component_id }}_slo" {
-  name                = "amprg-${{ values.component_id }}-slo"
+resource "azurerm_monitor_alert_prometheus_rule_group" "${{ values.componentId | replace('-', '_') }}_slo" {
+  name                = "amprg-${{ values.componentId }}-slo"
   location            = var.location
   resource_group_name = var.resource_group_name
   cluster_name        = var.aks_cluster_name
-  description         = "Golden-path SLO alerts for ${{ values.component_id }}."
+  description         = "Golden-path SLO alerts for ${{ values.componentId }}."
   rule_group_enabled  = true
   interval            = "PT1M"
   scopes              = [var.azure_monitor_workspace_id]
   tags                = var.tags
 
   rule {
-    alert      = "${{ values.component_id }}AvailabilityBurn"
+    alert      = "${{ values.componentId | replace('-', '_') }}AvailabilityBurn"
     enabled    = true
-    expression = "sum(rate(http_server_requests_total{namespace=\"${{ values.namespace }}\",service=\"${{ values.component_id }}\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_total{namespace=\"${{ values.namespace }}\",service=\"${{ values.component_id }}\"}[5m])) > (1 - (${{ values.slo_availability_target }} / 100))"
+    expression = "sum(rate(http_server_requests_total{namespace=\"${{ values.namespace }}\",service=\"${{ values.componentId }}\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_total{namespace=\"${{ values.namespace }}\",service=\"${{ values.componentId }}\"}[5m])) > (1 - (${{ values.sloAvailabilityTarget }} / 100))"
     for        = "PT10M"
     severity   = 2
 
@@ -21,13 +21,13 @@ resource "azurerm_monitor_alert_prometheus_rule_group" "${{ values.component_id 
     }
 
     annotations = {
-      runbook_url   = "${{ values.runbook_url }}"
-      dashboard_url = "${{ values.dashboard_url }}"
+      runbook_url   = "https://github.com/edinc/${{ values.repoName }}/blob/main/docs/runbook.md"
+      dashboard_url = "https://grafana.platform.example.com/d/${{ values.componentId }}"
     }
 
     labels = {
-      team    = "${{ values.team }}"
-      product = "${{ values.product }}"
+      team    = "${{ values.teamName }}"
+      product = "${{ values.productName }}"
     }
   }
 }

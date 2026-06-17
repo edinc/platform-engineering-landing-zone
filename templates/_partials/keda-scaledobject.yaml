@@ -1,25 +1,25 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: "${{ values.component_id }}"
+  name: "${{ values.componentId }}"
   namespace: "${{ values.namespace }}"
   labels:
-    app.kubernetes.io/name: "${{ values.component_id }}"
-    team: "${{ values.team }}"
-    product: "${{ values.product }}"
-    costCenter: "${{ values.cost_center }}"
-    dataClassification: "${{ values.data_classification }}"
+    app.kubernetes.io/name: "${{ values.componentId }}"
+    team: "${{ values.teamName }}"
+    product: "${{ values.productName }}"
+    costCenter: "${{ values.costCenter }}"
+    dataClassification: "${{ values.dataClassification }}"
 spec:
   scaleTargetRef:
-    name: "${{ values.component_id }}"
+    name: "${{ values.componentId }}"
   minReplicaCount: 0
-  maxReplicaCount: ${{ values.max_replicas }}
+  maxReplicaCount: ${{ values.maxReplicas }}
   pollingInterval: 30
   cooldownPeriod: 300
   triggers:
     - type: prometheus
       metadata:
         serverAddress: https://prometheus-query.platform.internal
-        metricName: "${{ values.component_id }}_requests_per_second"
-        query: sum(rate(http_server_requests_total{namespace="${{ values.namespace }}",service="${{ values.component_id }}"}[2m]))
-        threshold: "${{ values.scale_threshold }}"
+        metricName: "${{ values.componentId }}_requests_per_second"
+        query: sum(rate(http_server_requests_total{namespace="${{ values.namespace }}",service="${{ values.componentId }}"}[2m]))
+        threshold: "${{ values.scaleThreshold }}"

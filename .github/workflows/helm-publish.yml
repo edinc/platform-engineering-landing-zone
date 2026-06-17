@@ -32,6 +32,13 @@ on:
         required: false
         type: string
         default: self-hosted
+    outputs:
+      chart_ref:
+        description: Tag reference pushed by the workflow.
+        value: ${{ jobs.publish.outputs.chart_ref }}
+      digest_ref:
+        description: Digest-pinned chart reference.
+        value: ${{ jobs.publish.outputs.digest_ref }}
 
 permissions:
   contents: read
@@ -42,6 +49,9 @@ jobs:
     name: Package, push, sign
     runs-on: ${{ inputs.runs_on }}
     environment: ${{ inputs.environment }}
+    outputs:
+      chart_ref: ${{ steps.chart.outputs.chart_ref }}
+      digest_ref: ${{ steps.chart.outputs.digest_ref }}
     env:
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}

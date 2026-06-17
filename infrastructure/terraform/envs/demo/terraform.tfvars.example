@@ -3,8 +3,8 @@
 subscription_id = "44444444-4444-4444-4444-444444444444"
 tenant_id       = "00000000-0000-0000-0000-000000000000"
 
-location       = "westeurope"
-location_short = "weu"
+location       = "swedencentral"
+location_short = "sec"
 
 owner       = "platform-engineering"
 cost_center = "cc-demo"

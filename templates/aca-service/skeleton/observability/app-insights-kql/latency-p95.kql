@@ -1,0 +1,8 @@
+union isfuzzy=true
+    (ContainerAppConsoleLogs_CL | project timestamp = TimeGenerated, message = Log_s),
+    (traces | project timestamp, message)
+| where timestamp > ago(5m)
+| extend log = parse_json(message)
+| where tostring(log.event) == "http_request"
+| where tostring(log.service) == "${{ values.componentId }}"
+| summarize latency_p95_ms=percentile(todouble(log.duration_ms), 95)

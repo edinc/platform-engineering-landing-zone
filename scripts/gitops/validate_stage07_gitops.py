@@ -20,8 +20,10 @@ EXPECTED_POLICIES = {
     "require-resource-requests-limits.yaml",
     "require-run-as-non-root.yaml",
     "require-standard-labels.yaml",
+    "require-tenant-gitops-guardrails.yaml",
     "restrict-cert-manager-issuers.yaml",
     "restrict-external-dns-hostnames.yaml",
+    "restrict-tenant-reconciler-serviceaccounts.yaml",
     "verify-cosign-signatures.yaml",
 }
 
@@ -154,7 +156,7 @@ def validate_terraform_and_workflows() -> None:
     require_contains(".github/workflows/vend-namespace.yml", "tenant_index=\"clusters/overlays/${environment}/tenants/kustomization.yaml\"")
     require_contains(".github/workflows/vend-namespace.yml", "tenant_bootstrap=")
     require_contains(".github/workflows/vend-namespace.yml", "scripts/gitops/update_tenant_index.py")
-    require_contains("policies/kyverno/verify-cosign-signatures.yaml", "subjectRegExp: ^https://github\\.com/")
+    require_contains("policies/kyverno/verify-cosign-signatures.yaml", "subjectRegExp: ^https://github\\.com/edinc/platform-engineering-landing-zone/\\.github/workflows/container-build-sign\\.yml@refs/heads/main$")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "postBuild")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "postBuild")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "serviceAccountName: platform-reconciler")

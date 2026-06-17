@@ -45,7 +45,7 @@ bootstrap-init.sh        make bootstrap-import        bootstrap workflow
   --name-suffix <2-8 lowercase alnum>      # short, stable, globally unique
 ```
 
-Useful flags: `--location` / `--location-short` (default `westeurope` / `weu`),
+Useful flags: `--location` / `--location-short` (default `swedencentral` / `sec`),
 `--key-vault-sku premium` (only if you will use an HSM-backed CMK),
 `--grant-root-mg` (legacy opt-in root management group roles for explicitly
 documented future tenant-scope work; Stage 02 does not need it),
@@ -68,12 +68,12 @@ environment. With the GitHub CLI:
 gh variable set AZURE_CLIENT_ID          --env bootstrap --body "<appId>"
 gh variable set AZURE_TENANT_ID          --env bootstrap --body "<tenant-guid>"
 gh variable set AZURE_SUBSCRIPTION_ID    --env bootstrap --body "<sub-guid>"
-gh variable set TFSTATE_RESOURCE_GROUP   --env bootstrap --body "rg-pe-tfstate-weu"
-gh variable set TFSTATE_STORAGE_ACCOUNT  --env bootstrap --body "stpetfweu<suffix>"
+gh variable set TFSTATE_RESOURCE_GROUP   --env bootstrap --body "rg-pe-tfstate-sec"
+gh variable set TFSTATE_STORAGE_ACCOUNT  --env bootstrap --body "stpetfsec<suffix>"
 gh variable set TFSTATE_CONTAINER        --env bootstrap --body "bootstrap"
 gh variable set BOOTSTRAP_NAME_SUFFIX    --env bootstrap --body "<suffix>"
-gh variable set BOOTSTRAP_LOCATION       --env bootstrap --body "westeurope"
-gh variable set BOOTSTRAP_LOCATION_SHORT --env bootstrap --body "weu"
+gh variable set BOOTSTRAP_LOCATION       --env bootstrap --body "swedencentral"
+gh variable set BOOTSTRAP_LOCATION_SHORT --env bootstrap --body "sec"
 # REQUIRED: must equal bootstrap-init.sh's --soft-delete-days (immutable on the Key Vault).
 gh variable set BOOTSTRAP_SOFT_DELETE_DAYS --env bootstrap --body "90"
 ```
@@ -191,7 +191,7 @@ Replace `<workspace-id>` with the `log_analytics_workspace_id` output:
 
 Use the portal (simplest, version-independent): **Entra ID → Monitoring →
 Diagnostic settings → Add diagnostic setting**, enable the `SignInLogs` category,
-and send it to the `log-pe-bootstrap-weu` workspace.
+and send it to the `log-pe-bootstrap-sec` workspace.
 
 Equivalent via the Azure Monitor REST API — Entra diagnostic settings live under
 the tenant-level `microsoft.aadiam` provider, so use `az rest` (not

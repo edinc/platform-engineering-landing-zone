@@ -5,8 +5,8 @@ tenant_id       = "00000000-0000-0000-0000-000000000000"
 subscription_id = "33333333-3333-3333-3333-333333333333"
 
 profile        = "nonprod"
-location       = "westeurope"
-location_short = "weu"
+location       = "swedencentral"
+location_short = "sec"
 
 hub_vnet_address_space = ["10.20.0.0/16"]
 subnet_address_prefixes = {
@@ -19,19 +19,19 @@ subnet_address_prefixes = {
 # Non-demo profiles use Azure Firewall Premium and the curated allowlist in
 # policies/azure/firewall/allowlist.json. Set a workspace to enable firewall
 # policy insights.
-# firewall_base_policy_id = "/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/firewallPolicies/afwp-alz-parent-weu"
-# log_analytics_workspace_id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-monitoring/providers/Microsoft.OperationalInsights/workspaces/log-platform-weu"
+# firewall_base_policy_id = "/subscriptions/33333333-3333-3333-3333-333333333333/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/firewallPolicies/afwp-alz-parent-sec"
+# log_analytics_workspace_id = "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-monitoring/providers/Microsoft.OperationalInsights/workspaces/log-platform-sec"
 
 # Enable AMPLS only when at least one scoped monitor resource is known, so
 # Private DNS does not route traffic to an empty Private Link Scope.
 enable_monitor_private_link_scope = true
 monitor_linked_resource_ids = [
-  "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-monitoring/providers/Microsoft.OperationalInsights/workspaces/log-platform-weu"
+  "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg-platform-monitoring/providers/Microsoft.OperationalInsights/workspaces/log-platform-sec"
 ]
 
 # Link every created Private DNS zone to brownfield spokes as they are onboarded.
 # spoke_virtual_network_ids = {
-#   app1-nonprod = "/subscriptions/55555555-5555-5555-5555-555555555555/resourceGroups/rg-app1-net/providers/Microsoft.Network/virtualNetworks/vnet-app1-nonprod-weu"
+#   app1-nonprod = "/subscriptions/55555555-5555-5555-5555-555555555555/resourceGroups/rg-app1-net/providers/Microsoft.Network/virtualNetworks/vnet-app1-nonprod-sec"
 # }
 
 # Stage 01 Phase-2 retrofit examples: move remote state and seed Key Vault behind
@@ -39,12 +39,12 @@ monitor_linked_resource_ids = [
 # the _bootstrap stack.
 # private_endpoints = {
 #   tfstate-blob = {
-#     resource_id            = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-pe-bootstrap-weu/providers/Microsoft.Storage/storageAccounts/stpebootweu0000"
+#     resource_id            = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-pe-bootstrap-sec/providers/Microsoft.Storage/storageAccounts/stpebootsec0000"
 #     subresource_names      = ["blob"]
 #     private_dns_zone_names = ["privatelink.blob.core.windows.net"]
 #   }
 #   seed-kv = {
-#     resource_id            = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-pe-bootstrap-weu/providers/Microsoft.KeyVault/vaults/kv-pe-boot-weu-0000"
+#     resource_id            = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-pe-bootstrap-sec/providers/Microsoft.KeyVault/vaults/kv-pe-boot-sec-0000"
 #     subresource_names      = ["vault"]
 #     private_dns_zone_names = ["privatelink.vaultcore.azure.net"]
 #   }

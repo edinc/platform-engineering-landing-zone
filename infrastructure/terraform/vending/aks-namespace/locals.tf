@@ -1,6 +1,8 @@
 locals {
   identity_name             = "id-pe-${var.environment}-${var.team_name}-${var.namespace}"
   flux_service_account_name = "tenant-${var.team_name}-${var.environment}-${var.namespace}"
+  helm_service_account_name = "helm-${var.service_account_name}"
+  helm_storage_namespace    = "helm-${var.namespace}"
 
   labels = merge(
     var.extra_labels,
@@ -93,14 +95,68 @@ locals {
       }
       spec = {
         podSelector = {}
-        policyTypes = ["Egress"]
+        policyTypes = ["Egress", "Ingress"]
+        ingress = [
+          {
+            from = [
+              {
+                namespaceSelector = {
+                  matchLabels = {
+                    "kubernetes.io/metadata.name" = "ingress-nginx"
+                  }
+                }
+              },
+              {
+                namespaceSelector = {
+                  matchLabels = {
+                    "kubernetes.io/metadata.name" = "observability"
+                  }
+                }
+              },
+              {
+                namespaceSelector = {
+                  matchLabels = {
+                    "kubernetes.io/metadata.name" = "kube-system"
+                  }
+                }
+              },
+            ]
+          }
+        ]
         egress = [
+          {
+            to = [
+              {
+                namespaceSelector = {
+                  matchLabels = {
+                    "kubernetes.io/metadata.name" = "kube-system"
+                  }
+                }
+              }
+            ]
+            ports = [
+              {
+                protocol = "UDP"
+                port     = 53
+              },
+              {
+                protocol = "TCP"
+                port     = 53
+              },
+            ]
+          },
           {
             to = [
               for cidr in var.egress_allowlist_cidrs : {
                 ipBlock = {
                   cidr = cidr
                 }
+              }
+            ]
+            ports = [
+              for allowed in var.egress_allowlist_ports : {
+                protocol = allowed.protocol
+                port     = allowed.port
               }
             ]
           }
@@ -154,6 +210,73 @@ locals {
       }
     })
 
+    "helm-serviceaccount.yaml" = yamlencode({
+      apiVersion = "v1"
+      kind       = "ServiceAccount"
+      metadata = {
+        name        = local.helm_service_account_name
+        namespace   = var.namespace
+        labels      = local.labels
+        annotations = local.annotations
+      }
+    })
+
+    "helm-storage-namespace.yaml" = yamlencode({
+      apiVersion = "v1"
+      kind       = "Namespace"
+      metadata = {
+        name        = local.helm_storage_namespace
+        labels      = local.labels
+        annotations = local.annotations
+      }
+    })
+
+    "helm-storage-rolebinding.yaml" = yamlencode({
+      apiVersion = "rbac.authorization.k8s.io/v1"
+      kind       = "RoleBinding"
+      metadata = {
+        name        = "rb-${var.namespace}-helm-storage"
+        namespace   = local.helm_storage_namespace
+        labels      = local.labels
+        annotations = local.annotations
+      }
+      subjects = [
+        {
+          kind      = "ServiceAccount"
+          name      = local.helm_service_account_name
+          namespace = var.namespace
+        }
+      ]
+      roleRef = {
+        kind     = "ClusterRole"
+        apiGroup = "rbac.authorization.k8s.io"
+        name     = "platform:tenant-helm-release-storage"
+      }
+    })
+
+    "helm-rolebinding.yaml" = yamlencode({
+      apiVersion = "rbac.authorization.k8s.io/v1"
+      kind       = "RoleBinding"
+      metadata = {
+        name        = "rb-${var.namespace}-helm-reconciler"
+        namespace   = var.namespace
+        labels      = local.labels
+        annotations = local.annotations
+      }
+      subjects = [
+        {
+          kind      = "ServiceAccount"
+          name      = local.helm_service_account_name
+          namespace = var.namespace
+        }
+      ]
+      roleRef = {
+        kind     = "ClusterRole"
+        apiGroup = "rbac.authorization.k8s.io"
+        name     = "platform:tenant-flux-reconciler"
+      }
+    })
+
     "kustomization.yaml" = yamlencode({
       apiVersion = "kustomize.config.k8s.io/v1beta1"
       kind       = "Kustomization"
@@ -165,6 +288,10 @@ locals {
         "serviceaccount.yaml",
         "flux-serviceaccount.yaml",
         "flux-rolebinding.yaml",
+        "helm-serviceaccount.yaml",
+        "helm-storage-namespace.yaml",
+        "helm-storage-rolebinding.yaml",
+        "helm-rolebinding.yaml",
       ]
     })
   }
