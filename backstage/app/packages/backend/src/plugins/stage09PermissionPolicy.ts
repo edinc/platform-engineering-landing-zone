@@ -50,6 +50,17 @@ const teamScopedActionCondition = scaffolderActionConditions.hasStringProperty({
   key: 'values.stage10TeamScoped',
   value: 'true',
 });
+const stage11GoldenPathActionCondition =
+  scaffolderActionConditions.hasStringProperty({
+    key: 'values.stage11GoldenPath',
+    value: 'true',
+  });
+const teamScopedTemplateActionCondition = {
+  anyOf: [teamScopedActionCondition, stage11GoldenPathActionCondition] as [
+    typeof teamScopedActionCondition,
+    typeof stage11GoldenPathActionCondition,
+  ],
+};
 
 const fetchTemplateActionCondition = scaffolderActionConditions.hasActionId({
   actionId: 'fetch:template',
@@ -74,18 +85,56 @@ function allowTeamScopedFetchFor(team: string): ScaffolderActionCriteria {
     key: 'values.teamName',
     value: team,
   });
+  const serviceGoldenPathCondition = {
+    anyOf: [
+      scaffolderActionConditions.hasStringProperty({
+        key: 'values.goldenPathType',
+        value: 'aks-microservice',
+      }),
+      scaffolderActionConditions.hasStringProperty({
+        key: 'values.goldenPathType',
+        value: 'aca-service',
+      }),
+    ] as [
+      ReturnType<typeof scaffolderActionConditions.hasStringProperty>,
+      ReturnType<typeof scaffolderActionConditions.hasStringProperty>,
+    ],
+  };
+
+  const stage10FetchCondition = {
+    allOf: [teamScopedActionCondition, teamNameCondition] as [
+      typeof teamScopedActionCondition,
+      typeof teamNameCondition,
+    ],
+  };
+  const stage11ServiceFetchCondition = {
+    allOf: [
+      stage11GoldenPathActionCondition,
+      teamNameCondition,
+      serviceGoldenPathCondition,
+    ] as [
+      typeof stage11GoldenPathActionCondition,
+      typeof teamNameCondition,
+      typeof serviceGoldenPathCondition,
+    ],
+  };
 
   return {
     allOf: [
       fetchTemplateActionCondition,
       stage10TemplateSkeletonCondition,
-      teamScopedActionCondition,
-      teamNameCondition,
+      {
+        anyOf: [stage10FetchCondition, stage11ServiceFetchCondition] as [
+          typeof stage10FetchCondition,
+          typeof stage11ServiceFetchCondition,
+        ],
+      },
     ] as [
       typeof fetchTemplateActionCondition,
       typeof stage10TemplateSkeletonCondition,
-      typeof teamScopedActionCondition,
-      typeof teamNameCondition,
+      {
+        anyOf: [typeof stage10FetchCondition, typeof stage11ServiceFetchCondition];
+      },
     ],
   };
 }
@@ -105,6 +154,40 @@ function allowPlatformPullRequestFor(title: string): ScaffolderActionCriteria {
       typeof publishPullRequestActionCondition,
       typeof platformRepositoryUrlCondition,
       typeof titleCondition,
+    ],
+  };
+}
+
+function allowGoldenPathRequestFor(
+  team: string,
+  kind: 'aks' | 'aca',
+): ScaffolderActionCriteria {
+  const titleCondition = scaffolderActionConditions.hasStringProperty({
+    key: 'title',
+    value: `Create ${kind === 'aks' ? 'AKS microservice' : 'ACA service'} for ${team}`,
+  });
+  const branchCondition = scaffolderActionConditions.hasStringProperty({
+    key: 'branchName',
+    value: `golden-path-${kind}-${team}`,
+  });
+  const targetCondition = scaffolderActionConditions.hasStringProperty({
+    key: 'targetPath',
+    value: `golden-path-requests/${kind}/${team}`,
+  });
+
+  return {
+    allOf: [
+      publishPullRequestActionCondition,
+      platformRepositoryUrlCondition,
+      titleCondition,
+      branchCondition,
+      targetCondition,
+    ] as [
+      typeof publishPullRequestActionCondition,
+      typeof platformRepositoryUrlCondition,
+      typeof titleCondition,
+      typeof branchCondition,
+      typeof targetCondition,
     ],
   };
 }
@@ -222,12 +305,16 @@ export class Stage09PermissionPolicy implements PermissionPolicy {
         allowPlatformPullRequestFor(
           `Request egress exception for ${firstTeam}`,
         ),
+        allowGoldenPathRequestFor(firstTeam, 'aks'),
+        allowGoldenPathRequestFor(firstTeam, 'aca'),
         ...remainingTeams.flatMap(team => [
           allowTeamScopedFetchFor(team),
           allowPlatformPullRequestFor(`Onboard ${team}`),
           allowPlatformPullRequestFor(
             `Request egress exception for ${team}`,
           ),
+          allowGoldenPathRequestFor(team, 'aks'),
+          allowGoldenPathRequestFor(team, 'aca'),
         ]),
       ] as [ScaffolderActionCriteria, ...ScaffolderActionCriteria[]];
 
@@ -238,7 +325,7 @@ export class Stage09PermissionPolicy implements PermissionPolicy {
 
     if (isPermission(request.permission, actionExecutePermission) && isOperator) {
       return createScaffolderActionConditionalDecision(request.permission, {
-        not: teamScopedActionCondition,
+        not: teamScopedTemplateActionCondition,
       });
     }
 

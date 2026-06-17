@@ -21,7 +21,7 @@ variable "vending_subscription_id" {
 variable "location" {
   type        = string
   description = "Default Azure region for vended subscription resources."
-  default     = "westeurope"
+  default     = "swedencentral"
 }
 
 variable "subscription_alias_name" {

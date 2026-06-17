@@ -163,8 +163,8 @@ resource "terraform_data" "input_guard" {
     }
 
     precondition {
-      condition     = !var.enable_aca_environment || var.firewall_private_ip_address != ""
-      error_message = "enable_aca_environment requires firewall_private_ip_address so the internal ACA environment has an explicit outbound path."
+      condition     = !var.enable_aca_environment || var.profile == "demo" || var.firewall_private_ip_address != ""
+      error_message = "enable_aca_environment requires firewall_private_ip_address for non-demo profiles so the internal ACA environment has an explicit outbound path."
     }
 
     precondition {

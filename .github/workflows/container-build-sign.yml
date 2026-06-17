@@ -74,7 +74,7 @@ jobs:
       PLATFORM_ACR_NAME: ${{ vars.PLATFORM_ACR_NAME }}
       PLATFORM_ACR_LOGIN_SERVER: ${{ vars.PLATFORM_ACR_LOGIN_SERVER }}
       SYFT_VERSION: "1.18.1"
-      TRIVY_VERSION: "0.56.2"
+      TRIVY_VERSION: "0.71.1"
       COSIGN_EXPERIMENTAL: "1"
     steps:
       - name: Harden runner

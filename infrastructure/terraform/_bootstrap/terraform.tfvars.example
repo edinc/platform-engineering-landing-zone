@@ -11,8 +11,8 @@ tenant_id       = "00000000-0000-0000-0000-000000000000"
 name_suffix = "ab12"
 
 # --- Location -----------------------------------------------------------------
-location       = "westeurope"
-location_short = "weu"
+location       = "swedencentral"
+location_short = "sec"
 
 # --- Repository ---------------------------------------------------------------
 github_owner = "edinc"

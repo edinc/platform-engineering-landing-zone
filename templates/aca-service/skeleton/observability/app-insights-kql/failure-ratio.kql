@@ -1,0 +1,11 @@
+let request_logs =
+    union isfuzzy=true
+        (ContainerAppConsoleLogs_CL | project timestamp = TimeGenerated, message = Log_s),
+        (traces | project timestamp, message)
+    | where timestamp > ago(5m)
+    | extend log = parse_json(message)
+    | where tostring(log.event) == "http_request"
+    | where tostring(log.service) == "${{ values.componentId }}";
+request_logs
+| summarize total=count(), failed=countif(toint(log.status) >= 500)
+| extend failure_ratio = iff(total == 0, 0.0, todouble(failed) / todouble(total))

@@ -1,6 +1,16 @@
 # AKS microservice template
 
-Stage 11 introduces the AKS microservice golden path. Stage 08 pre-seeds the
-observability contract: this template must render `templates/_partials/slo.yaml`
-and the KEDA partial so new services get SLOs, dashboards, alerts, and cost tags
-without developer-authored monitoring configuration.
+Opens a platform-reviewed request to create a team-owned microservice repository
+for AKS workloads that need the Kubernetes platform substrate.
+
+Generated repositories include:
+
+- language scaffold for Node.js TypeScript, Python, or .NET;
+- `.devcontainer/`, README, TechDocs, Renovate, and Backstage catalog metadata;
+- Helm chart with HPA, PDB, NetworkPolicy, ServiceMonitor, optional ingress, and
+  KEDA scale-to-zero support;
+- DNS egress plus default-deny CIDR egress; FQDN egress exceptions remain a
+  platform-reviewed workflow;
+- Sloth `slo.yaml` and runbook/dashboard annotations;
+- GitHub Actions wired to Stage 06 reusable build/sign/SBOM, Helm publish,
+  GitOps PR push, promotion, and TechDocs workflows.

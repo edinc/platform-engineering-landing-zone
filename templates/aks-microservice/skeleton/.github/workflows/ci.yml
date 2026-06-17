@@ -1,0 +1,89 @@
+name: AKS microservice CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  pr-validate:
+    if: ${{ "${{ github.event_name == 'pull_request' }}" }}
+    name: PR validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Build container locally
+        run: docker build --pull --file Dockerfile --tag ${{ values.componentId }}:pr .
+
+      - name: Validate Helm chart
+        run: mise exec -- helm lint chart
+
+  build:
+    if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
+    uses: edinc/platform-engineering-landing-zone/.github/workflows/container-build-sign.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      image_name: apps/${{ values.repoName }}
+      context: .
+      dockerfile: Dockerfile
+      environment: ${{ values.environment }}
+
+  helm:
+    if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
+    needs: build
+    uses: edinc/platform-engineering-landing-zone/.github/workflows/helm-publish.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      chart_path: chart
+      environment: ${{ values.environment }}
+
+  techdocs:
+    if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
+    uses: edinc/platform-engineering-landing-zone/.github/workflows/techdocs-publish.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      entity_name: ${{ values.componentId }}
+      environment: ${{ values.environment }}
+
+  gitops-dev:
+    if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
+    needs:
+      - build
+      - helm
+    uses: edinc/platform-engineering-landing-zone/.github/workflows/gitops-push.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      source_path: gitops/dev
+      target_path: tenants/${{ values.teamName }}/${{ values.environment }}/${{ values.namespace }}/workloads/${{ values.componentId }}
+      kustomization_resource: ${{ values.componentId }}
+      image_digest_ref: ${{ '${{ needs.build.outputs.digest_ref }}' }}
+      acr_login_server: ${{ '${{ vars.PLATFORM_ACR_LOGIN_SERVER }}' }}
+      chart_digest_ref: ${{ '${{ needs.helm.outputs.digest_ref }}' }}
+      branch_prefix: app/${{ values.componentId }}
+      pr_title: Deploy ${{ values.componentId }} to ${{ values.environment }}
+      pr_body: Signed image digest `${{ '${{ needs.build.outputs.digest_ref }}' }}` is ready for Flux reconciliation.
+      environment: vending

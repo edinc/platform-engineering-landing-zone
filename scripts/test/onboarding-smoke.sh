@@ -42,7 +42,7 @@ spec:
   dataClassification: confidential
   environment: demo
   regions:
-    - westeurope
+    - swedencentral
   tags:
     owner: payments
     costCenter: cc-payments
@@ -66,10 +66,10 @@ spec:
       cidrs:
         - 10.30.0.0/16
     azure:
-      aksClusterId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-demo-platform-weu/providers/Microsoft.ContainerService/managedClusters/aks-pe-demo-weu
-      acrId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-demo-platform-weu/providers/Microsoft.ContainerRegistry/registries/acrpedemoweu001
+      aksClusterId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-demo-platform-sec/providers/Microsoft.ContainerService/managedClusters/aks-pe-demo-sec
+      acrId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-demo-platform-sec/providers/Microsoft.ContainerRegistry/registries/acrpedemosec001
       keyVaultSecretIds: []
-      resourceGroupName: rg-pe-demo-platform-weu
+      resourceGroupName: rg-pe-demo-platform-sec
 YAML
 
 echo "Validating NamespaceVendingRequest object-id contract..."

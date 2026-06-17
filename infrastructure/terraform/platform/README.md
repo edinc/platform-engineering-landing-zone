@@ -57,7 +57,7 @@ CI validates credential-free with `terraform init -backend=false`.
 |-------|---------|
 | `private_dns_zone_ids` | Private DNS zone IDs for ACR, Key Vault, Postgres, Service Bus, and AKS API. |
 | `private_dns_zone_subscription_id` | Subscription that owns the supplied Private DNS zones; set to the Stage 03 connectivity subscription for centralized zones. |
-| `firewall_private_ip_address` | Enables platform subnet UDRs to Stage 03 Firewall. |
+| `firewall_private_ip_address` | Enables platform subnet UDRs to Stage 03 Firewall. Required for non-demo ACA environments; demo keeps the cost-conscious no-Firewall path. |
 | `log_analytics_workspace_id` | Enables Defender/OMS/ACA logging integrations. |
 | `aks_host_encryption_enabled` | Keep `true` for production; set `false` only in demo subscriptions where EncryptionAtHost is unavailable. |
 | `aks_os_disk_type` | Keep `Ephemeral` where the VM SKU supports it; use `Managed` only for constrained demo subscriptions whose allowed SKUs do not provide enough temp/cache disk. |

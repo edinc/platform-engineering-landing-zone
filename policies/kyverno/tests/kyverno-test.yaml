@@ -7,6 +7,8 @@ policies:
   - ../require-run-as-non-root.yaml
   - ../require-read-only-root-filesystem.yaml
   - ../require-pod-security-restricted.yaml
+  - ../require-tenant-gitops-guardrails.yaml
+  - ../restrict-tenant-reconciler-serviceaccounts.yaml
 resources:
   - resources/pod-compliant.yaml
   - resources/pod-missing-labels.yaml
@@ -17,6 +19,15 @@ resources:
   - resources/pod-writable-root.yaml
   - resources/namespace-restricted.yaml
   - resources/namespace-missing-psa.yaml
+  - resources/oci-repository-compliant.yaml
+  - resources/oci-repository-unsigned.yaml
+  - resources/oci-repository-broad-subject.yaml
+  - resources/oci-repository-extra-matcher.yaml
+  - resources/helmrelease-compliant.yaml
+  - resources/helmrelease-unrestricted.yaml
+  - resources/pod-helm-serviceaccount.yaml
+  - resources/deployment-helm-serviceaccount.yaml
+  - resources/cronjob-helm-serviceaccount.yaml
 results:
   - policy: require-standard-labels
     rule: require-platform-labels
@@ -87,4 +98,54 @@ results:
     rule: require-restricted-psa
     resource: team-missing-psa
     kind: Namespace
+    result: fail
+  - policy: require-tenant-gitops-guardrails
+    rule: require-verified-oci-repositories
+    resource: checkout-signed
+    kind: OCIRepository
+    result: pass
+  - policy: require-tenant-gitops-guardrails
+    rule: require-verified-oci-repositories
+    resource: checkout-unsigned
+    kind: OCIRepository
+    result: fail
+  - policy: require-tenant-gitops-guardrails
+    rule: require-verified-oci-repositories
+    resource: checkout-broad-subject
+    kind: OCIRepository
+    result: fail
+  - policy: require-tenant-gitops-guardrails
+    rule: require-verified-oci-repositories
+    resource: checkout-extra-matcher
+    kind: OCIRepository
+    result: fail
+  - policy: require-tenant-gitops-guardrails
+    rule: require-restricted-helm-releases
+    resource: checkout-restricted
+    kind: HelmRelease
+    result: pass
+  - policy: require-tenant-gitops-guardrails
+    rule: require-restricted-helm-releases
+    resource: checkout-unrestricted
+    kind: HelmRelease
+    result: fail
+  - policy: restrict-tenant-reconciler-serviceaccounts
+    rule: disallow-pod-helm-reconciler-serviceaccount
+    resource: pod-compliant
+    kind: Pod
+    result: pass
+  - policy: restrict-tenant-reconciler-serviceaccounts
+    rule: disallow-pod-helm-reconciler-serviceaccount
+    resource: pod-helm-serviceaccount
+    kind: Pod
+    result: fail
+  - policy: restrict-tenant-reconciler-serviceaccounts
+    rule: disallow-controller-helm-reconciler-serviceaccount
+    resource: deployment-helm-serviceaccount
+    kind: Deployment
+    result: fail
+  - policy: restrict-tenant-reconciler-serviceaccounts
+    rule: disallow-cronjob-helm-reconciler-serviceaccount
+    resource: cronjob-helm-serviceaccount
+    kind: CronJob
     result: fail

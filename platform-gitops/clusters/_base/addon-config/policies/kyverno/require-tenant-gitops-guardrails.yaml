@@ -1,0 +1,84 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-tenant-gitops-guardrails
+  annotations:
+    policies.kyverno.io/title: Require tenant GitOps guardrails
+    policies.kyverno.io/category: Supply Chain
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-verified-oci-repositories
+      match:
+        any:
+          - resources:
+              kinds:
+                - OCIRepository
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - flux-system
+                - kyverno
+                - cert-manager
+                - external-dns
+                - external-secrets
+                - azureserviceoperator-system
+                - keda
+                - ingress-nginx
+                - observability
+                - backstage
+      validate:
+        message: Tenant OCIRepository resources must use Azure auth and cosign verification from the platform Helm publish workflow.
+        deny:
+          conditions:
+            any:
+              - key: "{{ request.object.spec.provider || '' }}"
+                operator: NotEquals
+                value: azure
+              - key: "{{ request.object.spec.serviceAccountName || '' }}"
+                operator: Equals
+                value: ""
+              - key: "{{ request.object.spec.verify.provider || '' }}"
+                operator: NotEquals
+                value: cosign
+              - key: "{{ length(request.object.spec.verify.matchOIDCIdentity || `[]`) }}"
+                operator: NotEquals
+                value: 1
+              - key: "{{ request.object.spec.verify.matchOIDCIdentity[0].issuer || '' }}"
+                operator: NotEquals
+                value: ^https://token.actions.githubusercontent.com$
+              - key: "{{ request.object.spec.verify.matchOIDCIdentity[0].subject || '' }}"
+                operator: NotEquals
+                value: ^https://github.com/edinc/platform-engineering-landing-zone/\.github/workflows/helm-publish\.yml@refs/heads/main$
+    - name: require-restricted-helm-releases
+      match:
+        any:
+          - resources:
+              kinds:
+                - HelmRelease
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - flux-system
+                - kyverno
+                - cert-manager
+                - external-dns
+                - external-secrets
+                - azureserviceoperator-system
+                - keda
+                - ingress-nginx
+                - observability
+                - backstage
+      validate:
+        message: Tenant HelmRelease resources must use the vended Helm service account, separate Helm storage namespace, and OCIRepository chart source.
+        pattern:
+          spec:
+            serviceAccountName: "helm-*"
+            storageNamespace: "helm-{{ request.object.metadata.namespace }}"
+            chartRef:
+              kind: OCIRepository
+              name: "?*"

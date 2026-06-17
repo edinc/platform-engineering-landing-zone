@@ -78,7 +78,7 @@ spec:
         region:
           title: Azure region
           type: string
-          default: westeurope
+          default: swedencentral
         serviceAccountName:
           title: Workload service account
           type: string

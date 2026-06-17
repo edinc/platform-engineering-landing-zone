@@ -1,0 +1,24 @@
+{{- if .Values.autoscaling.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "golden-path.fullname" . }}
+  labels:
+    {{- include "golden-path.labels" . | nindent 4 }}
+  annotations:
+    {{- include "golden-path.annotations" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    name: {{ include "golden-path.fullname" . }}
+  minReplicaCount: 0
+  maxReplicaCount: {{ .Values.autoscaling.maxReplicas }}
+  pollingInterval: 30
+  cooldownPeriod: 300
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: https://prometheus-query.platform.internal
+        metricName: "${{ values.componentId }}_requests_per_second"
+        query: sum(rate(http_server_requests_total{namespace="${{ values.namespace }}",service="${{ values.componentId }}"}[2m]))
+        threshold: {{ .Values.autoscaling.keda.threshold | quote }}
+{{- end }}

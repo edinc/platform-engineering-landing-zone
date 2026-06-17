@@ -1,0 +1,2 @@
+platform.example.io/on-call: "${{ values.onCallRotationId }}"
+platform.example.io/runbook-url: "https://github.com/edinc/${{ values.repoName }}/blob/main/docs/runbook.md"
