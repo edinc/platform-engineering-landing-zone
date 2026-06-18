@@ -67,7 +67,7 @@ def validate_templates() -> None:
         "onCallRotationId:",
         "githubTeam:",
         "dataClassification:",
-        "stage10TeamScoped",
+        "teamScopedTemplate",
         "publish:github:pull-request",
         "TeamOnboardingRequest",
     ]:
@@ -84,7 +84,7 @@ def validate_templates() -> None:
         "productName:",
         "appSelector:",
         "expiresOn:",
-        "stage10TeamScoped",
+        "teamScopedTemplate",
         "publish:github:pull-request",
         "maximum 90 days",
     ]:
@@ -118,9 +118,10 @@ def validate_templates() -> None:
         "templates/onboard-team/template.yaml",
         "templates/request-egress-exception/template.yaml",
     ]:
-        require_contains(path, "repoUrl: github.com?owner=edinc&repo=platform-engineering-landing-zone")
-        if "RepoUrlPicker" in read(path) or "platformRepoUrl" in read(path):
-            fail(f"{path} must hardcode the platform repository for app-team scaffolder actions")
+        require_contains(path, "platformRepoUrl:")
+        require_contains(path, "repoUrl: ${{ parameters.platformRepoUrl }}")
+        if "RepoUrlPicker" in read(path):
+            fail(f"{path} must not let app teams pick arbitrary repositories")
     require_contains("backstage/app/app-config.yaml", "templates/onboard-team/template.yaml")
     require_contains("backstage/app/app-config.yaml", "templates/request-egress-exception/template.yaml")
     require_contains("backstage/deploy/templates/configmap.yaml", "templates/onboard-team/template.yaml")
@@ -134,7 +135,7 @@ def validate_templates() -> None:
 
 
 def validate_policy() -> None:
-    policy = read("backstage/app/packages/backend/src/plugins/stage09PermissionPolicy.ts")
+    policy = read("backstage/app/packages/backend/src/plugins/platformPermissionPolicy.ts")
     for needle in [
         "actionExecutePermission",
         "taskCreatePermission",
@@ -143,16 +144,18 @@ def validate_policy() -> None:
         "createScaffolderActionConditionalDecision",
         "createScaffolderTaskConditionalDecision",
         "createScaffolderTemplateConditionalDecision",
-        "values.stage10TeamScoped",
+        "values.teamScopedTemplate",
         "values.teamName",
         "fetch:template",
         "publish:github:pull-request",
-        "github.com?owner=edinc&repo=platform-engineering-landing-zone",
+        "platformRepositoryUrl",
+        "platformRepositoryOwner",
+        "platformRepositoryName",
         "taskReadPermission",
         "taskCancelPermission",
         "applicationTeamGroupMap",
     ]:
-        require_contains("backstage/app/packages/backend/src/plugins/stage09PermissionPolicy.ts", needle)
+        require_contains("backstage/app/packages/backend/src/plugins/platformPermissionPolicy.ts", needle)
 
     ownership_rule = read("policies/backstage/ownership-required.ts")
     for needle in [
@@ -192,7 +195,7 @@ def validate_contracts_and_workflows() -> None:
         "repositoryPermissions",
         '"enum": ["pull", "triage"]',
         '"maxLength": 22',
-        '"const": "edinc"',
+        '"pattern": "^[A-Za-z0-9_.-]+$"',
         "serviceAccountName",
         "egressAllowlist",
     ]:
@@ -258,7 +261,8 @@ def validate_contracts_and_workflows() -> None:
     require_contains("scripts/workflows/validate_team_onboarding_request.py", "ipaddress.ip_network")
     require_contains("scripts/workflows/validate_team_onboarding_request.py", "RFC1918_NETWORKS")
     require_contains("scripts/workflows/validate_team_onboarding_request.py", "require_keys")
-    require_contains("scripts/workflows/validate_team_onboarding_request.py", "spec.github.owner must be edinc")
+    require_contains("scripts/workflows/validate_team_onboarding_request.py", "spec.github.owner")
+    require_contains(".github/workflows/onboard-team.yml", "TEAM_ONBOARDING_GITHUB_OWNER")
     require_contains("scripts/workflows/validate_team_onboarding_request.py", "spec.githubTeam must equal app-team-<team>")
     require_contains("scripts/workflows/validate_team_onboarding_request.py", 'if "repositoryPermissions" in github else {}')
     require_contains(".github/workflows/onboard-team.yml", '"keyVaultSecretIds" => []')

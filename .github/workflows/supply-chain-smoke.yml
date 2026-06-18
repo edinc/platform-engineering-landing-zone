@@ -1,4 +1,4 @@
-name: Stage 06 supply-chain smoke test
+name: Supply-chain smoke test
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
       image_name:
         description: ACR image repository for the smoke image.
         required: true
-        default: smoke/stage06-hello
+        default: smoke/supply-chain-hello
       tag:
         description: Optional semver-compatible tag. Defaults in the reusable workflow.
         required: false
@@ -43,6 +43,7 @@ permissions:
 jobs:
   build:
     name: Build signed smoke image
+    if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/container-build-sign.yml
     permissions:
       contents: read
@@ -57,7 +58,7 @@ jobs:
 
   promote-nonprod:
     name: Promote smoke image to nonprod
-    if: ${{ inputs.run_nonprod_promotion }}
+    if: ${{ github.ref == 'refs/heads/main' && inputs.run_nonprod_promotion }}
     needs: build
     uses: ./.github/workflows/promote-image.yml
     permissions:
@@ -73,7 +74,7 @@ jobs:
 
   promote-prod:
     name: Promote smoke image to prod
-    if: ${{ inputs.run_prod_promotion && inputs.run_nonprod_promotion }}
+    if: ${{ github.ref == 'refs/heads/main' && inputs.run_prod_promotion && inputs.run_nonprod_promotion }}
     needs:
       - build
       - promote-nonprod

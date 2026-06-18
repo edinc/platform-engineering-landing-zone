@@ -13,6 +13,7 @@ resource "azurerm_resource_group" "tfstate" {
 # (Stage 03) retrofits Private Endpoints and disables public access
 # (ADR-0048 / ADR-0031). RBAC authorization only; no access policies.
 resource "azurerm_key_vault" "bootstrap" {
+  #checkov:skip=CKV_AZURE_109:Default firewall action is Deny by default and guarded by lifecycle precondition; Checkov does not resolve the variable/precondition pair.
   #checkov:skip=CKV_AZURE_189:Phase 1 public endpoint with default-deny IP allowlist; public access is disabled when the Private Endpoint lands in Stage 03 (ADR-0048 / ADR-0031).
   #checkov:skip=CKV2_AZURE_32:No VNet exists in Phase 1; the Key Vault Private Endpoint is added in Stage 03 (ADR-0048).
   name                       = local.key_vault_name

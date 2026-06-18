@@ -38,7 +38,7 @@ on:
         type: string
         default: techdocs
       upload_runs_on:
-        description: Runner label for Azure Blob upload. Use a VNet-integrated self-hosted runner when TechDocs storage is private.
+        description: Deprecated compatibility input. Privileged TechDocs upload jobs always use the approved private Azure runner label set.
         required: false
         type: string
         default: self-hosted
@@ -111,7 +111,7 @@ jobs:
 
   upload:
     name: Upload TechDocs
-    runs-on: ${{ inputs.upload_runs_on }}
+    runs-on: [self-hosted, azure, private-acr, swedencentral]
     needs: generate
     environment: ${{ inputs.environment }}
     permissions:

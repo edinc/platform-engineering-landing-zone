@@ -1,4 +1,4 @@
-name: Foundation CI
+name: Repository quality gates
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   foundation:
-    name: Stage 00 quality gates
+    name: Repository quality gates
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,5 +28,5 @@ jobs:
       - name: Bootstrap local quality tools
         run: make bootstrap
 
-      - name: Run Stage 00 quality gates
+      - name: Run repository quality gates
         run: make lint validate policy-test-rego policy-test-kyverno policy-test-azure

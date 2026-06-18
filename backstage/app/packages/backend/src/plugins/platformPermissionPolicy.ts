@@ -40,6 +40,9 @@ type GroupMappings = {
   platformOperatorsGroupRef: string;
   applicationTeamGroupRefs: string[];
   applicationTeamGroupMap: Record<string, string>;
+  platformRepositoryUrl: string;
+  platformRepositoryOwner: string;
+  platformRepositoryName: string;
 };
 
 type ScaffolderActionCriteria = PermissionCriteria<
@@ -47,25 +50,25 @@ type ScaffolderActionCriteria = PermissionCriteria<
 >;
 
 const teamScopedActionCondition = scaffolderActionConditions.hasStringProperty({
-  key: 'values.stage10TeamScoped',
+  key: 'values.teamScopedTemplate',
   value: 'true',
 });
-const stage11GoldenPathActionCondition =
+const goldenPathActionCondition =
   scaffolderActionConditions.hasStringProperty({
-    key: 'values.stage11GoldenPath',
+    key: 'values.goldenPathTemplate',
     value: 'true',
   });
 const teamScopedTemplateActionCondition = {
-  anyOf: [teamScopedActionCondition, stage11GoldenPathActionCondition] as [
+  anyOf: [teamScopedActionCondition, goldenPathActionCondition] as [
     typeof teamScopedActionCondition,
-    typeof stage11GoldenPathActionCondition,
+    typeof goldenPathActionCondition,
   ],
 };
 
 const fetchTemplateActionCondition = scaffolderActionConditions.hasActionId({
   actionId: 'fetch:template',
 });
-const stage10TemplateSkeletonCondition =
+const templateSkeletonCondition =
   scaffolderActionConditions.hasStringProperty({
     key: 'url',
     value: './skeleton',
@@ -74,17 +77,31 @@ const publishPullRequestActionCondition =
   scaffolderActionConditions.hasActionId({
     actionId: 'publish:github:pull-request',
   });
-const platformRepositoryUrlCondition =
+const platformRepositoryUrlCondition = (repoUrl: string) =>
   scaffolderActionConditions.hasStringProperty({
     key: 'repoUrl',
-    value: 'github.com?owner=edinc&repo=platform-engineering-landing-zone',
+    value: repoUrl,
   });
 
-function allowTeamScopedFetchFor(team: string): ScaffolderActionCriteria {
+function allowTeamScopedFetchFor(
+  team: string,
+  platformRepositoryOwner: string,
+  platformRepositoryName: string,
+): ScaffolderActionCriteria {
   const teamNameCondition = scaffolderActionConditions.hasStringProperty({
     key: 'values.teamName',
     value: team,
   });
+  const platformRepositoryOwnerCondition =
+    scaffolderActionConditions.hasStringProperty({
+      key: 'values.platformRepoOwner',
+      value: platformRepositoryOwner,
+    });
+  const platformRepositoryNameCondition =
+    scaffolderActionConditions.hasStringProperty({
+      key: 'values.platformRepoName',
+      value: platformRepositoryName,
+    });
   const serviceGoldenPathCondition = {
     anyOf: [
       scaffolderActionConditions.hasStringProperty({
@@ -101,19 +118,19 @@ function allowTeamScopedFetchFor(team: string): ScaffolderActionCriteria {
     ],
   };
 
-  const stage10FetchCondition = {
+  const onboardingFetchCondition = {
     allOf: [teamScopedActionCondition, teamNameCondition] as [
       typeof teamScopedActionCondition,
       typeof teamNameCondition,
     ],
   };
-  const stage11ServiceFetchCondition = {
+  const goldenPathFetchCondition = {
     allOf: [
-      stage11GoldenPathActionCondition,
+      goldenPathActionCondition,
       teamNameCondition,
       serviceGoldenPathCondition,
     ] as [
-      typeof stage11GoldenPathActionCondition,
+      typeof goldenPathActionCondition,
       typeof teamNameCondition,
       typeof serviceGoldenPathCondition,
     ],
@@ -122,24 +139,28 @@ function allowTeamScopedFetchFor(team: string): ScaffolderActionCriteria {
   return {
     allOf: [
       fetchTemplateActionCondition,
-      stage10TemplateSkeletonCondition,
+      templateSkeletonCondition,
+      platformRepositoryOwnerCondition,
+      platformRepositoryNameCondition,
       {
-        anyOf: [stage10FetchCondition, stage11ServiceFetchCondition] as [
-          typeof stage10FetchCondition,
-          typeof stage11ServiceFetchCondition,
+        anyOf: [onboardingFetchCondition, goldenPathFetchCondition] as [
+          typeof onboardingFetchCondition,
+          typeof goldenPathFetchCondition,
         ],
       },
     ] as [
       typeof fetchTemplateActionCondition,
-      typeof stage10TemplateSkeletonCondition,
+      typeof templateSkeletonCondition,
+      typeof platformRepositoryOwnerCondition,
+      typeof platformRepositoryNameCondition,
       {
-        anyOf: [typeof stage10FetchCondition, typeof stage11ServiceFetchCondition];
+        anyOf: [typeof onboardingFetchCondition, typeof goldenPathFetchCondition];
       },
     ],
   };
 }
 
-function allowPlatformPullRequestFor(title: string): ScaffolderActionCriteria {
+function allowPlatformPullRequestFor(repoUrl: string, title: string): ScaffolderActionCriteria {
   const titleCondition = scaffolderActionConditions.hasStringProperty({
     key: 'title',
     value: title,
@@ -148,17 +169,18 @@ function allowPlatformPullRequestFor(title: string): ScaffolderActionCriteria {
   return {
     allOf: [
       publishPullRequestActionCondition,
-      platformRepositoryUrlCondition,
+      platformRepositoryUrlCondition(repoUrl),
       titleCondition,
     ] as [
       typeof publishPullRequestActionCondition,
-      typeof platformRepositoryUrlCondition,
+      ReturnType<typeof platformRepositoryUrlCondition>,
       typeof titleCondition,
     ],
   };
 }
 
 function allowGoldenPathRequestFor(
+  repoUrl: string,
   team: string,
   kind: 'aks' | 'aca',
 ): ScaffolderActionCriteria {
@@ -178,13 +200,13 @@ function allowGoldenPathRequestFor(
   return {
     allOf: [
       publishPullRequestActionCondition,
-      platformRepositoryUrlCondition,
+      platformRepositoryUrlCondition(repoUrl),
       titleCondition,
       branchCondition,
       targetCondition,
     ] as [
       typeof publishPullRequestActionCondition,
-      typeof platformRepositoryUrlCondition,
+      ReturnType<typeof platformRepositoryUrlCondition>,
       typeof titleCondition,
       typeof branchCondition,
       typeof targetCondition,
@@ -192,7 +214,7 @@ function allowGoldenPathRequestFor(
   };
 }
 
-export class Stage09PermissionPolicy implements PermissionPolicy {
+export class PlatformPermissionPolicy implements PermissionPolicy {
   constructor(private readonly mappings: GroupMappings) {}
 
   private teamNamesFor(ownershipEntityRefs: string[]) {
@@ -299,22 +321,25 @@ export class Stage09PermissionPolicy implements PermissionPolicy {
       }
 
       const [firstTeam, ...remainingTeams] = applicationTeamNames;
+      const { platformRepositoryName, platformRepositoryOwner, platformRepositoryUrl } = this.mappings;
       const actionCriteria = [
-        allowTeamScopedFetchFor(firstTeam),
-        allowPlatformPullRequestFor(`Onboard ${firstTeam}`),
+        allowTeamScopedFetchFor(firstTeam, platformRepositoryOwner, platformRepositoryName),
+        allowPlatformPullRequestFor(platformRepositoryUrl, `Onboard ${firstTeam}`),
         allowPlatformPullRequestFor(
+          platformRepositoryUrl,
           `Request egress exception for ${firstTeam}`,
         ),
-        allowGoldenPathRequestFor(firstTeam, 'aks'),
-        allowGoldenPathRequestFor(firstTeam, 'aca'),
+        allowGoldenPathRequestFor(platformRepositoryUrl, firstTeam, 'aks'),
+        allowGoldenPathRequestFor(platformRepositoryUrl, firstTeam, 'aca'),
         ...remainingTeams.flatMap(team => [
-          allowTeamScopedFetchFor(team),
-          allowPlatformPullRequestFor(`Onboard ${team}`),
+          allowTeamScopedFetchFor(team, platformRepositoryOwner, platformRepositoryName),
+          allowPlatformPullRequestFor(platformRepositoryUrl, `Onboard ${team}`),
           allowPlatformPullRequestFor(
+            platformRepositoryUrl,
             `Request egress exception for ${team}`,
           ),
-          allowGoldenPathRequestFor(team, 'aks'),
-          allowGoldenPathRequestFor(team, 'aca'),
+          allowGoldenPathRequestFor(platformRepositoryUrl, team, 'aks'),
+          allowGoldenPathRequestFor(platformRepositoryUrl, team, 'aca'),
         ]),
       ] as [ScaffolderActionCriteria, ...ScaffolderActionCriteria[]];
 
@@ -364,7 +389,7 @@ export class Stage09PermissionPolicy implements PermissionPolicy {
 
 export default createBackendModule({
   pluginId: 'permission',
-  moduleId: 'stage09-policy',
+  moduleId: 'platform-policy',
   register(reg) {
     reg.registerInit({
       deps: {
@@ -373,7 +398,7 @@ export default createBackendModule({
       },
       async init({ config, policy }) {
         policy.setPolicy(
-          new Stage09PermissionPolicy({
+          new PlatformPermissionPolicy({
             platformAdminsGroupRef: config.getString(
               'permission.rbac.platformAdminsGroupRef',
             ),
@@ -393,6 +418,15 @@ export default createBackendModule({
                 ) || 'json:{}'
               ).replace(/^json:/, ''),
             ) as Record<string, string>,
+            platformRepositoryUrl: config.getString(
+              'permission.rbac.platformRepositoryUrl',
+            ),
+            platformRepositoryOwner: config.getString(
+              'permission.rbac.platformRepositoryOwner',
+            ),
+            platformRepositoryName: config.getString(
+              'permission.rbac.platformRepositoryName',
+            ),
           }),
         );
       },

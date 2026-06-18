@@ -11,15 +11,15 @@ workload artifacts. If ownership changes, update this runbook and
 | Artifact | Responsible | Accountable | Consulted | Informed | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Management groups and ALZ policy | External ALZ/platform foundation owner | External ALZ/platform foundation owner | Platform team, security | App teams | Existing prerequisite; this repo validates assumptions only. |
-| Subscription baseline | Platform team | Platform lead | Security, FinOps | App teams | Stage 02 Terraform owns subscription-scoped diagnostics, Defender, budgets, and exports. |
-| Hub VNet, Firewall, Private DNS | Platform team | Platform lead | Network team, security | App teams | Stage 03 owns repo-managed connectivity unless an external connectivity subscription owns central zones. |
+| Subscription baseline | Platform team | Platform lead | Security, FinOps | App teams | Terraform owns subscription-scoped diagnostics, Defender, budgets, and exports. |
+| Hub VNet, Firewall, Private DNS | Platform team | Platform lead | Network team, security | App teams | Terraform owns repo-managed connectivity unless an external connectivity subscription owns central zones. |
 | Egress allowlist | Platform team | Security owner | Owning app team | FinOps, SRE | Exceptions are time-boxed and reviewed through `request-egress-exception`. |
-| Platform AKS cluster | Platform team | Platform lead | SRE, security | App teams | Stage 04/07 own cluster baseline and in-cluster platform add-ons. |
-| Backstage portal | Platform team | Platform lead | App teams | All developers | Stage 09 owns hosting, plugins, catalog ingestion, TechDocs, and RBAC policy code. |
-| Entra group `pe-app-team-<name>` | Platform team | Owning app team | Security | Backstage users | Created by Stage 10 team onboarding Terraform; membership is managed in Entra. |
-| GitHub team `app-team-<name>` | Platform team | Owning app team | Repository owners | App team members | Created by Stage 10; repo permissions are explicit and least-privilege. |
+| Platform AKS cluster | Platform team | Platform lead | SRE, security | App teams | Terraform and Flux own cluster baseline and in-cluster platform add-ons. |
+| Backstage portal | Platform team | Platform lead | App teams | All developers | Platform code owns hosting, plugins, catalog ingestion, TechDocs, and RBAC policy code. |
+| Entra group `pe-app-team-<name>` | Platform team | Owning app team | Security | Backstage users | Created by team onboarding Terraform; membership is managed in Entra. |
+| GitHub team `app-team-<name>` | Platform team | Owning app team | Repository owners | App team members | Created by team onboarding; repo permissions are explicit and least-privilege. |
 | ACR repo `<team>/*` | Owning app team | Owning app team | Platform team | Security | Vended access only; ACR service remains platform-owned. |
-| AKS namespace `<team>-<product>-<environment>` | Owning app team | Owning app team | Platform team, SRE | Security | Vended through Stage 05; RBAC is namespace-scoped and GitOps-first. |
+| AKS namespace `<team>-<product>-<environment>` | Owning app team | Owning app team | Platform team, SRE | Security | Vended through namespace vending; RBAC is namespace-scoped and GitOps-first. |
 | Backstage Component | Owning app team | Owning app team | Platform team | Consumers | `spec.owner` is mandatory and must point at a synced Entra group/user ref. |
 | Azure resources via ASO | Owning app team | Owning app team | Platform team | Security, FinOps | `managedBy: aso`; Flux owns Kubernetes desired state for ASO resources. |
 | Azure resources via Terraform vending | Platform team / vending PR | Owning app team | Security, FinOps | SRE | `managedBy: terraform`; state and approvals stay in protected workflows. |

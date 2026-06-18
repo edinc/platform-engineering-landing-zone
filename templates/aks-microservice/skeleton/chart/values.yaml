@@ -46,5 +46,5 @@ platform:
   dataClassification: "${{ values.dataClassification }}"
   confidentiality: "${{ values.confidentiality }}"
   managedBy: flux
-  repo: "edinc/${{ values.repoName }}"
+  repo: "${{ values.githubOwner }}/${{ values.repoName }}"
   onCallRotationId: "${{ values.onCallRotationId }}"

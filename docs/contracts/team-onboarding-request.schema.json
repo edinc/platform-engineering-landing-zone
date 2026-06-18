@@ -95,7 +95,7 @@
           "properties": {
             "owner": {
               "type": "string",
-              "const": "edinc"
+              "pattern": "^[A-Za-z0-9_.-]+$"
             },
             "repositoryPermissions": {
               "type": "object",

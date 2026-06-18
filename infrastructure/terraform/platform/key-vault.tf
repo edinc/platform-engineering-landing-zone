@@ -28,7 +28,7 @@ resource "azurerm_role_assignment" "backstage_key_vault_secret_user" {
 
   scope                = "${azurerm_key_vault.platform[0].id}/secrets/${each.value}"
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = var.backstage_workload_identity_principal_id
+  principal_id         = local.backstage_workload_identity_principal_id
   principal_type       = "ServicePrincipal"
 }
 
@@ -37,6 +37,6 @@ resource "azurerm_role_assignment" "backstage_catalog_reconciler_key_vault_secre
 
   scope                = "${azurerm_key_vault.platform[0].id}/secrets/${each.value}"
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = var.backstage_catalog_reconciler_workload_identity_principal_id
+  principal_id         = local.backstage_catalog_reconciler_workload_identity_principal_id
   principal_type       = "ServicePrincipal"
 }

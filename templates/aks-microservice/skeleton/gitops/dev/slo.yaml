@@ -13,7 +13,7 @@ metadata:
 spec:
   service: "${{ values.componentId }}"
   labels:
-    repo: "edinc/${{ values.repoName }}"
+    repo: "${{ values.githubOwner }}/${{ values.repoName }}"
   slos:
     - name: availability
       objective: ${{ values.sloAvailabilityTarget }}
@@ -29,5 +29,5 @@ spec:
           team: "${{ values.teamName }}"
           product: "${{ values.productName }}"
         annotations:
-          runbook_url: "https://github.com/edinc/${{ values.repoName }}/blob/main/docs/runbook.md"
+          runbook_url: "https://github.com/${{ values.githubOwner }}/${{ values.repoName }}/blob/main/docs/runbook.md"
           dashboard_url: "https://grafana.platform.example.com/d/${{ values.componentId }}"

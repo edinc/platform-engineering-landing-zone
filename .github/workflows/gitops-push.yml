@@ -66,7 +66,7 @@ on:
         type: string
         default: main
       runs_on:
-        description: Runner label. Use a VNet-integrated self-hosted runner when the seed Key Vault is private.
+        description: Deprecated compatibility input. Privileged GitOps PR jobs always use the approved private Azure runner label set.
         required: false
         type: string
         default: self-hosted
@@ -78,7 +78,7 @@ permissions:
 jobs:
   push:
     name: Open GitOps PR
-    runs-on: ${{ inputs.runs_on }}
+    runs-on: [self-hosted, azure, private-acr, swedencentral]
     environment: ${{ inputs.environment }}
     env:
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}

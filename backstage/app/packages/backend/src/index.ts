@@ -41,7 +41,7 @@ backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 
 // permission plugin
 backend.add(import('@backstage/plugin-permission-backend'));
-backend.add(import('./plugins/stage09PermissionPolicy'));
+backend.add(import('./plugins/platformPermissionPolicy'));
 
 // search plugin
 backend.add(import('@backstage/plugin-search-backend'));

@@ -12,5 +12,5 @@ Generated repositories include:
 - DNS egress plus default-deny CIDR egress; FQDN egress exceptions remain a
   platform-reviewed workflow;
 - Sloth `slo.yaml` and runbook/dashboard annotations;
-- GitHub Actions wired to Stage 06 reusable build/sign/SBOM, Helm publish,
+- GitHub Actions wired to reusable build/sign/SBOM, Helm publish,
   GitOps PR push, promotion, and TechDocs workflows.

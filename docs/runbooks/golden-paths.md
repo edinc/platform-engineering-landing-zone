@@ -1,6 +1,6 @@
 # Golden paths v1 runbook
 
-Stage: 11 - golden paths v1
+Capability: golden paths v1
 
 Use this runbook to operate and support the three MVP Backstage templates:
 `aks-workload-namespace`, `aks-microservice`, and `aca-service`.
@@ -9,10 +9,10 @@ Use this runbook to operate and support the three MVP Backstage templates:
 
 | Requirement | Purpose |
 | --- | --- |
-| Stage 10 team onboarding complete | Application team has Entra/GitHub groups and Backstage RBAC mapping. |
+| Team onboarding complete | Application team has Entra/GitHub groups and Backstage RBAC mapping. |
 | Namespace vending variables configured | `vend-namespace.yml` can validate, plan, and apply namespace requests. |
-| Stage 06 reusable workflows available | Generated repos can build, sign, publish SBOMs, publish charts, and push GitOps PRs. |
-| Stage 04 platform outputs available | AKS, ACR, Key Vault, and ACA environment IDs are supplied to templates. |
+| Reusable workflows available | Generated repos can build, sign, publish SBOMs, publish charts, and push GitOps PRs. |
+| Platform outputs available | AKS, ACR, Key Vault, and ACA environment IDs are supplied to templates. |
 | TechDocs storage configured | Generated repos can publish TechDocs through `techdocs-publish.yml`. |
 
 ## AKS workload namespace
@@ -69,11 +69,11 @@ Use this runbook to operate and support the three MVP Backstage templates:
 4. The first push to `main` builds and signs the image, applies the Terraform app
    resource, verifies the digest, and updates the Container App revision.
 5. Validate the public FQDN when enabled and confirm the KQL pack returns data.
-   The Stage 04 managed environment is internal; internet reachability requires
+   The platform-managed environment is internal; internet reachability requires
    the platform ingress/Front Door route in front of the ACA endpoint.
    The `demo` profile may deploy the ACA managed environment without Azure
    Firewall egress to keep MVP costs low; non-demo profiles still require the
-   Stage 03 firewall route.
+   firewall route.
 
 ## Failure handling
 
@@ -84,5 +84,5 @@ Use this runbook to operate and support the three MVP Backstage templates:
 | GitOps PR has placeholder digest | Re-run the workflow; `gitops-push.yml` replaces image and chart digest placeholders only when `image_digest_ref` and `chart_digest_ref` are provided. |
 | ACA update fails signature verification | Confirm the trusted workflow identity matches the generated repository workflow path. |
 | Missing mandatory tags | Fix the generated tags in Helm values or Terraform variables; do not bypass policy. |
-| AKS workload needs extra FQDN egress | Use the Stage 10 egress-exception template; application teams must not author Cilium egress policies directly. |
+| AKS workload needs extra FQDN egress | Use the egress-exception template; application teams must not author Cilium egress policies directly. |
 | AKS workload needs different NetworkPolicy | Open a platform-reviewed vending or egress-exception PR; tenant charts do not own NetworkPolicy resources. |

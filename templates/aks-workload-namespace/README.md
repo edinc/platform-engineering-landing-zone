@@ -1,6 +1,6 @@
 # AKS workload namespace template
 
-Opens the Stage 05 namespace vending request that application teams need before
+Opens the namespace vending request that application teams need before
 they can deploy AKS microservices.
 
 The template collects team/product/environment ownership inputs plus an explicit

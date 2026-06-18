@@ -1,4 +1,4 @@
-name: Bootstrap (Stage 01)
+name: Bootstrap Azure foundation
 
 # Manual, OIDC-authenticated Terraform for the _bootstrap stack (remote state,
 # seed Key Vault, state CMK, break-glass monitoring). There are NO long-lived

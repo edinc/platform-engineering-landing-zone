@@ -895,12 +895,22 @@ variable "github_owner" {
   type        = string
   description = "GitHub owner that hosts the platform repository (repo tag)."
   default     = "edinc"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9-]+$", var.github_owner))
+    error_message = "github_owner must contain only letters, numbers, and hyphens so it is safe in generated GitHub URLs and Kyverno trust regexes."
+  }
 }
 
 variable "github_repo" {
   type        = string
   description = "GitHub repository name (repo tag)."
   default     = "platform-engineering-landing-zone"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_-]+$", var.github_repo))
+    error_message = "github_repo must contain only letters, numbers, underscores, and hyphens so it is safe in generated GitHub URLs and Kyverno trust regexes."
+  }
 }
 
 variable "extra_tags" {

@@ -39,7 +39,7 @@ jobs:
 
   build:
     if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
-    uses: edinc/platform-engineering-landing-zone/.github/workflows/container-build-sign.yml@main
+    uses: ${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/container-build-sign.yml@main
     permissions:
       contents: read
       id-token: write
@@ -129,7 +129,7 @@ jobs:
           set -euo pipefail
           az acr login --name "$PLATFORM_ACR_NAME"
           mise exec -- cosign verify \
-            --certificate-identity "https://github.com/edinc/platform-engineering-landing-zone/.github/workflows/container-build-sign.yml@refs/heads/main" \
+            --certificate-identity "https://github.com/${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/container-build-sign.yml@refs/heads/main" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             "$DIGEST_REF"
 
@@ -180,7 +180,7 @@ jobs:
           set -euo pipefail
           az acr login --name "$PLATFORM_ACR_NAME"
           mise exec -- cosign verify \
-            --certificate-identity "https://github.com/edinc/platform-engineering-landing-zone/.github/workflows/container-build-sign.yml@refs/heads/main" \
+            --certificate-identity "https://github.com/${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/container-build-sign.yml@refs/heads/main" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             "$DIGEST_REF"
 
@@ -206,7 +206,7 @@ jobs:
 
   techdocs:
     if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
-    uses: edinc/platform-engineering-landing-zone/.github/workflows/techdocs-publish.yml@main
+    uses: ${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/techdocs-publish.yml@main
     permissions:
       contents: read
       id-token: write

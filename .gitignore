@@ -17,6 +17,7 @@ coverage/
 
 # Terraform
 **/.terraform/
+infrastructure/terraform/_modules/**/.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 *.tfplan

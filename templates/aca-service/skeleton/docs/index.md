@@ -1,6 +1,6 @@
 # ${{ values.componentTitle }}
 
-This service was generated from the Stage 11 Azure Container Apps golden path.
+This service was generated from the Azure Container Apps golden path.
 
 ## Ownership
 

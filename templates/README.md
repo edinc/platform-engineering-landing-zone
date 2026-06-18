@@ -1,16 +1,16 @@
 # Golden path templates
 
-Backstage Software Templates begin in Stage 10 with platform onboarding flows.
-Stage 11 adds the MVP developer golden paths that create deployable workload
-repositories or reviewed namespace vending PRs.
+Backstage Software Templates provide platform onboarding flows and developer
+golden paths that create deployable workload repositories or reviewed namespace
+vending PRs.
 
-| Template | Stage | Purpose |
-| --- | --- | --- |
-| [`onboard-team`](onboard-team/) | 10 | Creates a `TeamOnboardingRequest` PR for Entra, GitHub, namespace vending, ownership, and cost showback. |
-| [`request-egress-exception`](request-egress-exception/) | 10 | Opens a time-boxed egress exception PR with firewall and Cilium policy drafts. |
-| [`aks-workload-namespace`](aks-workload-namespace/) | 11 | Opens a reviewed namespace vending PR with quota, ownership, and Backstage `Resource` metadata. |
-| [`aks-microservice`](aks-microservice/) | 11 | Creates an AKS microservice repository with CI, signed images, Helm, Flux, SLOs, TechDocs, and on-call metadata. |
-| [`aca-service`](aca-service/) | 11 | Creates an Azure Container Apps service repository that targets the Stage 04 ACA managed environment. |
+| Template | Purpose |
+| --- | --- |
+| [`onboard-team`](onboard-team/) | Creates a `TeamOnboardingRequest` PR for Entra, GitHub, namespace vending, ownership, and cost showback. |
+| [`request-egress-exception`](request-egress-exception/) | Opens a time-boxed egress exception PR with firewall and Cilium policy drafts. |
+| [`aks-workload-namespace`](aks-workload-namespace/) | Opens a reviewed namespace vending PR with quota, ownership, and Backstage `Resource` metadata. |
+| [`aks-microservice`](aks-microservice/) | Creates an AKS microservice repository with CI, signed images, Helm, Flux, SLOs, TechDocs, and on-call metadata. |
+| [`aca-service`](aca-service/) | Creates an Azure Container Apps service repository that targets the platform-managed ACA environment. |
 
 | Partial | Purpose |
 |---------|---------|

@@ -28,7 +28,7 @@ on:
         type: string
         default: helm
       runs_on:
-        description: Runner label. Use a VNet-integrated self-hosted runner because private ACR data-plane push/sign operations cannot run from GitHub-hosted runners.
+        description: Deprecated compatibility input. Privileged Helm publish jobs always use the approved private Azure runner label set.
         required: false
         type: string
         default: self-hosted
@@ -47,7 +47,7 @@ permissions:
 jobs:
   publish:
     name: Package, push, sign
-    runs-on: ${{ inputs.runs_on }}
+    runs-on: [self-hosted, azure, private-acr, swedencentral]
     environment: ${{ inputs.environment }}
     outputs:
       chart_ref: ${{ steps.chart.outputs.chart_ref }}

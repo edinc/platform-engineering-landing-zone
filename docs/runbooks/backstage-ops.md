@@ -1,20 +1,48 @@
 # Backstage operations
 
-Stage 09 runs Backstage in AKS through Flux and the Stage 06 supply chain.
+Backstage runs in AKS through Flux and the reusable supply-chain workflows.
 
 ## Upgrade
 
 1. Let Renovate open dependency updates for `backstage/app`, the Backstage Helm
    chart, and community plugin packages.
-2. Confirm `ci-backstage.yml` passes app tests, chart lint, and Stage 09
+2. Confirm `ci-backstage.yml` passes app tests, chart lint, and Backstage
    contracts.
-3. Publish the signed image and Helm chart from `main`.
-4. Promote by updating `backstage_image_digest`, `backstage_chart_digest`, and
-   `backstage_chart_version` in the platform Terraform inputs for the target
-   environment.
+3. Run **Backstage CI** from `main` to publish the signed Backstage image,
+   catalog reconciler image, and Helm chart. The workflow summary prints the
+   digest values expected by the platform Terraform stack.
+4. Promote by updating `backstage_image_digest`,
+   `backstage_catalog_reconciler_image_digest`, `backstage_chart_digest`, and
+   `backstage_chart_version` in the protected platform Terraform tfvars JSON for
+   the target environment, then dispatch **Deploy Terraform stack (Stages
+   02-11)** for the `platform` stack.
+   The platform stack creates the default Backstage and catalog-reconciler
+   managed identities plus federated credentials; set identity variables only
+   when adopting brownfield identities.
 5. Confirm the dedicated `backstage-<env>` Flux configuration reconciles and that
    the Backstage availability panel in `grafana-dashboard-platform-slos` stays
    green.
+6. Re-run **Backstage CI** with `run_azure_smoke=true` to validate the deployed
+   AKS, TechDocs storage, private endpoint, and readiness endpoint wiring.
+
+## Runtime secrets
+
+Backstage runtime secrets live in the platform Key Vault and are consumed by
+External Secrets / CSI from inside the private AKS network. Seed real values from
+a VNet-connected runner or operator session before enabling `enable_backstage`:
+
+| Secret name | Purpose |
+| --- | --- |
+| `backstage-session-secret` | Backstage auth session signing secret. |
+| `backstage-microsoft-auth-client-secret` | Entra app client secret for Microsoft auth. |
+| `backstage-github-app-id` | GitHub App numeric ID. |
+| `backstage-github-app-client-id` | GitHub App OAuth client ID. |
+| `backstage-github-app-client-secret` | GitHub App OAuth client secret. |
+| `backstage-github-app-webhook-secret` | GitHub App webhook secret. |
+| `backstage-github-app-private-key` | GitHub App private key PEM. |
+| `backstage-catalog-reconciler-github-token` | Token used by the catalog drift reconciler. |
+| `backstage-catalog-reconciler-teams-webhook-url` | Optional Teams webhook for drift alerts. |
+| `backstage-postgres-password` | Required only when `backstage_postgres_auth_mode=password`. |
 
 ## Postgres restore
 
@@ -50,8 +78,8 @@ token.
 2. Confirm the `backstage` ServiceAccount has the expected
    `azure.workload.identity/client-id` annotation.
 3. Confirm the managed identity has AKS Cluster User and the in-cluster read-only
-   RBAC required by Stage 09. Direct Kubernetes plugin permissions are
-   operator-only until Stage 10 creates namespace-scoped team RoleBindings.
+   RBAC required by Backstage. Direct Kubernetes plugin permissions are
+   operator-only until namespace vending creates namespace-scoped team RoleBindings.
 4. Check Backstage backend logs for AAD token or Kubernetes authorization
    failures.
 5. Validate component annotations include `backstage.io/kubernetes-id`.
@@ -65,7 +93,7 @@ token.
 3. For onboarding, add users to Entra groups that sync through Microsoft Graph;
    do not change code for each team.
 4. The Microsoft Graph application used by Backstage needs read-only Graph
-   permissions for users and groups. Stage 09 scopes ingestion to the immutable
+   permissions for users and groups. Backstage scopes ingestion to the immutable
    Entra group object IDs in `backstage_microsoft_graph_group_object_ids` and
    their members; do not authorize RBAC from mutable display-name prefixes.
 

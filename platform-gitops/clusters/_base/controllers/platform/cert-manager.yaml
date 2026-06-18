@@ -20,6 +20,7 @@ spec:
     podLabels:
       azure.workload.identity/use: "true"
     serviceAccount:
+      name: cert-manager
       annotations:
         azure.workload.identity/client-id: ${cert_manager_client_id}
     extraArgs:
