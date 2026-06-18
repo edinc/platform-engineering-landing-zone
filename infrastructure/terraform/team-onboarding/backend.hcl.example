@@ -1,5 +1,5 @@
-resource_group_name  = "rg-pe-bootstrap-weu"
-storage_account_name = "stpebootstrapweu001"
+resource_group_name  = "rg-pe-bootstrap-sec"
+storage_account_name = "stpebootstrapsec001"
 container_name       = "team-onboarding"
 key                  = "teams/payments/terraform.tfstate"
 use_azuread_auth     = true

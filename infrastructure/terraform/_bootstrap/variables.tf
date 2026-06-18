@@ -21,13 +21,13 @@ variable "tenant_id" {
 variable "location" {
   type        = string
   description = "Azure region for bootstrap resources."
-  default     = "westeurope"
+  default     = "swedencentral"
 }
 
 variable "location_short" {
   type        = string
-  description = "Short region token used in resource names (for example weu for westeurope)."
-  default     = "weu"
+  description = "Short region token used in resource names (for example sec for swedencentral)."
+  default     = "sec"
 
   validation {
     condition     = can(regex("^[a-z0-9]{2,6}$", var.location_short))

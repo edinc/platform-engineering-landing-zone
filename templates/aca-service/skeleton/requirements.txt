@@ -1,0 +1,2 @@
+opentelemetry-api==1.33.1
+structlog==25.2.0

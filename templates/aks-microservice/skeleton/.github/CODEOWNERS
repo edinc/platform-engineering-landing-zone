@@ -1,0 +1,8 @@
+* @edinc/app-team-${{ values.teamName }}
+/.mise.toml @edinc/pe-platform-admins
+/.tool-versions @edinc/pe-platform-admins
+/mise.toml @edinc/pe-platform-admins
+/.github/ @edinc/pe-platform-admins
+/chart/ @edinc/pe-platform-admins
+/gitops/ @edinc/pe-platform-admins
+/catalog-info.yaml @edinc/pe-platform-admins @edinc/app-team-${{ values.teamName }}

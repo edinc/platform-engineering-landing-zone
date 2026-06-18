@@ -23,3 +23,4 @@ catalog with incident response, restore drills, and DR procedures.
 | [`ownership-matrix.md`](ownership-matrix.md) | Canonical RACI for platform, workload, identity, GitOps, and cost artifacts | 10 |
 | [`team-onboarding.md`](team-onboarding.md) | Team onboarding request, idempotency, and partial-failure recovery | 10 |
 | [`team-decommissioning.md`](team-decommissioning.md) | Team sunset, ownership reassignment, namespace retirement, and access removal | 10 |
+| [`golden-paths.md`](golden-paths.md) | Stage 11 template operation, generated repo handoff, and failure handling | 11 |

@@ -1,0 +1,50 @@
+replicaCount: 2
+
+image:
+  repository: "${{ values.repoName }}"
+  tag: "dev"
+  digest: ""
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: false
+  name: "${{ values.serviceAccountName }}"
+  workloadIdentityClientId: ""
+
+service:
+  port: ${{ values.port }}
+
+ingress:
+  enabled: ${{ values.publicExposure }}
+  className: nginx
+  host: "${{ values.componentId }}.apps.platform.example.com"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  keda:
+    enabled: false
+    threshold: "5"
+
+podDisruptionBudget:
+  minAvailable: 1
+
+platform:
+  team: "${{ values.teamName }}"
+  product: "${{ values.productName }}"
+  costCenter: "${{ values.costCenter }}"
+  dataClassification: "${{ values.dataClassification }}"
+  confidentiality: "${{ values.confidentiality }}"
+  managedBy: flux
+  repo: "edinc/${{ values.repoName }}"
+  onCallRotationId: "${{ values.onCallRotationId }}"

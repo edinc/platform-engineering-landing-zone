@@ -79,6 +79,18 @@ data:
           target: https://github.com/{{ .Values.appConfig.githubOrg }}/platform-engineering-landing-zone/blob/main/templates/request-egress-exception/template.yaml
           rules:
             - allow: [Template]
+        - type: url
+          target: https://github.com/{{ .Values.appConfig.githubOrg }}/platform-engineering-landing-zone/blob/main/templates/aks-workload-namespace/template.yaml
+          rules:
+            - allow: [Template]
+        - type: url
+          target: https://github.com/{{ .Values.appConfig.githubOrg }}/platform-engineering-landing-zone/blob/main/templates/aks-microservice/template.yaml
+          rules:
+            - allow: [Template]
+        - type: url
+          target: https://github.com/{{ .Values.appConfig.githubOrg }}/platform-engineering-landing-zone/blob/main/templates/aca-service/template.yaml
+          rules:
+            - allow: [Template]
       import:
         entityFilename: catalog-info.yaml
       providers:

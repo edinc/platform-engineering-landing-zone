@@ -27,6 +27,8 @@ resources:
   - policies/kyverno/require-resource-requests-limits.yaml
   - policies/kyverno/require-run-as-non-root.yaml
   - policies/kyverno/require-standard-labels.yaml
+  - policies/kyverno/require-tenant-gitops-guardrails.yaml
   - policies/kyverno/restrict-cert-manager-issuers.yaml
   - policies/kyverno/restrict-external-dns-hostnames.yaml
+  - policies/kyverno/restrict-tenant-reconciler-serviceaccounts.yaml
   - policies/kyverno/verify-cosign-signatures.yaml

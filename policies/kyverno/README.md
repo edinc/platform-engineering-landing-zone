@@ -20,8 +20,10 @@ The Stage 07 baseline includes:
 | `generate-default-network-policy` | Generates default-deny NetworkPolicies. |
 | `require-default-network-policy` | Fails namespace updates when generated default-deny policy is missing. |
 | `require-pod-security-restricted` | Requires workload namespaces to opt into PSA restricted. |
+| `require-tenant-gitops-guardrails` | Requires tenant Flux `OCIRepository` and `HelmRelease` resources to keep signed OCI sources and restricted Helm settings. |
 | `restrict-cert-manager-issuers` | Keeps tenant certificate requests under the tenant namespace subdomain. |
 | `restrict-external-dns-hostnames` | Keeps tenant-published DNS names under the tenant namespace subdomain. |
+| `restrict-tenant-reconciler-serviceaccounts` | Blocks tenant pods and workload controllers from mounting Helm reconciler service accounts. |
 | `verify-cosign-signatures` | Verifies keyless cosign signatures from this repository's GitHub Actions identity. |
 
 Terraform mirrors these files into

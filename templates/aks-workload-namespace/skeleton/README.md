@@ -1,3 +1,14 @@
-# AKS workload namespace skeleton
+# AKS workload namespace request
 
-Template content is introduced in Stage 11.
+Generated from the Stage 11 AKS workload namespace golden path.
+
+This PR contains:
+
+- a `NamespaceVendingRequest` for `${{ values.namespace }}`;
+- a Backstage `Resource` entity owned by `group:default/pe-app-team-${{ values.teamName }}`;
+- quota tier `${{ values.quotaTier }}` mapped to concrete CPU, memory, and pod
+  limits.
+
+After merge, `.github/workflows/vend-namespace.yml` validates the request,
+applies the Stage 05 namespace Terraform stack, and opens the Flux
+cluster-state PR for the generated namespace manifests.

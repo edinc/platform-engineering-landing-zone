@@ -1,0 +1,17 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: "${{ values.componentId }}"
+  namespace: "${{ values.namespace }}"
+spec:
+  interval: 5m
+  url: "oci://$(PLATFORM_ACR_LOGIN_SERVER)/helm/${{ values.componentId }}"
+  provider: azure
+  serviceAccountName: "${{ values.serviceAccountName }}"
+  ref:
+    digest: "sha256:REPLACE_WITH_SIGNED_CHART_DIGEST"
+  verify:
+    provider: cosign
+    matchOIDCIdentity:
+      - issuer: "^https://token.actions.githubusercontent.com$"
+        subject: "^https://github.com/edinc/platform-engineering-landing-zone/\\.github/workflows/helm-publish\\.yml@refs/heads/main$"

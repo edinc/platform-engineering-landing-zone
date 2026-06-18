@@ -10,8 +10,8 @@ spec:
   dataClassification: restricted
   environment: prod
   regions:
-    - westeurope
-    - northeurope
+    - swedencentral
+    - swedensouth
   tags:
     owner: analytics
     costCenter: cc-analytics

@@ -32,19 +32,19 @@ variable "profile" {
 variable "location" {
   type        = string
   description = "Primary Azure region for platform shared services."
-  default     = "westeurope"
+  default     = "swedencentral"
 }
 
 variable "paired_location" {
   type        = string
   description = "Paired/DR Azure region used for ACR geo-replication and DR documentation."
-  default     = "northeurope"
+  default     = "swedensouth"
 }
 
 variable "location_short" {
   type        = string
   description = "Short region token used in resource names."
-  default     = "weu"
+  default     = "sec"
 
   validation {
     condition     = can(regex("^[a-z0-9]{2,6}$", var.location_short))

@@ -12,7 +12,7 @@ spec:
   dataClassification: confidential
   environment: nonprod
   regions:
-    - westeurope
+    - swedencentral
   tags:
     owner: payments
     costCenter: cc-payments
@@ -47,4 +47,4 @@ spec:
     network:
       addressSpace:
         - 10.64.0.0/20
-      hubNetworkResourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-hub-weu/providers/Microsoft.Network/virtualNetworks/vnet-pe-nonprod-hub-weu
+      hubNetworkResourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-hub-sec/providers/Microsoft.Network/virtualNetworks/vnet-pe-nonprod-hub-sec

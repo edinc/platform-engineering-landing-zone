@@ -7,8 +7,8 @@
 # generates this file from GitHub Actions variables at run time. State access is
 # Entra-ID-only (use_azuread_auth = true); there are no storage account keys.
 
-resource_group_name  = "rg-pe-tfstate-weu"
-storage_account_name = "stpetfweuab12" # stpetf<location_short><name_suffix>
+resource_group_name  = "rg-pe-tfstate-sec"
+storage_account_name = "stpetfsecab12" # stpetf<location_short><name_suffix>
 container_name       = "bootstrap"
 key                  = "bootstrap.tfstate"
 use_azuread_auth     = true

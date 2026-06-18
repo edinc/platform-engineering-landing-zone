@@ -1,0 +1,21 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: "${{ values.namespace }}"
+  title: "${{ values.namespace }} AKS namespace"
+  description: "Vended AKS namespace for ${{ values.teamName }} / ${{ values.productName }} in ${{ values.environment }}."
+  annotations:
+    platform.example.io/team: "${{ values.teamName }}"
+    platform.example.io/product: "${{ values.productName }}"
+    platform.example.io/environment: "${{ values.environment }}"
+    platform.example.io/on-call: "${{ values.onCallRotationId }}"
+    platform.example.io/quota-tier: "${{ values.quotaTier }}"
+  tags:
+    - aks
+    - namespace
+    - "${{ values.environment }}"
+    - "${{ values.dataClassification }}"
+spec:
+  type: kubernetes-namespace
+  owner: "group:default/pe-app-team-${{ values.teamName }}"
+  system: "${{ values.productName }}"

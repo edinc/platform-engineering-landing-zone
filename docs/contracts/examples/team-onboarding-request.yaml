@@ -16,7 +16,7 @@ spec:
     - nonprod
     - prod
   regions:
-    - westeurope
+    - swedencentral
   github:
     owner: edinc
     repositoryPermissions:

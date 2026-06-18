@@ -1,0 +1,8 @@
+site_name: "${{ values.componentTitle }}"
+site_description: "TechDocs for ${{ values.componentId }}"
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Runbook: runbook.md
+plugins:
+  - techdocs-core

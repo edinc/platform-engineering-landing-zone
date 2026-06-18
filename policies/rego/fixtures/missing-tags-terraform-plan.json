@@ -10,7 +10,7 @@
         "actions": ["create"],
         "after": {
           "name": "rg-platform-demo",
-          "location": "westeurope",
+          "location": "swedencentral",
           "tags": {
             "env": "demo",
             "owner": "platform-team",
