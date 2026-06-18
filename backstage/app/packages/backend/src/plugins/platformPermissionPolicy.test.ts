@@ -4,15 +4,18 @@ import {
   taskCreatePermission,
 } from '@backstage/plugin-scaffolder-common/alpha';
 import { PolicyQuery, PolicyQueryUser } from '@backstage/plugin-permission-node';
-import { Stage09PermissionPolicy } from './stage09PermissionPolicy';
+import { PlatformPermissionPolicy } from './platformPermissionPolicy';
 
-const policy = new Stage09PermissionPolicy({
+const policy = new PlatformPermissionPolicy({
   platformAdminsGroupRef: 'group:default/pe-platform-admins',
   platformOperatorsGroupRef: 'group:default/pe-platform-operators',
   applicationTeamGroupRefs: ['group:default/pe-app-team-payments'],
   applicationTeamGroupMap: {
     'group:default/pe-app-team-payments': 'payments',
   },
+  platformRepositoryUrl: 'github.com?owner=customer-org&repo=platform-engineering-landing-zone',
+  platformRepositoryOwner: 'customer-org',
+  platformRepositoryName: 'platform-engineering-landing-zone',
 });
 
 const paymentsUser = {
@@ -22,7 +25,7 @@ const paymentsUser = {
   },
 } as PolicyQueryUser;
 
-describe('Stage09PermissionPolicy Stage 10 scaffolder authorization', () => {
+describe('PlatformPermissionPolicy scaffolder authorization', () => {
   it('allows app-team users to create scaffolder tasks', async () => {
     await expect(
       policy.handle({ permission: taskCreatePermission } as PolicyQuery, paymentsUser),
@@ -41,11 +44,14 @@ describe('Stage09PermissionPolicy Stage 10 scaffolder authorization', () => {
   });
 
   it('denies app-team action execution when the group-to-team map is missing', async () => {
-    const unmappedPolicy = new Stage09PermissionPolicy({
+    const unmappedPolicy = new PlatformPermissionPolicy({
       platformAdminsGroupRef: 'group:default/pe-platform-admins',
       platformOperatorsGroupRef: 'group:default/pe-platform-operators',
       applicationTeamGroupRefs: ['group:default/pe-app-team-payments'],
       applicationTeamGroupMap: {},
+      platformRepositoryUrl: 'github.com?owner=customer-org&repo=platform-engineering-landing-zone',
+      platformRepositoryOwner: 'customer-org',
+      platformRepositoryName: 'platform-engineering-landing-zone',
     });
 
     await expect(

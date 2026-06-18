@@ -38,6 +38,26 @@ output "backstage_flux_configuration_id" {
   description = "Stage 09 Backstage Flux configuration ID, or null when Backstage is disabled."
 }
 
+output "platform_workload_identity_client_ids" {
+  value = {
+    cert_manager                 = local.cert_manager_workload_identity_client_id
+    external_dns                 = local.external_dns_workload_identity_client_id
+    external_secrets             = local.external_secrets_workload_identity_client_id
+    aso                          = local.aso_workload_identity_client_id
+    backstage                    = local.backstage_workload_identity_client_id
+    backstage_catalog_reconciler = local.backstage_catalog_reconciler_workload_identity_client_id
+  }
+  description = "Effective Workload Identity client IDs for platform add-ons and Backstage. Values come from variables when supplied, otherwise from Terraform-created managed identities."
+}
+
+output "platform_workload_identity_principal_ids" {
+  value = {
+    backstage                    = local.backstage_workload_identity_principal_id
+    backstage_catalog_reconciler = local.backstage_catalog_reconciler_workload_identity_principal_id
+  }
+  description = "Effective principal IDs for platform identities that receive Azure RBAC assignments."
+}
+
 output "gitops_cluster_state_root_path" {
   value       = local.gitops_root_path
   description = "platform-cluster-state path reconciled by the root Flux Kustomization."

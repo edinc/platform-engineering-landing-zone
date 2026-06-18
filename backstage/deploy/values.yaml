@@ -56,7 +56,9 @@ appConfig:
   aksApiServerUrl: https://aks-pe-nonprod-sec.privatelink.swedencentral.azmk8s.io
   techdocsStorageAccountName: stpenonprodsecexample
   techdocsContainerName: techdocs
-  githubOrg: edinc
+  githubOrg: your-github-org
+  platformRepositoryName: platform-engineering-landing-zone
+  platformRepositoryUrl: github.com?owner=your-github-org&repo=platform-engineering-landing-zone
   platformEnv: nonprod
   platformRootDomain: platform.example.com
   microsoftAuthClientId: ""

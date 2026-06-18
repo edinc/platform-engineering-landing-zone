@@ -18,7 +18,7 @@ availability error budget too quickly.
 1. Avoid Terraform or Flux changes until the API server is stable unless the
    change is the known fix.
 2. Escalate to Microsoft support for regional/API-server faults.
-3. If private connectivity is the issue, use the Stage 03 connectivity runbooks
+3. If private connectivity is the issue, use the connectivity runbooks
    and keep default-deny egress intact.
 4. Communicate platform impact through the status page for user-visible outages.
 

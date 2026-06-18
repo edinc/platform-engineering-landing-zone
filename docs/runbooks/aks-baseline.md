@@ -2,7 +2,7 @@
 
 Stage: 04 - platform shared services
 
-This runbook captures the day-2 AKS baseline that the Stage 04 Terraform stack
+This runbook captures the day-2 AKS baseline that the platform Terraform stack
 establishes and later GitOps stages extend.
 
 ## Baseline checks
@@ -32,7 +32,7 @@ backfill any incident change into Terraform before closing the incident.
 
 ## Known follow-ups
 
-- AKS Backup is documented in Stage 04 and validated in Stage 12, but the initial
+- AKS Backup is documented as a platform reliability capability, but the initial
   Terraform slice does not yet create backup vault/policy resources.
 - AKS Node Auto-Provisioning is tracked as a follow-up until the pinned
   `azurerm` provider exposes the required schema.

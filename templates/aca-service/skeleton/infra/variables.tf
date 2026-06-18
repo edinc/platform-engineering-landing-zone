@@ -153,6 +153,6 @@ variable "tags" {
     dataClassification = "${{ values.dataClassification }}"
     confidentiality    = "${{ values.confidentiality }}"
     managedBy          = "terraform"
-    repo               = "edinc/${{ values.repoName }}"
+    repo               = "${{ values.githubOwner }}/${{ values.repoName }}"
   }
 }

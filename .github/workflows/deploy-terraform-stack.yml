@@ -1,0 +1,112 @@
+name: Deploy infrastructure stack
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: Staged Terraform stack to plan/apply.
+        required: true
+        type: choice
+        options:
+          - subscription-baseline
+          - connectivity
+          - identity
+          - cluster-state-repo
+          - platform
+      action:
+        description: Terraform action to run.
+        required: true
+        type: choice
+        default: plan
+        options:
+          - plan
+          - apply
+      environment:
+        description: GitHub Environment that owns Azure OIDC and protected tfvars.
+        required: true
+        type: choice
+        default: dev
+        options:
+          - dev
+          - nonprod
+          - prod
+      subscription_id:
+        description: Azure subscription ID used in subscription-baseline state keys.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  subscription-baseline:
+    if: github.ref == 'refs/heads/main' && inputs.stack == 'subscription-baseline'
+    uses: ./.github/workflows/terraform-plan-apply.yml
+    with:
+      stack_path: infrastructure/terraform/subscription-baseline
+      environment: ${{ inputs.environment }}
+      backend_container: subscription-baseline
+      backend_key: subscriptions/${{ inputs.subscription_id }}/subscription-baseline.tfstate
+      apply: ${{ inputs.action == 'apply' }}
+      tfvars_json_variable: TERRAFORM_TFVARS_SUBSCRIPTION_BASELINE_JSON
+    permissions:
+      contents: read
+      id-token: write
+
+  connectivity:
+    if: github.ref == 'refs/heads/main' && inputs.stack == 'connectivity'
+    uses: ./.github/workflows/terraform-plan-apply.yml
+    with:
+      stack_path: infrastructure/terraform/connectivity
+      environment: ${{ inputs.environment }}
+      backend_container: connectivity
+      backend_key: ${{ inputs.environment }}/connectivity.tfstate
+      apply: ${{ inputs.action == 'apply' }}
+      tfvars_json_variable: TERRAFORM_TFVARS_CONNECTIVITY_JSON
+    permissions:
+      contents: read
+      id-token: write
+
+  identity:
+    if: github.ref == 'refs/heads/main' && inputs.stack == 'identity'
+    uses: ./.github/workflows/terraform-plan-apply.yml
+    with:
+      stack_path: infrastructure/terraform/identity
+      environment: ${{ inputs.environment }}
+      backend_container: identity
+      backend_key: ${{ inputs.environment }}/identity.tfstate
+      apply: ${{ inputs.action == 'apply' }}
+      tfvars_json_variable: TERRAFORM_TFVARS_IDENTITY_JSON
+    permissions:
+      contents: read
+      id-token: write
+
+  cluster-state-repo:
+    if: github.ref == 'refs/heads/main' && inputs.stack == 'cluster-state-repo'
+    uses: ./.github/workflows/terraform-plan-apply.yml
+    with:
+      stack_path: infrastructure/terraform/cluster-state-repo
+      environment: ${{ inputs.environment }}
+      backend_container: platform
+      backend_key: cluster-state-repo/terraform.tfstate
+      apply: ${{ inputs.action == 'apply' }}
+      tfvars_json_variable: TERRAFORM_TFVARS_CLUSTER_STATE_REPO_JSON
+    permissions:
+      contents: read
+      id-token: write
+
+  platform:
+    if: github.ref == 'refs/heads/main' && inputs.stack == 'platform'
+    uses: ./.github/workflows/terraform-plan-apply.yml
+    secrets: inherit
+    with:
+      stack_path: infrastructure/terraform/platform
+      environment: ${{ inputs.environment }}
+      backend_container: platform
+      backend_key: ${{ inputs.environment }}/platform.tfstate
+      apply: ${{ inputs.action == 'apply' }}
+      tfvars_json_variable: TERRAFORM_TFVARS_PLATFORM_JSON
+      tfvars_json_secret: TERRAFORM_TFVARS_PLATFORM_SECRET_JSON
+    permissions:
+      contents: read
+      id-token: write

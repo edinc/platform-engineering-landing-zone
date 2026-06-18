@@ -24,5 +24,5 @@ spec:
       costCenter: "${{ values.costCenter }}"
       dataClassification: "${{ values.dataClassification }}"
       confidentiality: "${{ values.confidentiality }}"
-      repo: "edinc/${{ values.repoName }}"
+      repo: "${{ values.githubOwner }}/${{ values.repoName }}"
       onCallRotationId: "${{ values.onCallRotationId }}"

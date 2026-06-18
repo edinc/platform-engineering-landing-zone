@@ -143,9 +143,8 @@ def validate_template_definitions() -> None:
             "kind: Template",
             "deprecated: false",
             "scaffolder.platform.example.io/api-version: scaffolder.platform.example.io/v1",
-            "stage-11",
             "golden-path",
-            "stage11GoldenPath: \"true\"",
+            "goldenPathTemplate: \"true\"",
             "teamName:",
             "productName:",
             "costCenter:",
@@ -166,10 +165,12 @@ def validate_template_definitions() -> None:
 
 
 def validate_permission_policy() -> None:
-    path = "backstage/app/packages/backend/src/plugins/stage09PermissionPolicy.ts"
+    path = "backstage/app/packages/backend/src/plugins/platformPermissionPolicy.ts"
     for needle in [
-        "values.stage10TeamScoped",
-        "values.stage11GoldenPath",
+        "values.teamScopedTemplate",
+        "values.goldenPathTemplate",
+        "values.platformRepoOwner",
+        "values.platformRepoName",
         "values.goldenPathType",
         "aks-microservice",
         "aca-service",
@@ -199,7 +200,8 @@ def validate_aks_microservice() -> None:
             "publicExposure:",
             "serviceAccountName:",
             "publish:github:pull-request",
-            "github.com?owner=edinc&repo=platform-engineering-landing-zone",
+            "platformRepoUrl:",
+            "repoUrl: ${{ parameters.platformRepoUrl }}",
             "branchName: golden-path-aks-${{ parameters.teamName }}",
             "targetPath: golden-path-requests/aks/${{ parameters.teamName }}",
             "branch protection",
@@ -264,7 +266,7 @@ def validate_aks_microservice() -> None:
             'serviceAccountName: "${{ values.serviceAccountName }}"',
             "sha256:REPLACE_WITH_SIGNED_CHART_DIGEST",
             "matchOIDCIdentity:",
-            "platform-engineering-landing-zone/\\\\.github/workflows/helm-publish\\\\.yml@refs/heads/main",
+            "${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/\\\\.github/workflows/helm-publish\\\\.yml@refs/heads/main",
         ],
         "templates/aks-microservice/skeleton/catalog-info.yaml": [
             "backstage.io/techdocs-ref: dir:.",
@@ -275,13 +277,13 @@ def validate_aks_microservice() -> None:
             'description: "Helm chart for ${{ values.componentTitle }}"',
         ],
         "templates/aks-microservice/skeleton/.github/CODEOWNERS": [
-            "* @edinc/app-team-${{ values.teamName }}",
-            "/.mise.toml @edinc/pe-platform-admins",
-            "/.tool-versions @edinc/pe-platform-admins",
-            "/mise.toml @edinc/pe-platform-admins",
-            "/.github/ @edinc/pe-platform-admins",
-            "/chart/ @edinc/pe-platform-admins",
-            "/gitops/ @edinc/pe-platform-admins",
+            "* @${{ values.githubOwner }}/app-team-${{ values.teamName }}",
+            "/.mise.toml @${{ values.githubOwner }}/pe-platform-admins",
+            "/.tool-versions @${{ values.githubOwner }}/pe-platform-admins",
+            "/mise.toml @${{ values.githubOwner }}/pe-platform-admins",
+            "/.github/ @${{ values.githubOwner }}/pe-platform-admins",
+            "/chart/ @${{ values.githubOwner }}/pe-platform-admins",
+            "/gitops/ @${{ values.githubOwner }}/pe-platform-admins",
         ],
     }.items():
         for needle in needles:
@@ -302,8 +304,8 @@ def validate_aks_microservice() -> None:
     require_contains("templates/aks-microservice/skeleton/chart/templates/serviceaccount.yaml", "{{- if .Values.serviceAccount.create }}")
     require_order(
         "templates/aks-microservice/skeleton/.github/CODEOWNERS",
-        "* @edinc/app-team-${{ values.teamName }}",
-        "/.github/ @edinc/pe-platform-admins",
+        "* @${{ values.githubOwner }}/app-team-${{ values.teamName }}",
+        "/.github/ @${{ values.githubOwner }}/pe-platform-admins",
     )
     for needle in ["COPY package*.json ./", "USER 1000", "USER 10001", "USER 64198"]:
         require_contains("templates/aks-microservice/skeleton/Dockerfile", needle)
@@ -349,7 +351,8 @@ def validate_aca_service() -> None:
             "scaleRule:",
             "targetPath: ${{ parameters.componentId }}",
             "publish:github:pull-request",
-            "github.com?owner=edinc&repo=platform-engineering-landing-zone",
+            "platformRepoUrl:",
+            "repoUrl: ${{ parameters.platformRepoUrl }}",
             "branchName: golden-path-aca-${{ parameters.teamName }}",
             "targetPath: golden-path-requests/aca/${{ parameters.teamName }}",
             "branch protection",
@@ -386,7 +389,7 @@ def validate_aca_service() -> None:
             "backend.hcl",
             "golden-paths/aca/${{ values.environment }}/${{ values.componentId }}.tfstate",
             "if: ${{ \"${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}\" }}",
-            "platform-engineering-landing-zone/.github/workflows/container-build-sign.yml@refs/heads/main",
+            "${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/container-build-sign.yml@refs/heads/main",
         ],
         "templates/aca-service/skeleton/.tool-versions": [
             "terraform 1.9.8",
@@ -419,12 +422,12 @@ def validate_aca_service() -> None:
             "observability/app-insights-kql/availability.kql",
         ],
         "templates/aca-service/skeleton/.github/CODEOWNERS": [
-            "* @edinc/app-team-${{ values.teamName }}",
-            "/.mise.toml @edinc/pe-platform-admins",
-            "/.tool-versions @edinc/pe-platform-admins",
-            "/mise.toml @edinc/pe-platform-admins",
-            "/.github/ @edinc/pe-platform-admins",
-            "/infra/ @edinc/pe-platform-admins",
+            "* @${{ values.githubOwner }}/app-team-${{ values.teamName }}",
+            "/.mise.toml @${{ values.githubOwner }}/pe-platform-admins",
+            "/.tool-versions @${{ values.githubOwner }}/pe-platform-admins",
+            "/mise.toml @${{ values.githubOwner }}/pe-platform-admins",
+            "/.github/ @${{ values.githubOwner }}/pe-platform-admins",
+            "/infra/ @${{ values.githubOwner }}/pe-platform-admins",
         ],
         "templates/aca-service/skeleton/catalog-info.yaml": [
             "backstage.io/techdocs-ref: dir:.",
@@ -449,8 +452,8 @@ def validate_aca_service() -> None:
         require_not_contains("templates/aca-service/skeleton/infra/${{ values.environment }}.tfvars", needle)
     require_order(
         "templates/aca-service/skeleton/.github/CODEOWNERS",
-        "* @edinc/app-team-${{ values.teamName }}",
-        "/.github/ @edinc/pe-platform-admins",
+        "* @${{ values.githubOwner }}/app-team-${{ values.teamName }}",
+        "/.github/ @${{ values.githubOwner }}/pe-platform-admins",
     )
     for needle in ["COPY package*.json ./", "USER 1000", "USER 10001", "USER 64198"]:
         require_contains("templates/aca-service/skeleton/Dockerfile", needle)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Stage 06 reusable workflow contracts without external dependencies."""
+"""Validate reusable CI/CD workflow contracts without external dependencies."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 REQUIRED_WORKFLOWS = {
     "container-build-sign.yml",
+    "deploy-terraform-stack.yml",
     "gitops-push.yml",
     "helm-publish.yml",
     "import-quay.yml",
@@ -20,7 +21,7 @@ REQUIRED_WORKFLOWS = {
     "techdocs-publish.yml",
     "terraform-plan-apply.yml",
 }
-SMOKE_WORKFLOW = "stage06-smoke.yml"
+SMOKE_WORKFLOW = "supply-chain-smoke.yml"
 
 ACTION_REF_RE = re.compile(r"^\s*uses:\s+([^@\s#]+)@([^\s#]+)", re.MULTILINE)
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -38,11 +39,14 @@ def validate_workflow(name: str) -> None:
     if not path.is_file():
         fail(f"Missing executable reusable workflow: {path.relative_to(ROOT)}")
     text = path.read_text(encoding="utf-8")
-    if "workflow_call:" not in text:
+    if name == "deploy-terraform-stack.yml":
+        if "workflow_dispatch:" not in text:
+            fail(f"{path.relative_to(ROOT)} must expose on.workflow_dispatch")
+    elif "workflow_call:" not in text:
         fail(f"{path.relative_to(ROOT)} must expose on.workflow_call")
-    if name != "import-quay.yml" and "actions/checkout@" not in text:
+    if name not in {"deploy-terraform-stack.yml", "import-quay.yml"} and "actions/checkout@" not in text:
         fail(f"{path.relative_to(ROOT)} must explicitly checkout the repository")
-    if "step-security/harden-runner@" not in text:
+    if name != "deploy-terraform-stack.yml" and "step-security/harden-runner@" not in text:
         fail(f"{path.relative_to(ROOT)} must include harden-runner")
     top_level_keys = set(TOP_LEVEL_KEY_RE.findall(text))
     unexpected_keys = sorted(top_level_keys - ALLOWED_TOP_LEVEL_KEYS)
@@ -90,7 +94,7 @@ def validate_renovate() -> None:
 def validate_smoke_workflow() -> None:
     path = ROOT / ".github" / "workflows" / SMOKE_WORKFLOW
     if not path.is_file():
-        fail(f"Missing Stage 06 smoke workflow: {path.relative_to(ROOT)}")
+        fail(f"Missing supply-chain smoke workflow: {path.relative_to(ROOT)}")
     text = path.read_text(encoding="utf-8")
     required_fragments = [
         "workflow_dispatch:",
@@ -134,6 +138,50 @@ def validate_workflow_specific_contracts() -> None:
         if fragment not in gitops_push:
             fail(f".github/workflows/gitops-push.yml must include {fragment!r}")
 
+    terraform_plan_apply = (ROOT / ".github/workflows/terraform-plan-apply.yml").read_text(encoding="utf-8")
+    for fragment in [
+        "workflow_call:",
+        "backend_container:",
+        "tfvars_json_variable:",
+        "tfvars_json_secret:",
+        "vars[inputs.tfvars_json_variable]",
+        "secrets[inputs.tfvars_json_secret]",
+        "zz-workflow.auto.tfvars.json",
+        "zz-workflow-secret.auto.tfvars.json",
+        "Remove materialized Terraform variables",
+        '"refs/heads/main"',
+    ]:
+        if fragment not in terraform_plan_apply:
+            fail(f".github/workflows/terraform-plan-apply.yml must include {fragment!r}")
+    if "workflow_dispatch:" in terraform_plan_apply:
+        fail(".github/workflows/terraform-plan-apply.yml must not be directly manually dispatchable")
+
+    deploy_terraform = (ROOT / ".github/workflows/deploy-terraform-stack.yml").read_text(encoding="utf-8")
+    for fragment in [
+        "workflow_dispatch:",
+        "subscription-baseline",
+        "connectivity",
+        "identity",
+        "cluster-state-repo",
+        "platform",
+        "./.github/workflows/terraform-plan-apply.yml",
+        "subscription_id:",
+        "TERRAFORM_TFVARS_PLATFORM_SECRET_JSON",
+    ]:
+        if fragment not in deploy_terraform:
+            fail(f".github/workflows/deploy-terraform-stack.yml must include {fragment!r}")
+    for workflow_name in [
+        "container-build-sign.yml",
+        "gitops-push.yml",
+        "helm-publish.yml",
+        "promote-image.yml",
+        "techdocs-publish.yml",
+        "terraform-plan-apply.yml",
+    ]:
+        workflow_text = (ROOT / ".github/workflows" / workflow_name).read_text(encoding="utf-8")
+        if "runs-on: [self-hosted, azure, private-acr, swedencentral]" not in workflow_text:
+            fail(f".github/workflows/{workflow_name} must use the approved private Azure runner label set")
+
 
 def main() -> None:
     for workflow in sorted(REQUIRED_WORKFLOWS):
@@ -142,7 +190,7 @@ def main() -> None:
     validate_smoke_workflow()
     validate_workflow_specific_contracts()
     validate_renovate()
-    print("Stage 06 reusable workflow contracts validated.")
+    print("Reusable CI/CD workflow contracts validated.")
 
 
 if __name__ == "__main__":

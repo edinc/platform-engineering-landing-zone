@@ -1,7 +1,7 @@
-* @edinc/app-team-${{ values.teamName }}
-/.mise.toml @edinc/pe-platform-admins
-/.tool-versions @edinc/pe-platform-admins
-/mise.toml @edinc/pe-platform-admins
-/.github/ @edinc/pe-platform-admins
-/infra/ @edinc/pe-platform-admins
-/catalog-info.yaml @edinc/pe-platform-admins @edinc/app-team-${{ values.teamName }}
+* @${{ values.githubOwner }}/app-team-${{ values.teamName }}
+/.mise.toml @${{ values.githubOwner }}/pe-platform-admins
+/.tool-versions @${{ values.githubOwner }}/pe-platform-admins
+/mise.toml @${{ values.githubOwner }}/pe-platform-admins
+/.github/ @${{ values.githubOwner }}/pe-platform-admins
+/infra/ @${{ values.githubOwner }}/pe-platform-admins
+/catalog-info.yaml @${{ values.githubOwner }}/pe-platform-admins @${{ values.githubOwner }}/app-team-${{ values.teamName }}

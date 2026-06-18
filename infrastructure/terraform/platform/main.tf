@@ -66,14 +66,30 @@ resource "terraform_data" "input_guard" {
         alltrue([
           var.platform_root_domain != "",
           var.azure_dns_resource_group_name != "",
-          var.cert_manager_workload_identity_client_id != "",
-          var.external_dns_workload_identity_client_id != "",
-          var.external_secrets_workload_identity_client_id != "",
-          var.aso_workload_identity_client_id != "",
           var.application_insights_ingestion_endpoint != "",
         ])
       )
-      error_message = "enable_gitops requires platform_root_domain, azure_dns_resource_group_name, cert_manager_workload_identity_client_id, external_dns_workload_identity_client_id, external_secrets_workload_identity_client_id, aso_workload_identity_client_id, and application_insights_ingestion_endpoint."
+      error_message = "enable_gitops requires platform_root_domain, azure_dns_resource_group_name, and application_insights_ingestion_endpoint. Platform Workload Identity client IDs are optional overrides; Terraform creates managed identities and federated credentials when they are omitted."
+    }
+
+    precondition {
+      condition = (
+        var.backstage_workload_identity_client_id == "" &&
+        var.backstage_workload_identity_principal_id == "" ||
+        var.backstage_workload_identity_client_id != "" &&
+        var.backstage_workload_identity_principal_id != ""
+      )
+      error_message = "Brownfield Backstage Workload Identity adoption requires both backstage_workload_identity_client_id and backstage_workload_identity_principal_id, or neither so Terraform can create the identity."
+    }
+
+    precondition {
+      condition = (
+        var.backstage_catalog_reconciler_workload_identity_client_id == "" &&
+        var.backstage_catalog_reconciler_workload_identity_principal_id == "" ||
+        var.backstage_catalog_reconciler_workload_identity_client_id != "" &&
+        var.backstage_catalog_reconciler_workload_identity_principal_id != ""
+      )
+      error_message = "Brownfield Backstage catalog reconciler Workload Identity adoption requires both backstage_catalog_reconciler_workload_identity_client_id and backstage_catalog_reconciler_workload_identity_principal_id, or neither so Terraform can create the identity."
     }
 
     precondition {
@@ -88,10 +104,6 @@ resource "terraform_data" "input_guard" {
           var.enable_acr,
           var.enable_techdocs_storage,
           var.platform_root_domain != "",
-          var.backstage_workload_identity_client_id != "",
-          var.backstage_workload_identity_principal_id != "",
-          var.backstage_catalog_reconciler_workload_identity_client_id != "",
-          var.backstage_catalog_reconciler_workload_identity_principal_id != "",
           length(var.backstage_microsoft_graph_group_object_ids) > 0,
           var.backstage_microsoft_auth_client_id != "",
           var.backstage_chart_digest != "",
@@ -104,11 +116,9 @@ resource "terraform_data" "input_guard" {
           local.backstage_aks_apiserver_url != "",
           local.backstage_kubernetes_service_account_issuer_url != "",
           local.backstage_kubernetes_service_account_jwks_url != "",
-          local.backstage_cost_showback_container_url != "",
-          local.backstage_cost_showback_container_id != "",
         ])
       )
-      error_message = "enable_backstage requires enable_acr, enable_techdocs_storage, platform_root_domain, Backstage and catalog reconciler workload identity IDs, backstage_microsoft_graph_group_object_ids, backstage_microsoft_auth_client_id, backstage_chart_digest, backstage_image_digest, backstage_catalog_reconciler_image_digest, Backstage image repositories, Backstage Postgres host, AKS API server/OIDC issuer URL, and cost showback container URL/ID."
+      error_message = "enable_backstage requires enable_acr, enable_techdocs_storage, platform_root_domain, backstage_microsoft_graph_group_object_ids, backstage_microsoft_auth_client_id, backstage_chart_digest, backstage_image_digest, backstage_catalog_reconciler_image_digest, Backstage image repositories, Backstage Postgres host, and AKS API server/OIDC issuer URL. Workload Identity IDs are optional overrides; Terraform creates managed identities and federated credentials when they are omitted."
     }
 
     precondition {
@@ -178,8 +188,8 @@ resource "terraform_data" "input_guard" {
     }
 
     precondition {
-      condition     = !var.enable_techdocs_storage || var.backstage_workload_identity_principal_id != ""
-      error_message = "enable_techdocs_storage requires backstage_workload_identity_principal_id for Azure Blob data-plane RBAC."
+      condition     = !var.enable_techdocs_storage || local.backstage_enabled || var.backstage_workload_identity_principal_id != ""
+      error_message = "enable_techdocs_storage requires enable_backstage or backstage_workload_identity_principal_id for Azure Blob data-plane RBAC."
     }
 
     precondition {

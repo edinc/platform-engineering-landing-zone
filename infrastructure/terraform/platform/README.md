@@ -78,20 +78,30 @@ Identity client IDs, and Application Insights ingestion endpoint inputs.
 The Microsoft Flux extension explicitly keeps `multiTenancy.enforce = true`; do
 not disable it for workload tenant reconciliation.
 
+By default, this stack creates managed identities and federated credentials for
+cert-manager, external-dns, External Secrets, and ASO. Supplying a
+`*_workload_identity_client_id` adopts a brownfield identity instead; in that
+case the operator owns the required DNS Zone Contributor and Key Vault Secrets
+User role assignments outside this stack.
+
 ## Stage 09 Backstage and TechDocs inputs
 
 Backstage is deployed by a dedicated Flux configuration so Stage 07/08 GitOps
 can remain enabled without deploying the portal. Set `enable_backstage = true`
 after the Stage 06-published Backstage image and chart have been promoted. The
-Backstage Flux configuration requires `backstage_workload_identity_client_id`,
-`backstage_workload_identity_principal_id`, `backstage_image_digest`,
+platform stack creates the default Backstage and catalog-reconciler managed
+identities plus federated credentials; set the `backstage_*_workload_identity_*`
+variables only to adopt brownfield identities. The Backstage Flux configuration
+requires `backstage_image_digest`, `backstage_catalog_reconciler_image_digest`,
 `backstage_chart_digest`, and either `backstage_postgres_host` or
 `enable_postgres = true`.
 
 Set `enable_techdocs_storage = true` to create the private Azure Blob publisher
-storage. That requires `private_dns_zone_ids["privatelink.blob.core.windows.net"]`,
-`backstage_workload_identity_principal_id` for portal reads, and any
-`techdocs_publisher_principal_ids` that should write generated TechDocs from CI.
+storage. That requires
+`private_dns_zone_ids["privatelink.blob.core.windows.net"]`. If Backstage is not
+enabled in the same plan, provide `backstage_workload_identity_principal_id` for
+portal reads. Add any `techdocs_publisher_principal_ids` that should write
+generated TechDocs from CI.
 
 ## Validation
 

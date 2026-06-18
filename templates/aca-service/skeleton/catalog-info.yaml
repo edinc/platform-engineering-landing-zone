@@ -5,9 +5,9 @@ metadata:
   title: "${{ values.componentTitle }}"
   description: "${{ values.description }}"
   annotations:
-    backstage.io/source-location: "url:https://github.com/edinc/${{ values.repoName }}"
+    backstage.io/source-location: "url:https://github.com/${{ values.githubOwner }}/${{ values.repoName }}"
     backstage.io/techdocs-ref: dir:.
-    github.com/project-slug: "edinc/${{ values.repoName }}"
+    github.com/project-slug: "${{ values.githubOwner }}/${{ values.repoName }}"
     pagerduty.com/service-id: "${{ values.onCallRotationId }}"
     platform.example.io/on-call: "${{ values.onCallRotationId }}"
     platform.example.io/team: "${{ values.teamName }}"

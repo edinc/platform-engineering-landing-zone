@@ -139,6 +139,19 @@ def validate_terraform_and_workflows() -> None:
     require_contains("infrastructure/terraform/platform/gitops.tf", "post_build")
     require_contains("infrastructure/terraform/platform/gitops.tf", "external_secrets_client_id")
     require_contains("infrastructure/terraform/platform/gitops.tf", "cluster_state_root_path")
+    require_contains("infrastructure/terraform/platform/workload-identities.tf", "azurerm_user_assigned_identity")
+    require_contains("infrastructure/terraform/platform/workload-identities.tf", "azurerm_federated_identity_credential")
+    require_contains("infrastructure/terraform/platform/workload-identities.tf", "system:serviceaccount:")
+    require_contains("infrastructure/terraform/platform/workload-identities.tf", "azurerm_role_definition")
+    require_contains("infrastructure/terraform/platform/workload-identities.tf", "Platform ASO Operator")
+    require_contains("infrastructure/terraform/platform/gitops.tf", "azurerm_federated_identity_credential.platform_workload")
+    for path, service_account_name in {
+        "platform-gitops/clusters/_base/controllers/platform/cert-manager.yaml": "name: cert-manager",
+        "platform-gitops/clusters/_base/controllers/platform/external-dns.yaml": "name: external-dns",
+        "platform-gitops/clusters/_base/controllers/platform/external-secrets.yaml": "name: external-secrets",
+        "platform-gitops/clusters/_base/controllers/platform/aso.yaml": "name: azure-service-operator",
+    }.items():
+        require_contains(path, service_account_name)
     require_contains("infrastructure/terraform/vending/aks-namespace/main.tf", "Azure Kubernetes Service RBAC Reader")
     require_contains("infrastructure/terraform/cluster-state-repo/locals.tf", "legacy_seed_files")
     require_contains("infrastructure/terraform/cluster-state-repo/variables.tf", "stage07_seed_files_enabled")
@@ -156,7 +169,7 @@ def validate_terraform_and_workflows() -> None:
     require_contains(".github/workflows/vend-namespace.yml", "tenant_index=\"clusters/overlays/${environment}/tenants/kustomization.yaml\"")
     require_contains(".github/workflows/vend-namespace.yml", "tenant_bootstrap=")
     require_contains(".github/workflows/vend-namespace.yml", "scripts/gitops/update_tenant_index.py")
-    require_contains("policies/kyverno/verify-cosign-signatures.yaml", "subjectRegExp: ^https://github\\.com/edinc/platform-engineering-landing-zone/\\.github/workflows/container-build-sign\\.yml@refs/heads/main$")
+    require_contains("policies/kyverno/verify-cosign-signatures.yaml", "subjectRegExp: ^https://github\\.com/${github_owner}/${platform_repository_name}/\\.github/workflows/container-build-sign\\.yml@refs/heads/main$")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "postBuild")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "postBuild")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "serviceAccountName: platform-reconciler")

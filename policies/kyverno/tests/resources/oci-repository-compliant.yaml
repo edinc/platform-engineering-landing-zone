@@ -14,4 +14,4 @@ spec:
     provider: cosign
     matchOIDCIdentity:
       - issuer: ^https://token.actions.githubusercontent.com$
-        subject: ^https://github.com/edinc/platform-engineering-landing-zone/\.github/workflows/helm-publish\.yml@refs/heads/main$
+        subject: ^https://github.com/${github_owner}/${platform_repository_name}/\.github/workflows/helm-publish\.yml@refs/heads/main$

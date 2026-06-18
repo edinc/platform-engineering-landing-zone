@@ -1,4 +1,4 @@
-name: Egress exception expiry sweep (Stage 10)
+name: Egress exception expiry sweep
 
 on:
   schedule:
@@ -58,6 +58,6 @@ jobs:
           git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${branch}"
           gh pr create \
             --title "chore: remove expired egress exceptions" \
-            --body "Stage 10 egress exception sweep removed expired firewall and Cilium exception artifacts. Review and merge to stop reconciling expired egress paths." \
+            --body "Egress exception expiry cleanup removed expired firewall and Cilium exception artifacts. Review and merge to stop reconciling expired egress paths." \
             --base main \
             --head "$branch"

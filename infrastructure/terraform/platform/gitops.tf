@@ -54,18 +54,20 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
     post_build {
       substitute = {
         application_insights_ingestion_endpoint = var.application_insights_ingestion_endpoint
-        aso_client_id                           = var.aso_workload_identity_client_id
+        aso_client_id                           = local.aso_workload_identity_client_id
         azure_dns_resource_group_name           = var.azure_dns_resource_group_name
-        cert_manager_client_id                  = var.cert_manager_workload_identity_client_id
+        cert_manager_client_id                  = local.cert_manager_workload_identity_client_id
         cluster_state_branch                    = var.cluster_state_branch
         cluster_state_repository_provider       = var.gitops_repository_provider == "" ? "generic" : lower(var.gitops_repository_provider)
         cluster_state_repository_url            = local.gitops_repository_url
         cluster_state_root_path                 = local.gitops_root_path
-        external_dns_client_id                  = var.external_dns_workload_identity_client_id
-        external_secrets_client_id              = var.external_secrets_workload_identity_client_id
+        external_dns_client_id                  = local.external_dns_workload_identity_client_id
+        external_secrets_client_id              = local.external_secrets_workload_identity_client_id
+        github_owner                            = var.github_owner
         otel_trace_sampling_percentage          = tostring(local.otel_trace_sampling_percentage)
         platform_key_vault_name                 = local.key_vault_name
         platform_profile                        = var.profile
+        platform_repository_name                = var.github_repo
         platform_root_domain                    = var.platform_root_domain
         platform_subscription_id                = var.subscription_id
         platform_tenant_id                      = var.tenant_id
@@ -75,6 +77,12 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
 
   depends_on = [
     azurerm_kubernetes_cluster_extension.flux,
+    azurerm_federated_identity_credential.platform_workload,
+    azurerm_role_assignment.aso_platform_operator,
+    azurerm_role_assignment.cert_manager_dns,
+    azurerm_role_assignment.cert_manager_key_vault_secret_user,
+    azurerm_role_assignment.external_dns,
+    azurerm_role_assignment.external_secrets_key_vault_secret_user,
   ]
 }
 
@@ -110,13 +118,13 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
         backstage_aks_apiserver_url                     = local.backstage_aks_apiserver_url
         backstage_application_team_group_map_json       = var.backstage_application_team_group_map_json
         backstage_application_team_group_refs           = var.backstage_application_team_group_refs
-        backstage_catalog_reconciler_client_id          = var.backstage_catalog_reconciler_workload_identity_client_id
+        backstage_catalog_reconciler_client_id          = local.backstage_catalog_reconciler_workload_identity_client_id
         backstage_catalog_reconciler_image_digest       = var.backstage_catalog_reconciler_image_digest
         backstage_catalog_reconciler_image_repository   = local.backstage_catalog_reconciler_image_repository
         backstage_chart_digest                          = var.backstage_chart_digest
         backstage_chart_version                         = var.backstage_chart_version
         backstage_cost_showback_url                     = local.backstage_cost_showback_container_url
-        backstage_client_id                             = var.backstage_workload_identity_client_id
+        backstage_client_id                             = local.backstage_workload_identity_client_id
         backstage_image_digest                          = var.backstage_image_digest
         backstage_image_repository                      = local.backstage_image_repository
         backstage_microsoft_auth_client_id              = var.backstage_microsoft_auth_client_id
@@ -130,6 +138,8 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
         platform_acr_login_server                       = azurerm_container_registry.platform[0].login_server
         platform_key_vault_name                         = local.key_vault_name
         platform_profile                                = var.profile
+        platform_repository_name                        = var.github_repo
+        platform_repository_url                         = "github.com?owner=${var.github_owner}&repo=${var.github_repo}"
         platform_root_domain                            = var.platform_root_domain
         platform_subscription_id                        = var.subscription_id
         platform_tenant_id                              = var.tenant_id
@@ -140,6 +150,7 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
   }
 
   depends_on = [
+    azurerm_federated_identity_credential.platform_workload,
     azurerm_kubernetes_flux_configuration.platform,
     azurerm_role_assignment.backstage_acr_pull,
     azurerm_role_assignment.backstage_aks_cluster_user,

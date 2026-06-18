@@ -16,7 +16,7 @@ STAGE08_ALERT_RULES := $(shell { find platform-gitops/clusters/_base/addon-confi
 CONTRACT_REQUESTS := $(shell find docs/contracts -type f \( -path '*/examples/*.yaml' -o -name 'vending-request.yaml' \) ! -name 'team-onboarding-request.yaml' 2>/dev/null | sort)
 CONTRACT_NEGATIVE_REQUESTS := $(shell find docs/contracts/tests -type f -name '*.yaml' 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts stage11-contracts alert-runbook-lint finops-cost-test azure-test-stage08 azure-test-stage09 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts gitops-contracts observability-contracts backstage-contracts onboarding-contracts golden-path-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts stage11-contracts alert-runbook-lint finops-cost-test azure-test-stage08 azure-test-stage09 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -39,7 +39,7 @@ lint: pre-commit terraform-fmt tflint ## Run local linting checks.
 pre-commit: ## Run pre-commit hooks across tracked files.
 	$(MISE_EXEC) pre-commit run --all-files
 
-validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts stage11-contracts ## Run validation checks that do not deploy resources.
+validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts gitops-contracts observability-contracts backstage-contracts onboarding-contracts golden-path-contracts ## Run validation checks that do not deploy resources.
 
 terraform-fmt: ## Check Terraform formatting.
 	@if [ -z "$(TERRAFORM_DIRS)" ]; then \
@@ -53,10 +53,17 @@ terraform-validate: ## Validate each Terraform directory that contains .tf files
 	  echo "No Terraform files found; skipping terraform validate."; \
 	else \
 	  status=0; \
+	  tmp_root="$(CURDIR)/.tools/tmp/terraform-validate"; \
+	  rm -rf "$$tmp_root"; \
+	  mkdir -p "$$tmp_root"; \
 	  for dir in $(TERRAFORM_DIRS); do \
 	    echo "Validating Terraform in $$dir"; \
-	    (cd "$$dir" && $(MISE_EXEC) terraform init -backend=false -input=false && $(MISE_EXEC) terraform validate) || status=$$?; \
+	    tmp_name="$${dir//[^A-Za-z0-9_-]/_}"; \
+	    tmp_dir="$$tmp_root/$$tmp_name"; \
+	    mkdir -p "$$tmp_dir"; \
+	    (cd "$$dir" && TF_DATA_DIR="$$tmp_dir" $(MISE_EXEC) terraform init -backend=false -input=false && TF_DATA_DIR="$$tmp_dir" $(MISE_EXEC) terraform validate) || status=$$?; \
 	  done; \
+	  rm -rf "$$tmp_root"; \
 	  exit $$status; \
 	fi
 
@@ -124,35 +131,41 @@ contract-test: ## Validate public request contracts and negative fixtures.
 	  done; \
 	fi
 
-workflow-contracts: ## Validate Stage 06 reusable workflow contracts.
+workflow-contracts: ## Validate reusable CI/CD workflow contracts.
 	$(PYTHON) scripts/workflows/validate_stage06_workflows.py
 
-stage07-contracts: ## Validate Stage 07 GitOps, Flux, and Kyverno contracts.
+gitops-contracts: ## Validate GitOps, Flux, and Kyverno contracts.
 	$(PYTHON) scripts/gitops/validate_stage07_gitops.py
 
-stage08-contracts: alert-runbook-lint finops-cost-test ## Validate Stage 08 observability, SRE, and FinOps contracts.
+observability-contracts: alert-runbook-lint finops-cost-test ## Validate observability, SRE, and FinOps contracts.
 	$(PYTHON) scripts/observability/validate_stage08_observability.py
 
-stage09-contracts: ## Validate Stage 09 Backstage MVP contracts.
+backstage-contracts: ## Validate Backstage portal contracts.
 	$(PYTHON) scripts/backstage/validate_stage09_backstage.py
 
-stage10-contracts: ## Validate Stage 10 multi-tenancy, onboarding, and ownership contracts.
+onboarding-contracts: ## Validate multi-tenancy, onboarding, and ownership contracts.
 	$(PYTHON) scripts/backstage/validate_stage10_multitenancy.py
 	bash scripts/test/onboarding-smoke.sh
 
-stage11-contracts: ## Validate Stage 11 golden-path template contracts.
+golden-path-contracts: ## Validate golden-path template contracts.
 	$(PYTHON) scripts/backstage/validate_stage11_golden_paths.py
+
+stage07-contracts: gitops-contracts ## Compatibility alias for GitOps contracts.
+stage08-contracts: observability-contracts ## Compatibility alias for observability contracts.
+stage09-contracts: backstage-contracts ## Compatibility alias for Backstage contracts.
+stage10-contracts: onboarding-contracts ## Compatibility alias for onboarding contracts.
+stage11-contracts: golden-path-contracts ## Compatibility alias for golden-path contracts.
 
 alert-runbook-lint: ## Ensure Prometheus alert rules carry runbook_url annotations.
 	$(PYTHON) scripts/observability/lint_alert_runbooks.py $(STAGE08_ALERT_RULES)
 
-finops-cost-test: ## Test Stage 08 cost showback allocation logic.
+finops-cost-test: ## Test cost showback allocation logic.
 	$(PYTHON) scripts/finops/test_cost_showback.py
 
-azure-test-stage08: ## Run Azure CLI read-only validation for deployed Stage 08 resources.
+azure-test-stage08: ## Run Azure CLI read-only validation for deployed observability resources.
 	bash scripts/azure/validate_stage08_azure.sh
 
-azure-test-stage09: ## Run Azure CLI read-only validation for deployed Stage 09 Backstage resources.
+azure-test-stage09: ## Run Azure CLI read-only validation for deployed Backstage resources.
 	bash scripts/azure/validate_stage09_azure.sh
 
 policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
@@ -173,10 +186,10 @@ policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
 policy-test-kyverno: ## Test Kyverno policies with kyverno test.
 	$(MISE_EXEC) kyverno test policies/kyverno/tests
 
-policy-test-azure: policy-test-firewall ## Validate custom Azure Policy initiatives and Stage 03 Firewall allowlist.
+policy-test-azure: policy-test-firewall ## Validate custom Azure Policy initiatives and Firewall allowlist.
 	$(PYTHON) scripts/policy/validate_azure_initiatives.py policies/azure/initiatives
 
-policy-test-firewall: ## Validate Stage 03 Azure Firewall egress allowlist.
+policy-test-firewall: ## Validate Azure Firewall egress allowlist.
 	$(PYTHON) scripts/policy/validate_firewall_allowlist.py policies/azure/firewall/allowlist.json
 	$(PYTHON) scripts/policy/validate_egress_exception_patches.py
 

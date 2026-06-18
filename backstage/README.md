@@ -1,10 +1,10 @@
 # Backstage
 
-Stage 09 introduces the Backstage MVP:
+Backstage is the developer portal for this platform:
 
 - `app/` contains the configuration-first Backstage application package, catalog
   seed, Docker build contract, and local validation script.
-- `deploy/` contains the Helm chart published by the Stage 06 chart workflow and
+- `deploy/` contains the Helm chart published by the reusable chart workflow and
   consumed by Flux from ACR as an OCI chart.
 - `plugins/cost-insights-azure/` contains the fallback Azure Cost Management
   adapter scaffold. The MVP deploys the community Cost Insights plugin first;

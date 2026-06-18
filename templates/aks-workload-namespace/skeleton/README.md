@@ -1,6 +1,6 @@
 # AKS workload namespace request
 
-Generated from the Stage 11 AKS workload namespace golden path.
+Generated from the AKS workload namespace golden path.
 
 This PR contains:
 
@@ -10,5 +10,5 @@ This PR contains:
   limits.
 
 After merge, `.github/workflows/vend-namespace.yml` validates the request,
-applies the Stage 05 namespace Terraform stack, and opens the Flux
+applies the namespace Terraform stack, and opens the Flux
 cluster-state PR for the generated namespace manifests.

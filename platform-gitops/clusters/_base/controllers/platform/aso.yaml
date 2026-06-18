@@ -23,5 +23,6 @@ spec:
     podLabels:
       azure.workload.identity/use: "true"
     serviceAccount:
+      name: azure-service-operator
       annotations:
         azure.workload.identity/client-id: ${aso_client_id}

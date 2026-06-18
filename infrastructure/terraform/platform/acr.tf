@@ -58,6 +58,6 @@ resource "azurerm_role_assignment" "backstage_acr_pull" {
 
   scope                = azurerm_container_registry.platform[0].id
   role_definition_name = "AcrPull"
-  principal_id         = var.backstage_workload_identity_principal_id
+  principal_id         = local.backstage_workload_identity_principal_id
   principal_type       = "ServicePrincipal"
 }

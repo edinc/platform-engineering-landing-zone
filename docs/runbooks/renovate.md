@@ -1,4 +1,4 @@
-# Runbook: Renovate dependency updates (Stage 06)
+# Runbook: Renovate dependency updates
 
 This runbook operates Renovate as the primary dependency updater for GitHub
 Actions, Terraform, containers, Helm, Kubernetes manifests, and later Backstage
@@ -12,7 +12,7 @@ Related decision: [ADR-0035](../adr/0035-dependency-updater-strategy.md).
 | --- | --- |
 | Renovate GitHub App installed | Opens dependency update pull requests. |
 | `renovate.json` on `main` | Source of truth for update grouping and approvals. |
-| Stage 00/06 CI checks | Validate generated dependency PRs before merge. |
+| Repository CI checks | Validate generated dependency PRs before merge. |
 | GitHub vulnerability alerts | Native security alert signal; Dependabot version updates are not configured. |
 
 ## 1. Install Renovate
@@ -57,6 +57,6 @@ For critical CVEs:
 
 ## Rollback
 
-Revert the dependency PR and rerun the relevant Stage 00/06 checks. For promoted
+Revert the dependency PR and rerun the relevant repository checks. For promoted
 images, follow [release rollback](release.md#rollback) so cluster-state returns
 to a previously signed digest.

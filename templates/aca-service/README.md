@@ -8,9 +8,9 @@ Generated repositories include:
 
 - language scaffold for Node.js TypeScript, Python, or .NET;
 - `.devcontainer/`, README, TechDocs, Renovate, and Backstage catalog metadata;
-- Terraform for an `azurerm_container_app` targeting the Stage 04 managed
+- Terraform for an `azurerm_container_app` targeting the platform-managed
   environment;
-- GitHub Actions wired to Stage 06 build/sign/SBOM and TechDocs workflows plus a
+- GitHub Actions wired to reusable build/sign/SBOM and TechDocs workflows plus a
   signed digest verification gate before `az containerapp update`;
 - Application Insights KQL SLO pack for availability, failure ratio, and
   latency.
