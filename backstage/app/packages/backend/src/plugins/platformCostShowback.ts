@@ -39,7 +39,7 @@ export default createBackendPlugin({
       },
       async init({ config, httpAuth, httpRouter, userInfo: userInfoService }) {
         const router = express.Router();
-        const containerUrl = config.getString('costInsights.azure.showbackContainerUrl');
+        const containerUrl = config.getOptionalString('costInsights.azure.showbackContainerUrl');
         const admins = new Set(config.getString('permission.rbac.platformAdminsGroupRef').split(',').map(ref => ref.trim()));
         const operators = new Set(config.getString('permission.rbac.platformOperatorsGroupRef').split(',').map(ref => ref.trim()));
         const allowedTeams = new Set(
@@ -53,17 +53,24 @@ export default createBackendPlugin({
         const teamGroupMap = JSON.parse(
           rawTeamGroupMap.startsWith('json:') ? rawTeamGroupMap.slice(5) : rawTeamGroupMap,
         ) as Record<string, string>;
-        const { accountUrl, containerName } = parseContainerUrl(containerUrl);
-        const container = new BlobServiceClient(
-          accountUrl,
-          new DefaultAzureCredential(),
-        ).getContainerClient(containerName);
+        const containerConfig = containerUrl ? parseContainerUrl(containerUrl) : undefined;
+        const container = containerConfig
+          ? new BlobServiceClient(
+            containerConfig.accountUrl,
+            new DefaultAzureCredential(),
+          ).getContainerClient(containerConfig.containerName)
+          : undefined;
 
         router.get('/records', async (request, response) => {
           const credentials = await httpAuth.credentials(request, {
             allow: ['user'],
           });
           const callerInfo = await userInfoService.getUserInfo(credentials);
+          if (!container) {
+            response.json([]);
+            return;
+          }
+
           const ownershipRefs = new Set(callerInfo.ownershipEntityRefs);
           const canReadAll = [...admins, ...operators].some(ref => ownershipRefs.has(ref));
           const readableTeams = new Set(

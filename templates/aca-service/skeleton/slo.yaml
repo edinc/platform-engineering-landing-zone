@@ -16,5 +16,5 @@ spec:
     latencyP95: observability/app-insights-kql/latency-p95.kql
   alerting:
     severity: sev2
-    runbookUrl: "https://github.com/edinc/${{ values.repoName }}/blob/main/docs/runbook.md"
+    runbookUrl: "https://github.com/${{ values.githubOwner }}/${{ values.repoName }}/blob/main/docs/runbook.md"
     onCallRotationId: "${{ values.onCallRotationId }}"

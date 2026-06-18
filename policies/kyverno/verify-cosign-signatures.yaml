@@ -41,6 +41,6 @@ spec:
               entries:
                 - keyless:
                     issuer: https://token.actions.githubusercontent.com
-                    subjectRegExp: ^https://github\.com/edinc/platform-engineering-landing-zone/\.github/workflows/container-build-sign\.yml@refs/heads/main$
+                    subjectRegExp: ^https://github\.com/${github_owner}/${platform_repository_name}/\.github/workflows/container-build-sign\.yml@refs/heads/main$
                     rekor:
                       url: https://rekor.sigstore.dev

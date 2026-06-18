@@ -1,8 +1,8 @@
-# Runbook: Existing subscription onboarding (Stage 02)
+# Runbook: Existing subscription onboarding
 
 This runbook onboards an **existing Azure subscription** into the platform
 baseline without taking ownership of the tenant-wide Azure Landing Zone. It is
-the dry-run procedure behind Stage 02 acceptance criterion 7: validate the
+the dry-run procedure to validate the
 subscription's inherited ALZ posture, diagnostics, Defender state, and mandatory
 tag inventory before applying the subscription-baseline Terraform stack.
 
@@ -73,7 +73,7 @@ Review the sections it prints:
 1. **Signed-in context** — confirm tenant and subscription are the target.
 2. **Policy assignments visible at subscription scope** — confirm the expected
    inherited ALZ/CIS/tag/private-link assignments are present.
-3. **Defender pricing** — record current tiers before Stage 02 changes them.
+3. **Defender pricing** — record current tiers before the subscription baseline changes them.
 4. **Resource providers** — confirm `Microsoft.Security` is registered before
    applying because the Terraform provider will not auto-register it. The script
    also reports optional providers for diagnostics (`Microsoft.Insights`), budget
@@ -87,7 +87,7 @@ Review the sections it prints:
 
 ## 2. Confirm ALZ placement
 
-Stage 02 does **not** move subscriptions between management groups. If discovery
+The subscription baseline does **not** move subscriptions between management groups. If discovery
 or the ALZ owner's inventory shows the subscription is under the wrong MG, stop
 and have the ALZ/vending owner correct placement first.
 
@@ -147,7 +147,7 @@ scripts/subscription/import-defender-pricing.sh \
 ```
 
 The helper is idempotent and imports the Defender plan resource types managed by
-the Stage 02 stack (`VirtualMachines`, `Containers`, `KeyVaults`,
+the subscription baseline stack (`VirtualMachines`, `Containers`, `KeyVaults`,
 `StorageAccounts`, `SqlServers`, `OpenSourceRelationalDatabases`, `Arm`, and
 `Api`).
 

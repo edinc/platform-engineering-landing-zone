@@ -21,7 +21,7 @@ spec:
     dataClassification: "${{ values.dataClassification }}"
     confidentiality: "${{ values.confidentiality }}"
     managedBy: terraform
-    repo: edinc/platform-engineering-landing-zone
+    repo: ${{ values.githubOwner }}/${{ values.platformRepoName }}
   namespace:
     name: "${{ values.namespace }}"
     clusterEnvironment: "${{ values.environment }}"

@@ -1,4 +1,4 @@
-# Runbook: Policy exception (Stage 02)
+# Runbook: Policy exception
 
 This runbook is the operational procedure behind
 [ADR-0027](../adr/0027-policy-exception.md). Use it when a resource, resource

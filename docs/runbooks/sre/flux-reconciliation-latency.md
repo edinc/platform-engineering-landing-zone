@@ -17,7 +17,7 @@ five minutes for 15 minutes.
 
 1. Revert or fix the failing cluster-state change through a PR.
 2. Resume suspended Flux resources only after identifying the owner.
-3. If egress is blocked, use the Stage 03 egress exception workflow rather than
+3. If egress is blocked, use the egress exception workflow rather than
    opening broad outbound access.
 4. If controller resources are saturated, adjust controller Helm values through
    `platform-gitops`.

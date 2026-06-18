@@ -11,6 +11,7 @@
 # - Phase 1 firewall: default-deny + break-glass IP allowlist + AzureServices
 #   bypass. Phase 2 (Stage 03) retrofits Private Endpoints (ADR-0048).
 resource "azurerm_storage_account" "tfstate" {
+  #checkov:skip=CKV_AZURE_35:Default network action is Deny by default and guarded by lifecycle precondition; Checkov does not resolve the variable/precondition pair.
   #checkov:skip=CKV_AZURE_59:Phase 1 public endpoint with default-deny IP allowlist; Private Endpoint retrofit in Stage 03 (ADR-0048 / ADR-0031).
   #checkov:skip=CKV2_AZURE_33:No VNet exists in Phase 1; Private Endpoint is added in Stage 03 (ADR-0048).
   #checkov:skip=CKV_AZURE_33:State account exposes the blob service only; the queue service is not used.

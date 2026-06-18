@@ -42,7 +42,7 @@ An exception request must include:
    through break-glass but must be backfilled into git within one business day.
 4. **Apply** - Merge through the normal Terraform/GitOps pipeline. For
    `nonprod`/`prod`, update Azure Firewall rules; for `demo`, update Cilium
-   FQDN policy once Stage 07 is available.
+   FQDN policy once GitOps networking policy is available.
 5. **Audit** - Record the merged PR/change ID, owner, and expiry. Review
    exceptions at least monthly and before expiry.
 

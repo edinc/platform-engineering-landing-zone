@@ -1,4 +1,4 @@
-# Runbook: Environment and subscription vending (Stage 05)
+# Runbook: Environment and subscription vending
 
 This runbook operates the PR-driven vending path for workload subscriptions and
 AKS workload namespaces.
@@ -12,10 +12,10 @@ Related decisions: [ADR-0008](../adr/0008-subscription-vending.md),
 
 | Requirement | Purpose |
 | --- | --- |
-| Stage 01 seed Key Vault | Stores the `platform-vending-bot` private key. |
-| Stage 02 subscription baseline | Hardens new or externally-created subscriptions after vending. |
-| Stage 03 connectivity outputs | Supplies hub VNet IDs for workload spoke peering. |
-| Stage 04 platform outputs | Supplies AKS OIDC issuer URL, ACR ID, Key Vault ID, and platform resource group. |
+| Seed Key Vault | Stores the `platform-vending-bot` private key. |
+| Subscription baseline | Hardens new or externally-created subscriptions after vending. |
+| Connectivity outputs | Supplies hub VNet IDs for workload spoke peering. |
+| Platform outputs | Supplies AKS OIDC issuer URL, ACR ID, Key Vault ID, and platform resource group. |
 | EA/MCA/MPA billing scope | Required when this repo creates subscriptions through `Azure/lz-vending`. |
 | `platform-cluster-state` repository | Receives namespace manifests for Flux reconciliation. |
 
@@ -65,7 +65,7 @@ rm -f ./platform-vending-bot.private-key.pem
 ## 2. Apply GitHub App Terraform wiring
 
 From `infrastructure/terraform/github-app/`, initialize remote state using the
-Stage 01 state account and apply with protected operator input:
+Bootstrap state account and apply with protected operator input:
 
 ```bash
 terraform init -backend-config=backend.hcl
@@ -81,15 +81,15 @@ Set these protected `vending` environment variables for workflows:
 
 | Variable | Source |
 | --- | --- |
-| `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | Stage 01 OIDC/bootstrap output |
-| `TFSTATE_RESOURCE_GROUP`, `TFSTATE_STORAGE_ACCOUNT`, `TFSTATE_CONTAINER` | Stage 01 backend output |
+| `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | OIDC/bootstrap output |
+| `TFSTATE_RESOURCE_GROUP`, `TFSTATE_STORAGE_ACCOUNT`, `TFSTATE_CONTAINER` | Backend output |
 | `APPROVED_SUBSCRIPTION_MANAGEMENT_GROUP_IDS` | Comma-separated ALZ management group IDs approved for subscription vending |
-| `SEED_KEY_VAULT_NAME` | Stage 01 Key Vault output |
+| `SEED_KEY_VAULT_NAME` | Seed Key Vault output |
 | `PLATFORM_VENDING_BOT_APP_ID` | `github-app` output |
 | `PLATFORM_VENDING_BOT_INSTALLATION_ID` | `github-app` output |
 | `PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME` | `github-app` output |
-| `CLUSTER_STATE_REPO_OWNER`, `CLUSTER_STATE_REPO_NAME` | Stage 04 cluster-state repo output |
-| `AKS_OIDC_ISSUER_URL`, `PLATFORM_AKS_CLUSTER_ID`, `PLATFORM_ACR_ID`, `PLATFORM_KEY_VAULT_SECRET_IDS`, `PLATFORM_RESOURCE_GROUP_NAME` | Stage 04 platform output and approved per-workload secret IDs |
+| `CLUSTER_STATE_REPO_OWNER`, `CLUSTER_STATE_REPO_NAME` | Cluster-state repo output |
+| `AKS_OIDC_ISSUER_URL`, `PLATFORM_AKS_CLUSTER_ID`, `PLATFORM_ACR_ID`, `PLATFORM_KEY_VAULT_SECRET_IDS`, `PLATFORM_RESOURCE_GROUP_NAME` | Platform output and approved per-workload secret IDs |
 | `VENDING_PR_LABELS`, `VENDING_PR_REVIEWERS` | Optional PR routing controls |
 
 ## 3. Vend a workload subscription
@@ -105,7 +105,7 @@ the template.
 3. Reviewers confirm billing scope, management group ID, cost center, data
    classification, budget contacts, and network CIDR.
 4. Merge after approval. The `vending` environment approval protects the apply.
-5. Run the Stage 02 subscription baseline with the emitted handoff.
+5. Run the subscription baseline with the emitted handoff.
 
 For externally-created subscriptions, use
 `mode: onboard-existing` and include `existingSubscriptionId` plus
@@ -134,7 +134,7 @@ as the template.
    reader-only, the native Kubernetes RoleBinding is read-only, and
    NetworkPolicy changes remain platform-controlled.
 4. Review and merge the cluster-state PR after its CI passes.
-5. Stage 07 validates Flux reconciliation and Kyverno policy enforcement through
+5. GitOps validation confirms Flux reconciliation and Kyverno policy enforcement through
    namespace-scoped Flux impersonation.
 
 ## 5. Rotate the GitHub App private key
@@ -150,15 +150,15 @@ as the template.
 6. Delete the old private key from the GitHub App settings after the workflow
    succeeds.
 
-## Stage 06 reusable-workflow refactor checklist
+## Reusable-workflow refactor checklist
 
-Stage 05 ships standalone workflows. When Stage 06 reusable workflows land:
+Vending ships standalone workflows. When reusable workflows land:
 
 1. Move schema validation into the shared workflow.
-2. Replace inline Terraform init/validate/plan/apply steps with the Stage 06
+2. Replace inline Terraform init/validate/plan/apply steps with the reusable
    reusable Terraform workflow.
 3. Keep GitHub App token creation and cluster-state PR creation in the namespace
-   caller unless Stage 06 adds a dedicated cross-repo PR reusable workflow.
+   caller unless a dedicated cross-repo PR reusable workflow is added.
 4. Preserve the same `docs/contracts/vending-request.schema.json` contract.
 
 ## Rollback

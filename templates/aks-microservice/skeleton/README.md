@@ -1,6 +1,6 @@
 # ${{ values.componentTitle }}
 
-Generated from the Stage 11 AKS microservice golden path.
+Generated from the AKS microservice golden path.
 
 | Field | Value |
 | --- | --- |
@@ -22,7 +22,7 @@ curl -fsS http://localhost:${{ values.port }}/healthz
 
 ## Delivery
 
-`.github/workflows/ci.yml` calls the platform Stage 06 reusable workflows to:
+`.github/workflows/ci.yml` calls the platform reusable workflows to:
 
 1. build, scan, generate SBOMs, and sign the image;
 2. package and sign the Helm chart;

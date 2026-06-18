@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: ""
+      backend_container:
+        description: Remote-state container for the selected stack. Defaults to TFSTATE_CONTAINER when empty.
+        required: false
+        type: string
+        default: ""
       plan_name:
         description: Local Terraform plan file name.
         required: false
@@ -26,11 +31,16 @@ on:
         required: false
         type: boolean
         default: false
-      trusted_runs_on:
-        description: Runner label for Azure-backed Terraform plan/apply jobs. Use a VNet-integrated self-hosted runner that can reach private state.
+      tfvars_json_variable:
+        description: Optional GitHub Environment variable name containing a JSON object of non-secret Terraform inputs.
         required: false
         type: string
-        default: self-hosted
+        default: ""
+      tfvars_json_secret:
+        description: Optional GitHub Environment secret name containing a JSON object of sensitive Terraform inputs.
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -63,7 +73,10 @@ jobs:
         env:
           STACK_PATH: ${{ inputs.stack_path }}
           BACKEND_KEY: ${{ inputs.backend_key }}
+          BACKEND_CONTAINER: ${{ inputs.backend_container }}
           PLAN_NAME: ${{ inputs.plan_name }}
+          TFVARS_JSON_VARIABLE_NAME: ${{ inputs.tfvars_json_variable }}
+          TFVARS_JSON_SECRET_NAME: ${{ inputs.tfvars_json_secret }}
         run: |
           set -euo pipefail
           case "$STACK_PATH" in
@@ -86,6 +99,20 @@ jobs:
             echo "::error::Pull-request Terraform validation cannot use remote backend or Azure OIDC. Re-run a protected branch workflow for Azure-backed plans."
             exit 1
           fi
+          if [ -n "$BACKEND_CONTAINER" ]; then
+            echo "::error::Pull-request Terraform validation cannot use remote backend containers. Re-run a protected branch workflow for Azure-backed plans."
+            exit 1
+          fi
+          for name in "$TFVARS_JSON_VARIABLE_NAME" "$TFVARS_JSON_SECRET_NAME"; do
+            if [ -n "$name" ]; then
+              case "$name" in
+                *[!A-Z0-9_]*)
+                  echo "::error::tfvars_json_variable and tfvars_json_secret must be empty or uppercase GitHub variable/secret names."
+                  exit 1
+                  ;;
+              esac
+            fi
+          done
 
       - name: Terraform init without backend
         env:
@@ -106,7 +133,7 @@ jobs:
   trusted:
     name: Terraform ${{ inputs.apply && 'apply' || 'plan' }}
     if: ${{ github.event_name != 'pull_request' || inputs.apply }}
-    runs-on: ${{ inputs.trusted_runs_on }}
+    runs-on: [self-hosted, azure, private-acr, swedencentral]
     environment: ${{ inputs.environment }}
     permissions:
       contents: read
@@ -141,7 +168,10 @@ jobs:
         env:
           STACK_PATH: ${{ inputs.stack_path }}
           BACKEND_KEY: ${{ inputs.backend_key }}
+          BACKEND_CONTAINER: ${{ inputs.backend_container }}
           PLAN_NAME: ${{ inputs.plan_name }}
+          TFVARS_JSON_VARIABLE_NAME: ${{ inputs.tfvars_json_variable }}
+          TFVARS_JSON_SECRET_NAME: ${{ inputs.tfvars_json_secret }}
         run: |
           set -euo pipefail
           case "$STACK_PATH" in
@@ -175,13 +205,33 @@ jobs:
               ;;
           esac
           missing=()
-          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT TFSTATE_CONTAINER; do
+          for v in ARM_CLIENT_ID ARM_TENANT_ID ARM_SUBSCRIPTION_ID TFSTATE_RESOURCE_GROUP TFSTATE_STORAGE_ACCOUNT; do
             if [ -z "${!v:-}" ]; then missing+=("$v"); fi
           done
+          backend_container="${BACKEND_CONTAINER:-${TFSTATE_CONTAINER:-}}"
+          if [ -z "$backend_container" ]; then
+            missing+=(backend_container_or_TFSTATE_CONTAINER)
+          fi
+          case "$backend_container" in
+            ""|/*|*..*|*[!A-Za-z0-9_-]*)
+              echo "::error::Unsafe backend container: $backend_container"
+              exit 1
+              ;;
+          esac
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error::Missing GitHub Actions variables: ${missing[*]}."
             exit 1
           fi
+          for name in "$TFVARS_JSON_VARIABLE_NAME" "$TFVARS_JSON_SECRET_NAME"; do
+            if [ -n "$name" ]; then
+              case "$name" in
+                *[!A-Z0-9_]*)
+                  echo "::error::tfvars_json_variable and tfvars_json_secret must be empty or uppercase GitHub variable/secret names."
+                  exit 1
+                  ;;
+              esac
+            fi
+          done
 
       - name: Azure login (OIDC)
         uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
@@ -194,16 +244,57 @@ jobs:
         env:
           STACK_PATH: ${{ inputs.stack_path }}
           BACKEND_KEY: ${{ inputs.backend_key }}
+          BACKEND_CONTAINER: ${{ inputs.backend_container }}
         run: |
           set -euo pipefail
+          backend_container="${BACKEND_CONTAINER:-$TFSTATE_CONTAINER}"
           {
             printf 'resource_group_name  = "%s"\n' "$TFSTATE_RESOURCE_GROUP"
             printf 'storage_account_name = "%s"\n' "$TFSTATE_STORAGE_ACCOUNT"
-            printf 'container_name       = "%s"\n' "$TFSTATE_CONTAINER"
+            printf 'container_name       = "%s"\n' "$backend_container"
             printf 'key                  = "%s"\n' "$BACKEND_KEY"
             printf 'use_azuread_auth     = true\n'
           } > "$STACK_PATH/backend.hcl"
           mise exec -- terraform -chdir="$STACK_PATH" init -input=false -backend-config=backend.hcl
+
+      - name: Materialize Terraform variables
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+          TFVARS_JSON_VARIABLE_NAME: ${{ inputs.tfvars_json_variable }}
+          TFVARS_JSON_VARIABLE_VALUE: ${{ vars[inputs.tfvars_json_variable] }}
+          TFVARS_JSON_SECRET_NAME: ${{ inputs.tfvars_json_secret }}
+          TFVARS_JSON_SECRET_VALUE: ${{ secrets[inputs.tfvars_json_secret] }}
+        run: |
+          set -euo pipefail
+          write_tfvars_json() {
+            local name="$1"
+            local value="$2"
+            local path="$3"
+            if [ -z "$name" ]; then
+              return 0
+            fi
+            if [ -z "$value" ]; then
+              echo "::error::GitHub variable/secret '$name' is empty or not available in the '${{ inputs.environment }}' environment."
+              exit 1
+            fi
+            TFVARS_JSON_CONTENT="$value" TFVARS_JSON_PATH="$path" mise exec -- python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(os.environ["TFVARS_JSON_CONTENT"])
+          if not isinstance(data, dict):
+              raise SystemExit("Terraform tfvars JSON must be a top-level object.")
+          Path(os.environ["TFVARS_JSON_PATH"]).write_text(
+              json.dumps(data, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+            echo "Wrote Terraform input file from $name."
+          }
+
+          write_tfvars_json "$TFVARS_JSON_VARIABLE_NAME" "$TFVARS_JSON_VARIABLE_VALUE" "$STACK_PATH/zz-workflow.auto.tfvars.json"
+          write_tfvars_json "$TFVARS_JSON_SECRET_NAME" "$TFVARS_JSON_SECRET_VALUE" "$STACK_PATH/zz-workflow-secret.auto.tfvars.json"
 
       - name: Terraform validate
         env:
@@ -222,3 +313,9 @@ jobs:
           STACK_PATH: ${{ inputs.stack_path }}
           PLAN_NAME: ${{ inputs.plan_name }}
         run: mise exec -- terraform -chdir="$STACK_PATH" apply -input=false -lock-timeout=120s "$PLAN_NAME"
+
+      - name: Remove materialized Terraform variables
+        if: ${{ always() }}
+        env:
+          STACK_PATH: ${{ inputs.stack_path }}
+        run: rm -f "$STACK_PATH"/zz-workflow.auto.tfvars.json "$STACK_PATH"/zz-workflow-secret.auto.tfvars.json

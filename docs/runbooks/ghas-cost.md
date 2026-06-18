@@ -1,4 +1,4 @@
-# Runbook: GitHub Advanced Security cost and opt-in (Stage 06)
+# Runbook: GitHub Advanced Security cost and opt-in
 
 This runbook records when to enable GHAS-backed CodeQL and how to control its
 licence footprint.

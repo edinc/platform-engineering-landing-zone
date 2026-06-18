@@ -1,7 +1,7 @@
 # Platform SLOs
 
-Stage 08 publishes the first platform SLO set. The measurement surface is
-Managed Prometheus and Managed Grafana; Stage 09 surfaces the same data in
+The platform publishes its SLO set through Managed Prometheus and Managed
+Grafana; Backstage surfaces the same data in
 Backstage.
 
 | SLO | Target | Measurement |
@@ -11,7 +11,7 @@ Backstage.
 | Cluster API availability | >= 99.9% | AKS API server metrics and Azure Monitor health. |
 | Golden-path success rate | >= 95% | Scaffolder success ratio and first-run CI green ratio over 30 days. |
 | Vending PR to merge latency p95 | < 1 working day | GitHub Actions and pull request timestamps. |
-| Time to restore Postgres PITR | <= 60 minutes | Stage 12 restore drill measurement. |
+| Time to restore Postgres PITR | <= 60 minutes | Restore drill measurement. |
 | Signature-verify mean overhead | < 200 ms | `kyverno_admission_review_duration_seconds`. |
 
 ## Monthly review cadence

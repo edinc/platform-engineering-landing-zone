@@ -51,7 +51,7 @@ resource "azurerm_role_assignment" "techdocs_backstage_writer" {
 
   scope                = "${azurerm_storage_account.techdocs[0].id}/blobServices/default/containers/${azurerm_storage_container.techdocs[0].name}"
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = var.backstage_workload_identity_principal_id
+  principal_id         = local.backstage_workload_identity_principal_id
   principal_type       = "ServicePrincipal"
 }
 

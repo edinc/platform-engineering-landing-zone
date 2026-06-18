@@ -21,8 +21,8 @@ EXPECTED_FILES = [
     "backstage/app/packages/app/src/apis/PlatformCostInsightsClient.ts",
     "backstage/app/packages/backend/src/index.ts",
     "backstage/app/packages/backend/src/plugins/platformCostShowback.ts",
-    "backstage/app/packages/backend/src/plugins/stage09PermissionPolicy.ts",
-    "backstage/app/scripts/validate-stage09-app.mjs",
+    "backstage/app/packages/backend/src/plugins/platformPermissionPolicy.ts",
+    "backstage/app/scripts/validate-backstage-app.mjs",
     "backstage/deploy/Chart.yaml",
     "backstage/deploy/values.yaml",
     "backstage/deploy/templates/deployment.yaml",
@@ -130,7 +130,7 @@ def validate_backstage_config() -> None:
         "@backstage/plugin-auth-backend-module-microsoft-provider",
         "@backstage/plugin-catalog-backend-module-github",
         "@backstage/plugin-catalog-backend-module-msgraph",
-        "stage09PermissionPolicy",
+        "platformPermissionPolicy",
     ]:
         if needle not in package_json and needle not in backend_index and needle not in read("backstage/app/README.md"):
             fail(f"Backstage scaffold/backend must include {needle!r}")
@@ -158,7 +158,7 @@ def validate_backstage_config() -> None:
 
 
 def validate_permissions() -> None:
-    policy = read("backstage/app/packages/backend/src/plugins/stage09PermissionPolicy.ts")
+    policy = read("backstage/app/packages/backend/src/plugins/platformPermissionPolicy.ts")
     for needle in [
         "platformAdminsGroupRef",
         "platformOperatorsGroupRef",
@@ -174,12 +174,44 @@ def validate_permissions() -> None:
             fail(f"Backstage permission policy must include {needle!r}")
     if "pe-platform-admins" in policy or "pe-app-team-" in policy:
         fail("Backstage permission policy must read group names from config instead of hard-coding names")
-    require_contains("policies/backstage/permissions.ts", "stage09PermissionPolicy")
-    require_contains("backstage/app/packages/backend/src/index.ts", "stage09PermissionPolicy")
+    require_contains("policies/backstage/permissions.ts", "platformPermissionPolicy")
+    require_contains("backstage/app/packages/backend/src/index.ts", "platformPermissionPolicy")
     if "isApplicationTeam && permissionName === 'kubernetes.resources.read'" in policy:
         fail("Application-team Kubernetes access must remain disabled until Stage 10 namespace RBAC")
     require_contains("backstage/deploy/templates/configmap.yaml", "BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER")
     require_contains("backstage/deploy/templates/deployment.yaml", "BACKSTAGE_APPLICATION_TEAM_GROUP_REFS")
+    require_contains("backstage/app/app-config.yaml", "platformRepositoryUrl:")
+    require_contains("backstage/app/app-config.yaml", "platformRepositoryOwner:")
+    require_contains("backstage/app/app-config.yaml", "platformRepositoryName:")
+    require_contains("backstage/deploy/templates/configmap.yaml", "platformRepositoryUrl:")
+    require_contains("backstage/deploy/templates/configmap.yaml", "platformRepositoryOwner:")
+    require_contains("backstage/deploy/templates/configmap.yaml", "platformRepositoryName:")
+    require_contains("infrastructure/terraform/platform/gitops.tf", "platform_repository_url")
+    for needle in [
+        "deployment-values:",
+        "BACKSTAGE_IMAGE_DIGEST_REF",
+        "BACKSTAGE_CATALOG_RECONCILER_IMAGE_DIGEST_REF",
+        "BACKSTAGE_CHART_DIGEST_REF",
+        "Backstage platform Terraform inputs",
+        "run_azure_smoke:",
+        "Deployed Backstage smoke",
+        "scripts/azure/validate_stage09_azure.sh",
+        "runs-on: [self-hosted, azure, private-acr, swedencentral]",
+        "github.ref == 'refs/heads/main'",
+        '"enable_backstage": true',
+        '"enable_gitops": true',
+        '"enable_techdocs_storage": true',
+    ]:
+        require_contains(".github/workflows/ci-backstage.yml", needle)
+    for needle in [
+        'jq -r \'.oidc\'',
+        'jq -r \'.workloadIdentity\'',
+        "for tool in az curl jq",
+        'TechDocs storage public network access is not disabled.',
+        'TechDocs container exists.',
+        'Approved TechDocs private endpoints:',
+    ]:
+        require_contains("scripts/azure/validate_stage09_azure.sh", needle)
 
 
 def validate_gitops() -> None:
@@ -202,6 +234,13 @@ def validate_gitops() -> None:
         require_contains("platform-gitops/clusters/_base/addon-config/backstage/kustomization.yaml", expected)
     for expected in ["backstage_client_id", "backstage_chart_digest", "backstage_image_digest", "platform_acr_login_server", "techdocs_storage_account_name"]:
         require_contains("infrastructure/terraform/platform/gitops.tf", expected)
+    for expected in [
+        "backstage_workload_identity_client_id",
+        "backstage_workload_identity_principal_id",
+        "backstage_catalog_reconciler_workload_identity_client_id",
+        "backstage_catalog_reconciler_workload_identity_principal_id",
+    ]:
+        require_contains("infrastructure/terraform/platform/workload-identities.tf", expected)
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "create: false")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/ocirepository.yaml", "digest: ${backstage_chart_digest}")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "backstage_aks_apiserver_url")

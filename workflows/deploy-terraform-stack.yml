@@ -1,0 +1,5 @@
+capability: infrastructure-deployment
+status: executable
+executable_location: .github/workflows/deploy-terraform-stack.yml
+description: Manual staged Terraform deployment entrypoint that maps approved stacks to the reusable Terraform plan/apply workflow on main.
+runner: Azure-backed jobs run through the reusable workflow on the approved private Azure runner label set.
