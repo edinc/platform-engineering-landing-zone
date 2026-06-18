@@ -39,7 +39,7 @@ on:
         type: string
         default: main
       runs_on:
-        description: Runner label. Use a VNet-integrated self-hosted runner because promotion verifies/pushes private ACR data-plane references and reads Key Vault.
+        description: Deprecated compatibility input. Privileged promotion jobs always use the approved private Azure runner label set.
         required: false
         type: string
         default: self-hosted
@@ -51,7 +51,7 @@ permissions:
 jobs:
   promote:
     name: Promote image to ${{ inputs.target_environment }}
-    runs-on: ${{ inputs.runs_on }}
+    runs-on: [self-hosted, azure, private-acr, swedencentral]
     environment: ${{ inputs.target_environment }}
     env:
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}

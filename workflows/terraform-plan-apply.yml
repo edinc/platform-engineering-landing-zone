@@ -1,5 +1,6 @@
 stage: 06
 status: executable
 executable_location: .github/workflows/terraform-plan-apply.yml
-description: Terraform plan and apply reusable workflow contract.
+description: Terraform plan/apply reusable workflow contract. Manual deployment uses deploy-terraform-stack.yml, which calls this workflow from main.
 runner: Untrusted PR validation uses GitHub-hosted runners; Azure-backed plan/apply uses a private self-hosted runner by default.
+tfvars: Protected GitHub Environment variables/secrets can provide per-stack JSON input through tfvars_json_variable and tfvars_json_secret.

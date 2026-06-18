@@ -21,7 +21,7 @@
         "strict_required_status_checks_policy": true,
         "required_status_checks": [
           {
-            "context": "Stage 00 quality gates"
+            "context": "Repository quality gates"
           },
           {
             "context": "Backstage app contract (22.x)"

@@ -1,4 +1,4 @@
-name: Demo TTL sweep (Stage 08)
+name: Demo resource TTL cleanup
 
 on:
   schedule:
@@ -124,6 +124,6 @@ jobs:
           git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${branch}"
           gh pr create \
             --title "chore: decommission expired demo resources" \
-            --body "Stage 08 TTL sweep found expired ${SWEEP_ENVIRONMENT} resources. Review the generated manifest and remove the resources through Terraform or Flux-owned desired state." \
+            --body "Demo resource TTL cleanup found expired ${SWEEP_ENVIRONMENT} resources. Review the generated manifest and remove the resources through Terraform or Flux-owned desired state." \
             --base main \
             --head "$branch"

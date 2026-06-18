@@ -6,6 +6,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      run_azure_smoke:
+        description: Run read-only Azure checks against the deployed Backstage instance after contracts pass.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -65,7 +71,7 @@ jobs:
         run: mise exec -- helm lint backstage/deploy
 
   contract:
-    name: Stage 09 contract
+    name: Backstage contract validation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -73,12 +79,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Validate Stage 09 contracts
+      - name: Validate Backstage contracts
         run: python3 scripts/backstage/validate_stage09_backstage.py
 
   publish-image:
     name: Publish Backstage image
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
       id-token: write
@@ -94,7 +100,7 @@ jobs:
 
   publish-reconciler-image:
     name: Publish Backstage catalog reconciler image
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
       id-token: write
@@ -109,7 +115,7 @@ jobs:
 
   publish-chart:
     name: Publish Backstage chart
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
       id-token: write
@@ -122,6 +128,59 @@ jobs:
       chart_path: backstage/deploy
       environment: dev
       oci_repository: helm
+
+  deployment-values:
+    name: Backstage deployment values
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+      - publish-image
+      - publish-reconciler-image
+      - publish-chart
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Summarize Terraform inputs
+        env:
+          BACKSTAGE_IMAGE_DIGEST_REF: ${{ needs.publish-image.outputs.digest_ref }}
+          BACKSTAGE_CATALOG_RECONCILER_IMAGE_DIGEST_REF: ${{ needs.publish-reconciler-image.outputs.digest_ref }}
+          BACKSTAGE_CHART_DIGEST_REF: ${{ needs.publish-chart.outputs.digest_ref }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for v in BACKSTAGE_IMAGE_DIGEST_REF BACKSTAGE_CATALOG_RECONCILER_IMAGE_DIGEST_REF BACKSTAGE_CHART_DIGEST_REF; do
+            if [ -z "${!v:-}" ]; then missing+=("$v"); fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing reusable workflow outputs: ${missing[*]}."
+            exit 1
+          fi
+          backstage_image_digest="${BACKSTAGE_IMAGE_DIGEST_REF##*@}"
+          reconciler_image_digest="${BACKSTAGE_CATALOG_RECONCILER_IMAGE_DIGEST_REF##*@}"
+          backstage_chart_digest="${BACKSTAGE_CHART_DIGEST_REF##*@}"
+          backstage_chart_version="$(awk -F': *' '$1 == "version" {print $2; exit}' backstage/deploy/Chart.yaml)"
+          {
+            echo "### Backstage platform Terraform inputs"
+            echo
+            echo "Use these values in the protected platform Terraform tfvars JSON, then dispatch **Deploy infrastructure stack** with \`stack=platform\`."
+            echo
+            echo '```json'
+            printf '{\n'
+            printf '  "backstage_image_digest": "%s",\n' "$backstage_image_digest"
+            printf '  "backstage_catalog_reconciler_image_digest": "%s",\n' "$reconciler_image_digest"
+            printf '  "backstage_chart_digest": "%s",\n' "$backstage_chart_digest"
+            printf '  "backstage_chart_version": "%s",\n' "$backstage_chart_version"
+            printf '  "enable_backstage": true,\n'
+            printf '  "enable_gitops": true,\n'
+            printf '  "enable_techdocs_storage": true\n'
+            printf '}\n'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   environment-reference:
     name: Environment protection reference
@@ -141,4 +200,43 @@ jobs:
     steps:
       - name: Reference protected environment
         run: |
-          echo "Referenced ${{ matrix.environment }} for Stage 09 Backstage deployment controls."
+          echo "Referenced ${{ matrix.environment }} for Backstage deployment controls."
+
+  azure-smoke:
+    name: Deployed Backstage smoke
+    if: github.event_name == 'workflow_dispatch' && inputs.run_azure_smoke && github.ref == 'refs/heads/main'
+    needs:
+      - contract
+    runs-on: [self-hosted, azure, private-acr, swedencentral]
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      PLATFORM_RESOURCE_GROUP_NAME: ${{ vars.PLATFORM_RESOURCE_GROUP_NAME }}
+      PLATFORM_AKS_CLUSTER_NAME: ${{ vars.PLATFORM_AKS_CLUSTER_NAME }}
+      TECHDOCS_STORAGE_ACCOUNT_NAME: ${{ vars.TECHDOCS_STORAGE_ACCOUNT_NAME }}
+      TECHDOCS_STORAGE_CONTAINER_NAME: ${{ vars.TECHDOCS_STORAGE_CONTAINER_NAME || 'techdocs' }}
+      BACKSTAGE_HOST: ${{ vars.BACKSTAGE_HOST }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          install: true
+          cache: true
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate deployed Backstage
+        run: bash scripts/azure/validate_stage09_azure.sh

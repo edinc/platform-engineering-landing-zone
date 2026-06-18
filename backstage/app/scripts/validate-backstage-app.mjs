@@ -47,4 +47,4 @@ if (read('app-config.yaml').includes('githubOrgDiscovery')) {
   throw new Error('GitHub org discovery must not import identity entities');
 }
 
-console.log('Stage 09 Backstage app contract validated.');
+console.log('Backstage app contract validated.');

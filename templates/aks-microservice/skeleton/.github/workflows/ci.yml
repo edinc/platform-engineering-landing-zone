@@ -36,7 +36,7 @@ jobs:
 
   build:
     if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
-    uses: edinc/platform-engineering-landing-zone/.github/workflows/container-build-sign.yml@main
+    uses: ${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/container-build-sign.yml@main
     permissions:
       contents: read
       id-token: write
@@ -49,7 +49,7 @@ jobs:
   helm:
     if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
     needs: build
-    uses: edinc/platform-engineering-landing-zone/.github/workflows/helm-publish.yml@main
+    uses: ${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/helm-publish.yml@main
     permissions:
       contents: read
       id-token: write
@@ -59,7 +59,7 @@ jobs:
 
   techdocs:
     if: ${{ "${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}" }}
-    uses: edinc/platform-engineering-landing-zone/.github/workflows/techdocs-publish.yml@main
+    uses: ${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/techdocs-publish.yml@main
     permissions:
       contents: read
       id-token: write
@@ -72,7 +72,7 @@ jobs:
     needs:
       - build
       - helm
-    uses: edinc/platform-engineering-landing-zone/.github/workflows/gitops-push.yml@main
+    uses: ${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/.github/workflows/gitops-push.yml@main
     permissions:
       contents: read
       id-token: write

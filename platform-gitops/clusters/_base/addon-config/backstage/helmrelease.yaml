@@ -44,6 +44,8 @@ spec:
       techdocsStorageAccountName: ${techdocs_storage_account_name}
       techdocsContainerName: ${techdocs_storage_container_name}
       githubOrg: ${github_owner}
+      platformRepositoryName: ${platform_repository_name}
+      platformRepositoryUrl: ${platform_repository_url}
       platformEnv: ${platform_profile}
       platformRootDomain: ${platform_root_domain}
       microsoftAuthClientId: ${backstage_microsoft_auth_client_id}

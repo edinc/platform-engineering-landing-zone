@@ -18,9 +18,9 @@ spec:
   regions:
     - ${{ values.region }}
   github:
-    owner: edinc
+    owner: ${{ values.githubOwner }}
     repositoryPermissions:
-      platform-engineering-landing-zone: pull
+      ${{ values.platformRepoName }}: pull
   namespace:
     serviceAccountName: ${{ values.serviceAccountName }}
     resourceQuota:

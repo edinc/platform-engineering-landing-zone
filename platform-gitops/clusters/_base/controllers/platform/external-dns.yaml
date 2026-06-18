@@ -28,6 +28,7 @@ spec:
     podLabels:
       azure.workload.identity/use: "true"
     serviceAccount:
+      name: external-dns
       annotations:
         azure.workload.identity/client-id: ${external_dns_client_id}
     extraArgs:

@@ -1,4 +1,4 @@
-# Runbook: Stage 06 release and image promotion
+# Runbook: Release and image promotion
 
 This runbook operates the paved-road build, signing, SBOM, and promotion flow.
 
@@ -10,10 +10,10 @@ Related decisions: [ADR-0007](../adr/0007-image-signing.md),
 
 | Requirement | Purpose |
 | --- | --- |
-| Stage 01 OIDC variables | Azure login without long-lived secrets. |
-| Stage 03 Sigstore egress | Keyless signing and verification. |
-| Stage 04 ACR | Stores images, signatures, SBOMs, and Helm OCI artifacts. |
-| Stage 05 `platform-vending-bot` | Opens cross-repo PRs in `platform-cluster-state`. |
+| Azure OIDC variables | Azure login without long-lived secrets. |
+| Sigstore egress | Keyless signing and verification. |
+| Platform ACR | Stores images, signatures, SBOMs, and Helm OCI artifacts. |
+| `platform-vending-bot` | Opens cross-repo PRs in `platform-cluster-state`. |
 | Protected GitHub Environments | Gate `nonprod` and `prod` promotion. |
 | VNet-integrated self-hosted runner | Required for private ACR push/sign/promote operations and private Key Vault reads. |
 
@@ -85,16 +85,17 @@ target Kustomize image to a digest-pinned reference, and opens a PR in
 `platform-cluster-state`. Merge the PR only after the target environment's
 required reviewers approve.
 
-## 4. Run the Stage 06 smoke test
+## 4. Run the supply-chain smoke test
 
-Use **Actions -> Stage 06 supply-chain smoke test** to build the minimal
+Use **Actions -> Supply-chain smoke test** to build the minimal
 [`samples/hello-container`](../../samples/hello-container/) image through the
 same reusable workflow used by golden paths. To exercise promotion, provide the
 nonprod and prod `kustomization_path` values for a disposable smoke overlay and
 enable the matching promotion inputs. Prod smoke promotion intentionally depends
 on nonprod smoke promotion so the path proves dev -> nonprod -> prod ordering.
-Set `runs_on` to the private runner label that has network access to the
-platform ACR and seed Key Vault.
+The smoke workflow and privileged reusable workflows intentionally use the fixed
+`[self-hosted, azure, private-acr, swedencentral]` private-runner label set;
+dispatchers cannot route privileged ACR/Key Vault work to arbitrary runners.
 
 Run promotion smoke tests from `main`, or set the protected
 `TRUSTED_BUILDER_REF` environment variable to the immutable workflow commit SHA

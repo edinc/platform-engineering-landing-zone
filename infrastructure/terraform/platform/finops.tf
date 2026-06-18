@@ -18,10 +18,10 @@ module "cost_allocator" {
 }
 
 resource "azurerm_role_assignment" "backstage_cost_showback_reader" {
-  count = local.backstage_enabled ? 1 : 0
+  count = local.backstage_enabled && local.backstage_cost_showback_container_id != "" ? 1 : 0
 
   scope                = local.backstage_cost_showback_container_id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = var.backstage_workload_identity_principal_id
+  principal_id         = local.backstage_workload_identity_principal_id
   principal_type       = "ServicePrincipal"
 }

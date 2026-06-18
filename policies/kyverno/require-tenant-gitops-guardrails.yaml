@@ -52,7 +52,7 @@ spec:
                 value: ^https://token.actions.githubusercontent.com$
               - key: "{{ request.object.spec.verify.matchOIDCIdentity[0].subject || '' }}"
                 operator: NotEquals
-                value: ^https://github.com/edinc/platform-engineering-landing-zone/\.github/workflows/helm-publish\.yml@refs/heads/main$
+                value: ^https://github.com/${github_owner}/${platform_repository_name}/\.github/workflows/helm-publish\.yml@refs/heads/main$
     - name: require-restricted-helm-releases
       match:
         any:

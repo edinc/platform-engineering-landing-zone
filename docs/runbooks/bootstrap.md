@@ -1,4 +1,4 @@
-# Runbook: Bootstrap and secret zero (Stage 01)
+# Runbook: Bootstrap and secret zero
 
 This runbook takes an **empty (or brownfield) Azure subscription** to the point
 where every later stage deploys from GitHub Actions via OIDC, with Terraform
@@ -33,7 +33,7 @@ bootstrap-init.sh        make bootstrap-import        bootstrap workflow
   **Global Administrator** in Entra ID (to create the app registration).
 - `az` CLI (logged in: `az login --tenant <tenant-guid>`), `jq`, `gh`, and the
   repo toolchain (`mise install`, which provides the pinned Terraform).
-- The `bootstrap` GitHub Environment already exists (created in Stage 00,
+- The `bootstrap` GitHub Environment already exists (created during repository setup,
   ADR-0023). Confirm its deployment-branch policy restricts deploys to `main`.
 
 ## 1. Create secret zero
@@ -48,7 +48,7 @@ bootstrap-init.sh        make bootstrap-import        bootstrap workflow
 Useful flags: `--location` / `--location-short` (default `swedencentral` / `sec`),
 `--key-vault-sku premium` (only if you will use an HSM-backed CMK),
 `--grant-root-mg` (legacy opt-in root management group roles for explicitly
-documented future tenant-scope work; Stage 02 does not need it),
+documented future tenant-scope work; the subscription baseline does not need it),
 `--dry-run` (preview without changes).
 
 The script is **idempotent** — re-run it safely. It prints the GitHub Actions
@@ -110,7 +110,7 @@ incompatible with the local recovery guard.
 
 There are no secrets to store — that is the point of OIDC (acceptance criterion 4).
 
-> Stage 02 was renamed from the previous `alz` stack to
+> The subscription baseline was renamed from the previous `alz` stack to
 > `subscription-baseline`. The bootstrap stack now keeps both the legacy `alz`
 > container and the new `subscription-baseline` container, with state-container
 > deletion protected by Terraform `prevent_destroy`. Remove `alz` only through a
@@ -142,7 +142,7 @@ commit them.
 
 ## 4. First apply
 
-Run the **bootstrap** workflow (Actions -> "Bootstrap (Stage 01)" ->
+Run the **Bootstrap Azure foundation** workflow (Actions -> "Bootstrap Azure foundation" ->
 `workflow_dispatch`) with `action = plan`, review, then re-run with
 `action = apply`. The workflow authenticates via OIDC, allowlists the runner's
 egress IP on the state account and Key Vault firewalls before `terraform init`,
@@ -225,19 +225,19 @@ Verify by signing in with one account and confirming the alert fires.
 
 ## 6. Record downstream prerequisites (DNS delegation & Sigstore egress)
 
-Stage 01 does not configure DNS or runner egress, but it is the point at which
+Bootstrap does not configure DNS or runner egress, but it is the point at which
 these later-stage prerequisites are captured so they are not forgotten.
 
-**DNS delegation (for Stage 03 connectivity / public zones).** Confirm the parent
+**DNS delegation (for connectivity / public zones).** Confirm the parent
 zone's registrar credentials are held **out of band** (password manager / sealed
 break-glass safe, never in this repo). When a platform public zone is created in
 a later stage, delegation is completed by adding the Azure-issued `NS` records to
 the parent zone at the registrar; record the parent zone name and registrar owner
-here as part of bootstrap sign-off. No delegation is performed in Stage 01.
+here as part of bootstrap sign-off. No delegation is performed during bootstrap.
 
-**Sigstore egress (for Stage 03 hub firewall / Stage 06 supply chain).** Keyless
+**Sigstore egress (for hub firewall / supply chain).** Keyless
 `cosign` signing and verification require outbound reachability to the Sigstore
-services, so the Stage 03 hub Azure Firewall allowlist **must** include:
+services, so the hub Azure Firewall allowlist **must** include:
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -246,7 +246,7 @@ services, so the Stage 03 hub Azure Firewall allowlist **must** include:
 | `tuf.sigstore.dev` | Trust-root (TUF) metadata |
 
 These are recorded here as a forward reference; the allowlist itself is
-implemented with the hub firewall in Stage 03 (cross-reference ADR-0048).
+implemented with the hub firewall (cross-reference ADR-0048).
 
 ## Troubleshooting
 
@@ -261,7 +261,7 @@ implemented with the hub firewall in Stage 03 (cross-reference ADR-0048).
 ## Phase 2 retrofit
 
 Phase 1 uses a public endpoint with a default-deny firewall and just-in-time
-runner allowlisting. **Stage 03 (connectivity)** retrofits Private Endpoints,
+runner allowlisting. **Connectivity** retrofits Private Endpoints,
 private DNS, and VNet-integrated runners, sets `public_network_access_enabled =
 false`, and removes the just-in-time allowlisting — see
 [ADR-0048](../adr/0048-runner-connectivity.md).

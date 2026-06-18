@@ -1,6 +1,6 @@
 # ${{ values.componentTitle }}
 
-This service was generated from the Stage 11 AKS microservice golden path.
+This service was generated from the AKS microservice golden path.
 
 ## Ownership
 

@@ -1,6 +1,6 @@
 # ${{ values.componentTitle }}
 
-Generated from the Stage 11 Azure Container Apps golden path.
+Generated from the Azure Container Apps golden path.
 
 | Field | Value |
 | --- | --- |
@@ -23,7 +23,7 @@ curl -fsS http://localhost:${{ values.port }}/healthz
 ## Deployment model
 
 Terraform in `infra/` owns the `azurerm_container_app` resource in the existing
-Stage 04 managed environment. Application image updates are deploy operations:
+platform-managed environment. Application image updates are deploy operations:
 the workflow verifies the signed digest with cosign, then runs
 `az containerapp update --image <digest>`.
 

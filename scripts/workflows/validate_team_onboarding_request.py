@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import ipaddress
+import os
 import re
 import sys
 from pathlib import Path
@@ -130,7 +131,12 @@ def main(argv: list[str]) -> int:
     require(isinstance(github, dict), "spec.github must be an object")
     require_keys(github, GITHUB_KEYS, "spec.github")
     github_owner = require_string(github.get("owner"), "spec.github.owner", GITHUB_NAME_RE)
-    require(github_owner == "edinc", "spec.github.owner must be edinc for self-service team onboarding")
+    expected_github_owner = os.environ.get("TEAM_ONBOARDING_GITHUB_OWNER")
+    if expected_github_owner:
+        require(
+            github_owner == expected_github_owner,
+            "spec.github.owner must match TEAM_ONBOARDING_GITHUB_OWNER",
+        )
     repository_permissions = github["repositoryPermissions"] if "repositoryPermissions" in github else {}
     require(isinstance(repository_permissions, dict), "spec.github.repositoryPermissions must be an object")
     for repository, permission in repository_permissions.items():

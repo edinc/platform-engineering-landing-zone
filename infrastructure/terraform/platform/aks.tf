@@ -33,7 +33,7 @@ resource "azurerm_role_assignment" "backstage_aks_cluster_user" {
 
   scope                = azurerm_kubernetes_cluster.platform[0].id
   role_definition_name = "Azure Kubernetes Service Cluster User Role"
-  principal_id         = var.backstage_workload_identity_principal_id
+  principal_id         = local.backstage_workload_identity_principal_id
   principal_type       = "ServicePrincipal"
 }
 
@@ -42,7 +42,7 @@ resource "azurerm_role_assignment" "backstage_aks_rbac_reader" {
 
   scope                = azurerm_kubernetes_cluster.platform[0].id
   role_definition_name = "Azure Kubernetes Service RBAC Reader"
-  principal_id         = var.backstage_workload_identity_principal_id
+  principal_id         = local.backstage_workload_identity_principal_id
   principal_type       = "ServicePrincipal"
 }
 
@@ -50,6 +50,7 @@ resource "azurerm_kubernetes_cluster" "platform" {
   #checkov:skip=CKV_AZURE_116:Azure Policy add-on installs Gatekeeper; Kyverno is the single in-cluster admission engine per ADR-0036.
   #checkov:skip=CKV_AZURE_117:AKS disk encryption set is a Stage 04 hardening follow-up once CMK lifecycle is fully wired.
   #checkov:skip=CKV_AZURE_171:automatic_upgrade_channel is set to stable; Checkov does not resolve this provider argument.
+  #checkov:skip=CKV_AZURE_226:os_disk_type defaults to Ephemeral and is validated; Managed is an explicit demo-only escape hatch for constrained subscriptions/SKUs.
   #checkov:skip=CKV_AZURE_227:host_encryption_enabled is set on every node pool; Checkov does not resolve nested/default node pool settings in this azurerm schema.
   count = var.enable_aks ? 1 : 0
 

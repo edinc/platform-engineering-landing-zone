@@ -8,7 +8,6 @@ metadata:
   annotations:
     scaffolder.platform.example.io/api-version: scaffolder.platform.example.io/v1
   tags:
-    - stage-11
     - golden-path
     - team-scoped
     - aks
@@ -80,6 +79,25 @@ spec:
           title: On-call rotation
           type: string
           pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]{1,126}[A-Za-z0-9]$"
+        platformRepoUrl:
+          title: Platform repository
+          type: string
+          description: Must match the platform repository configured in Backstage RBAC.
+          default: github.com?owner=your-github-org&repo=platform-engineering-landing-zone
+        platformRepoOwner:
+          title: Platform repository owner
+          type: string
+          description: Must match the owner in Platform repository.
+          default: your-github-org
+        platformRepoName:
+          title: Platform repository name
+          type: string
+          description: Must match the repository in Platform repository.
+          default: platform-engineering-landing-zone
+        githubOwner:
+          title: Generated repository owner
+          type: string
+          default: your-github-org
     - title: Deployment defaults
       required:
         - environment
@@ -133,7 +151,7 @@ spec:
         url: ./skeleton
         targetPath: ${{ parameters.componentId }}
         values:
-          stage11GoldenPath: "true"
+          goldenPathTemplate: "true"
           goldenPathType: aks-microservice
           componentId: ${{ parameters.componentId }}
           componentTitle: ${{ parameters.componentTitle }}
@@ -152,20 +170,22 @@ spec:
           serviceAccountName: ${{ parameters.serviceAccountName }}
           sloAvailabilityTarget: ${{ parameters.sloAvailabilityTarget }}
           repoName: ${{ parameters.teamName }}-${{ parameters.componentId }}
+          githubOwner: ${{ parameters.githubOwner }}
+          platformRepoOwner: ${{ parameters.platformRepoOwner }}
+          platformRepoName: ${{ parameters.platformRepoName }}
     - id: publish-request
       name: Open service repository request
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?owner=edinc&repo=platform-engineering-landing-zone
+        repoUrl: ${{ parameters.platformRepoUrl }}
         branchName: golden-path-aks-${{ parameters.teamName }}
         title: Create AKS microservice for ${{ parameters.teamName }}
-        description: Stage 11 AKS microservice repository request. Platform reviewers create edinc/${{ parameters.teamName }}-${{ parameters.componentId }} with private visibility, branch protection, CODEOWNERS, app-team-${{ parameters.teamName }} push access, and the generated skeleton under golden-path-requests/aks/${{ parameters.teamName }}/${{ parameters.componentId }} in this PR.
+        description: AKS microservice repository request. Platform reviewers create ${{ parameters.githubOwner }}/${{ parameters.teamName }}-${{ parameters.componentId }} with private visibility, branch protection, CODEOWNERS, app-team-${{ parameters.teamName }} push access, and the generated skeleton under golden-path-requests/aks/${{ parameters.teamName }}/${{ parameters.componentId }} in this PR.
         targetPath: golden-path-requests/aks/${{ parameters.teamName }}
         teamReviewers:
           - pe-platform-admins
           - pe-security-reviewers
         labels:
-          - stage-11
           - golden-path
           - aks
   output:
