@@ -31,7 +31,7 @@ tfvar() {
 SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-$(tfvar subscription_id)}"
 LOCATION_SHORT="${LOCATION_SHORT:-$(tfvar location_short)}"
 NAME_SUFFIX="${NAME_SUFFIX:-$(tfvar name_suffix)}"
-LOCATION_SHORT="${LOCATION_SHORT:-weu}"
+LOCATION_SHORT="${LOCATION_SHORT:-sec}"
 
 [[ -n "$SUBSCRIPTION_ID" ]] || die "SUBSCRIPTION_ID not set and not found in ${TFVARS}."
 [[ -n "$NAME_SUFFIX" ]]     || die "NAME_SUFFIX not set and not found in ${TFVARS}."

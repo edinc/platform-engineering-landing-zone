@@ -10,8 +10,8 @@
 # not overlap across subscriptions. State access is Entra-ID-only (no storage
 # keys).
 
-resource_group_name  = "rg-pe-tfstate-weu"
-storage_account_name = "stpetfweuab12" # stpetf<location_short><name_suffix> from _bootstrap
+resource_group_name  = "rg-pe-tfstate-sec"
+storage_account_name = "stpetfsecab12" # stpetf<location_short><name_suffix> from _bootstrap
 container_name       = "subscription-baseline"
 key                  = "subscriptions/11111111-1111-1111-1111-111111111111/subscription-baseline.tfstate"
 use_azuread_auth     = true

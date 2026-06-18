@@ -74,8 +74,9 @@ jobs:
       PLATFORM_ACR_NAME: ${{ vars.PLATFORM_ACR_NAME }}
       PLATFORM_ACR_LOGIN_SERVER: ${{ vars.PLATFORM_ACR_LOGIN_SERVER }}
       SYFT_VERSION: "1.18.1"
-      TRIVY_VERSION: "0.56.2"
+      TRIVY_VERSION: "0.71.1"
       COSIGN_EXPERIMENTAL: "1"
+      AZURE_CONFIG_DIR: ${{ github.workspace }}/.tools/tmp/azure-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1

@@ -1,0 +1,57 @@
+apiVersion: platform.example.io/v1alpha1
+kind: NamespaceVendingRequest
+metadata:
+  name: "${{ values.namespace }}"
+  labels:
+    platform.example.io/requester: backstage
+    platform.example.io/golden-path: aks-workload-namespace
+spec:
+  team: "${{ values.teamName }}"
+  product: "${{ values.productName }}"
+  costCenter: "${{ values.costCenter }}"
+  onCallRotationId: "${{ values.onCallRotationId }}"
+  dataClassification: "${{ values.dataClassification }}"
+  environment: "${{ values.environment }}"
+  regions:
+    - "${{ values.region }}"
+  tags:
+    owner: "${{ values.teamName }}"
+    costCenter: "${{ values.costCenter }}"
+    product: "${{ values.productName }}"
+    dataClassification: "${{ values.dataClassification }}"
+    confidentiality: "${{ values.confidentiality }}"
+    managedBy: terraform
+    repo: edinc/platform-engineering-landing-zone
+  namespace:
+    name: "${{ values.namespace }}"
+    clusterEnvironment: "${{ values.environment }}"
+    entraGroupObjectId: "${{ values.entraGroupObjectId }}"
+    serviceAccountName: "${{ values.serviceAccountName }}"
+    resourceQuota:
+{% if values.quotaTier == "S" %}
+      cpuRequests: "1000m"
+      memoryRequests: 2Gi
+      cpuLimits: "2000m"
+      memoryLimits: 4Gi
+      pods: 25
+{% elif values.quotaTier == "M" %}
+      cpuRequests: "4000m"
+      memoryRequests: 8Gi
+      cpuLimits: "8000m"
+      memoryLimits: 16Gi
+      pods: 75
+{% else %}
+      cpuRequests: "8000m"
+      memoryRequests: 16Gi
+      cpuLimits: "16000m"
+      memoryLimits: 32Gi
+      pods: 150
+{% endif %}
+    egressAllowlist:
+      cidrs:
+        - 10.30.0.0/16
+    azure:
+      aksClusterId: ${{ values.aksClusterId }}
+      acrId: ${{ values.acrId }}
+      keyVaultSecretIds: []
+      resourceGroupName: ${{ values.resourceGroupName }}

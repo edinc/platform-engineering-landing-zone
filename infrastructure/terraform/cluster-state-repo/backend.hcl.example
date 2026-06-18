@@ -1,6 +1,6 @@
 # Copy to backend.hcl (gitignored) and fill values from the Stage 01 _bootstrap outputs.
-resource_group_name  = "rg-pe-bootstrap-weu"
-storage_account_name = "stpebootweu0000"
+resource_group_name  = "rg-pe-bootstrap-sec"
+storage_account_name = "stpebootsec0000"
 container_name       = "platform"
 key                  = "cluster-state-repo/terraform.tfstate"
 use_azuread_auth     = true

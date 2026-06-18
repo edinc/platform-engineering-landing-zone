@@ -51,10 +51,10 @@ podDisruptionBudget:
 appConfig:
   baseUrl: https://backstage.nonprod.platform.example.com
   postgresAuthMode: password
-  postgresHost: pg-pe-nonprod-weu-example.postgres.database.azure.com
+  postgresHost: pg-pe-nonprod-sec-example.postgres.database.azure.com
   postgresUser: backstage
-  aksApiServerUrl: https://aks-pe-nonprod-weu.privatelink.westeurope.azmk8s.io
-  techdocsStorageAccountName: stpenonprodweuexample
+  aksApiServerUrl: https://aks-pe-nonprod-sec.privatelink.swedencentral.azmk8s.io
+  techdocsStorageAccountName: stpenonprodsecexample
   techdocsContainerName: techdocs
   githubOrg: edinc
   platformEnv: nonprod

@@ -103,11 +103,44 @@ def validate_smoke_workflow() -> None:
             fail(f"{path.relative_to(ROOT)} must include {fragment}")
 
 
+def validate_workflow_specific_contracts() -> None:
+    container_build = (ROOT / ".github/workflows/container-build-sign.yml").read_text(encoding="utf-8")
+    if "AZURE_CONFIG_DIR:" not in container_build:
+        fail(".github/workflows/container-build-sign.yml must isolate Azure CLI state with AZURE_CONFIG_DIR")
+
+    helm_publish = (ROOT / ".github/workflows/helm-publish.yml").read_text(encoding="utf-8")
+    for fragment in [
+        "outputs:",
+        "chart_ref:",
+        "digest_ref:",
+        "value: ${{ jobs.publish.outputs.digest_ref }}",
+        "digest_ref: ${{ steps.chart.outputs.digest_ref }}",
+        "AZURE_CONFIG_DIR:",
+        "pushed_ref=",
+        "Unexpected pushed chart reference",
+    ]:
+        if fragment not in helm_publish:
+            fail(f".github/workflows/helm-publish.yml must expose {fragment!r}")
+
+    gitops_push = (ROOT / ".github/workflows/gitops-push.yml").read_text(encoding="utf-8")
+    for fragment in [
+        "image_digest_ref:",
+        "acr_login_server:",
+        "chart_digest_ref:",
+        "sha256:REPLACE_WITH_SIGNED_CHART_DIGEST",
+        "^sha256:[0-9a-f]{64}$",
+        "AZURE_CONFIG_DIR:",
+    ]:
+        if fragment not in gitops_push:
+            fail(f".github/workflows/gitops-push.yml must include {fragment!r}")
+
+
 def main() -> None:
     for workflow in sorted(REQUIRED_WORKFLOWS):
         validate_workflow(workflow)
         validate_contract_stub(workflow)
     validate_smoke_workflow()
+    validate_workflow_specific_contracts()
     validate_renovate()
     print("Stage 06 reusable workflow contracts validated.")
 

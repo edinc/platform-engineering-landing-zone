@@ -1,0 +1,165 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aks-workload-namespace
+  title: AKS workload namespace
+  description: Open a reviewed namespace vending PR with quota, workload identity, ownership, and catalog Resource metadata.
+  deprecated: false
+  annotations:
+    scaffolder.platform.example.io/api-version: scaffolder.platform.example.io/v1
+  tags:
+    - stage-11
+    - golden-path
+    - platform-admin-only
+    - aks
+spec:
+  owner: group:default/pe-platform-admins
+  type: resource
+  parameters:
+    - title: Namespace request
+      required:
+        - teamName
+        - productName
+        - environment
+        - namespace
+        - region
+        - quotaTier
+        - costCenter
+        - onCallRotationId
+        - dataClassification
+        - confidentiality
+        - entraGroupObjectId
+      properties:
+        teamName:
+          title: Team name
+          type: string
+          maxLength: 32
+          pattern: "^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$"
+          ui:autofocus: true
+        productName:
+          title: Product
+          type: string
+          maxLength: 22
+          pattern: "^[a-z0-9][a-z0-9-]{1,20}[a-z0-9]$"
+        environment:
+          title: Environment
+          type: string
+          enum:
+            - demo
+            - nonprod
+            - prod
+          default: demo
+        namespace:
+          title: Kubernetes namespace
+          type: string
+          description: DNS-safe namespace to vend. Keep this short enough that the derived helm-<namespace> storage namespace fits Kubernetes limits.
+          maxLength: 58
+          pattern: "^[a-z0-9][a-z0-9-]{1,56}[a-z0-9]$"
+        region:
+          title: Azure region
+          type: string
+          default: swedencentral
+          pattern: "^[a-z]+[a-z0-9]+$"
+        quotaTier:
+          title: Quota tier
+          type: string
+          enum:
+            - S
+            - M
+            - L
+          default: S
+        costCenter:
+          title: Cost center
+          type: string
+          pattern: "^cc-[a-z0-9-]{2,32}$"
+        onCallRotationId:
+          title: On-call rotation
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]{1,126}[A-Za-z0-9]$"
+        dataClassification:
+          title: Data classification
+          type: string
+          enum:
+            - public
+            - internal
+            - confidential
+            - restricted
+        confidentiality:
+          title: Confidentiality
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+          default: medium
+        entraGroupObjectId:
+          title: Team Entra group object ID
+          type: string
+          pattern: "^[0-9a-fA-F-]{36}$"
+    - title: Platform resource bindings
+      required:
+        - aksClusterId
+        - acrId
+        - resourceGroupName
+      properties:
+        aksClusterId:
+          title: Stage 04 AKS cluster ID
+          type: string
+          pattern: "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.ContainerService/managedClusters/[^/]+$"
+        acrId:
+          title: Stage 04 ACR ID
+          type: string
+          pattern: "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.ContainerRegistry/registries/[^/]+$"
+        resourceGroupName:
+          title: Workload identity resource group
+          type: string
+          pattern: "^[A-Za-z0-9_.()/-]{1,90}$"
+        serviceAccountName:
+          title: Workload service account
+          type: string
+          default: app
+          maxLength: 57
+          pattern: "^[a-z0-9][a-z0-9-]{1,55}[a-z0-9]$"
+  steps:
+    - id: fetch-request
+      name: Render namespace vending request
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          stage11GoldenPath: "true"
+          goldenPathType: aks-workload-namespace
+          teamName: ${{ parameters.teamName }}
+          productName: ${{ parameters.productName }}
+          environment: ${{ parameters.environment }}
+          region: ${{ parameters.region }}
+          quotaTier: ${{ parameters.quotaTier }}
+          costCenter: ${{ parameters.costCenter }}
+          onCallRotationId: ${{ parameters.onCallRotationId }}
+          dataClassification: ${{ parameters.dataClassification }}
+          confidentiality: ${{ parameters.confidentiality }}
+          entraGroupObjectId: ${{ parameters.entraGroupObjectId }}
+          aksClusterId: ${{ parameters.aksClusterId }}
+          acrId: ${{ parameters.acrId }}
+          resourceGroupName: ${{ parameters.resourceGroupName }}
+          serviceAccountName: ${{ parameters.serviceAccountName }}
+          namespace: ${{ parameters.namespace }}
+    - id: publish-request
+      name: Open namespace vending PR
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=edinc&repo=platform-engineering-landing-zone
+        branchName: vend-namespace-${{ parameters.namespace }}
+        title: Vend namespace for ${{ parameters.teamName }}
+        description: Stage 11 AKS workload namespace request generated by Backstage. Platform and security reviewers must approve before merge.
+        targetPath: .
+        teamReviewers:
+          - pe-platform-admins
+          - pe-security-reviewers
+        labels:
+          - stage-11
+          - namespace-vending
+  output:
+    links:
+      - title: Namespace vending pull request
+        url: ${{ steps['publish-request'].output.remoteUrl }}

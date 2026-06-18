@@ -33,8 +33,8 @@ die()  { printf '\033[0;31m[fail ]\033[0m %s\n' "$*" >&2; exit 1; }
 SUBSCRIPTION_ID=""
 TENANT_ID=""
 NAME_SUFFIX=""
-LOCATION="westeurope"
-LOCATION_SHORT="weu"
+LOCATION="swedencentral"
+LOCATION_SHORT="sec"
 GITHUB_OWNER="edinc"
 GITHUB_REPO="platform-engineering-landing-zone"
 ENVIRONMENT="bootstrap"
@@ -53,8 +53,8 @@ Required:
   --name-suffix <str>        Short, stable, globally-unique disambiguator (2-8 lowercase alnum).
 
 Options:
-  --location <region>        Azure region (default: westeurope).
-  --location-short <str>     Name token (default: weu).
+  --location <region>        Azure region (default: swedencentral).
+  --location-short <str>     Name token (default: sec).
   --github-owner <str>       GitHub owner (default: edinc).
   --github-repo <str>        GitHub repo (default: platform-engineering-landing-zone).
   --environment <str>        GitHub Environment for the OIDC subject (default: bootstrap).

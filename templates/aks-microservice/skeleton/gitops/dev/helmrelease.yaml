@@ -1,0 +1,28 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: "${{ values.componentId }}"
+  namespace: "${{ values.namespace }}"
+spec:
+  interval: 5m
+  storageNamespace: "helm-${{ values.namespace }}"
+  serviceAccountName: "helm-${{ values.serviceAccountName }}"
+  chartRef:
+    kind: OCIRepository
+    name: "${{ values.componentId }}"
+    namespace: "${{ values.namespace }}"
+  values:
+    serviceAccount:
+      create: false
+      name: "${{ values.serviceAccountName }}"
+    image:
+      repository: "$(PLATFORM_ACR_LOGIN_SERVER)/apps/${{ values.repoName }}"
+      digest: "sha256:REPLACE_WITH_SIGNED_DIGEST"
+    platform:
+      team: "${{ values.teamName }}"
+      product: "${{ values.productName }}"
+      costCenter: "${{ values.costCenter }}"
+      dataClassification: "${{ values.dataClassification }}"
+      confidentiality: "${{ values.confidentiality }}"
+      repo: "edinc/${{ values.repoName }}"
+      onCallRotationId: "${{ values.onCallRotationId }}"

@@ -32,6 +32,13 @@ on:
         required: false
         type: string
         default: self-hosted
+    outputs:
+      chart_ref:
+        description: Tag reference pushed by the workflow.
+        value: ${{ jobs.publish.outputs.chart_ref }}
+      digest_ref:
+        description: Digest-pinned chart reference.
+        value: ${{ jobs.publish.outputs.digest_ref }}
 
 permissions:
   contents: read
@@ -42,6 +49,9 @@ jobs:
     name: Package, push, sign
     runs-on: ${{ inputs.runs_on }}
     environment: ${{ inputs.environment }}
+    outputs:
+      chart_ref: ${{ steps.chart.outputs.chart_ref }}
+      digest_ref: ${{ steps.chart.outputs.digest_ref }}
     env:
       ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
@@ -49,6 +59,7 @@ jobs:
       PLATFORM_ACR_NAME: ${{ vars.PLATFORM_ACR_NAME }}
       PLATFORM_ACR_LOGIN_SERVER: ${{ vars.PLATFORM_ACR_LOGIN_SERVER }}
       COSIGN_EXPERIMENTAL: "1"
+      AZURE_CONFIG_DIR: ${{ github.workspace }}/.tools/tmp/azure-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
@@ -129,17 +140,20 @@ jobs:
             echo "::error::Unable to determine packaged chart path."
             exit 1
           fi
-          push_output="$(mise exec -- helm push "$chart_package" "oci://${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}")"
+          push_output="$(mise exec -- helm push "$chart_package" "oci://${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}" 2>&1)"
           printf '%s\n' "$push_output"
+          pushed_ref="$(printf '%s\n' "$push_output" | sed -n 's/^Pushed: //p' | tail -1)"
           digest="$(printf '%s\n' "$push_output" | sed -n 's/^Digest: //p' | tail -1)"
-          chart_name="$(mise exec -- helm show chart "$CHART_PATH" | awk -F': ' '$1 == "name" {print $2}')"
-          chart_version="$(mise exec -- helm show chart "$CHART_PATH" | awk -F': ' '$1 == "version" {print $2}')"
-          if [ -z "$digest" ] || [ -z "$chart_name" ] || [ -z "$chart_version" ]; then
-            echo "::error::Unable to determine chart digest, name, or version."
+          if [ -z "$digest" ] || [ -z "$pushed_ref" ]; then
+            echo "::error::Unable to determine pushed chart reference or digest."
             exit 1
           fi
-          echo "chart_ref=${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}/${chart_name}:${chart_version}" >> "$GITHUB_OUTPUT"
-          echo "digest_ref=${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}/${chart_name}@${digest}" >> "$GITHUB_OUTPUT"
+          case "$pushed_ref" in
+            "${ACR_LOGIN_SERVER}/${OCI_REPOSITORY}/"*:* ) ;;
+            *) echo "::error::Unexpected pushed chart reference: $pushed_ref"; exit 1 ;;
+          esac
+          echo "chart_ref=$pushed_ref" >> "$GITHUB_OUTPUT"
+          echo "digest_ref=${pushed_ref%:*}@${digest}" >> "$GITHUB_OUTPUT"
 
       - name: Sign chart artifact
         env:

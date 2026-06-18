@@ -10,7 +10,7 @@ spec:
   dataClassification: confidential
   environment: nonprod
   regions:
-    - westeurope
+    - swedencentral
   tags:
     owner: payments
     costCenter: cc-payments
@@ -34,8 +34,8 @@ spec:
       cidrs:
         - 10.30.0.0/16
     azure:
-      aksClusterId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-weu/providers/Microsoft.ContainerService/managedClusters/aks-pe-nonprod-weu
-      acrId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-weu/providers/Microsoft.ContainerRegistry/registries/acrpenonprodweu001
+      aksClusterId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-sec/providers/Microsoft.ContainerService/managedClusters/aks-pe-nonprod-sec
+      acrId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-sec/providers/Microsoft.ContainerRegistry/registries/acrpenonprodsec001
       keyVaultSecretIds:
-        - /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-weu/providers/Microsoft.KeyVault/vaults/kv-pe-nonprod-weu-001/secrets/payments-checkout
-      resourceGroupName: rg-pe-nonprod-platform-weu
+        - /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-nonprod-platform-sec/providers/Microsoft.KeyVault/vaults/kv-pe-nonprod-sec-001/secrets/payments-checkout
+      resourceGroupName: rg-pe-nonprod-platform-sec

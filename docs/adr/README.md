@@ -51,7 +51,7 @@ Next free number: **0054**
 | 0041 | Backstage RBAC | Accepted | [`0041-backstage-rbac.md`](0041-backstage-rbac.md) |
 | 0042 | TechDocs storage | Accepted | [`0042-techdocs-storage.md`](0042-techdocs-storage.md) |
 | 0043 | Ownership matrix | Accepted | [`0043-ownership-matrix.md`](0043-ownership-matrix.md) |
-| 0044 | Template versioning | Seeded in Stage 11 | Pending |
+| 0044 | Template versioning | Accepted | [`0044-template-versioning.md`](0044-template-versioning.md) |
 | 0045 | Game-day cadence and scope | Seeded in Stage 12 | Pending |
 | 0046 | Post-mortem retention and PII handling | Seeded in Stage 12 | Pending |
 | 0047 | Policy testing split | Accepted | [`0047-policy-testing-split.md`](0047-policy-testing-split.md) |
@@ -60,7 +60,7 @@ Next free number: **0054**
 | 0050 | ACA managed environment as a platform shared service | Accepted | [`0050-aca-managed-environment.md`](0050-aca-managed-environment.md) |
 | 0051 | Cross-repo GitHub writes | Accepted | [`0051-cross-repo-github-writes.md`](0051-cross-repo-github-writes.md) |
 | 0052 | Backstage Postgres passwordless auth | Accepted | [`0052-backstage-postgres-auth.md`](0052-backstage-postgres-auth.md) |
-| 0053 | ACA GitOps exception | Seeded in Stage 11 | Pending |
+| 0053 | ACA GitOps exception | Accepted | [`0053-aca-gitops-exception.md`](0053-aca-gitops-exception.md) |
 
 ADR seeds 0002-0020 are defined in [`plan/plan.md` section 9](../../plan/plan.md#9-key-architecture-decisions-adr-seeds).
 Later seeds are introduced by the stage files under [`plan/stages/`](../../plan/stages/).

@@ -1,0 +1,12 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: checkout-unsigned
+  namespace: team-payments
+spec:
+  interval: 5m
+  url: oci://acrpedemosec.azurecr.io/helm/checkout
+  provider: azure
+  serviceAccountName: app
+  ref:
+    digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef

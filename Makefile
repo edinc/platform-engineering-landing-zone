@@ -2,7 +2,7 @@ SHELL := /usr/bin/env bash
 .SHELLFLAGS := -euo pipefail -c
 .DEFAULT_GOAL := help
 PYTHON ?= python3
-export PATH := $(CURDIR)/.tools/venv/bin:$(PATH)
+export PATH := $(CURDIR)/.tools/bin:$(CURDIR)/.tools/venv/bin:$(PATH)
 MISE_EXEC := $(shell if command -v mise >/dev/null 2>&1; then printf 'mise exec --'; fi)
 
 TERRAFORM_DIRS := $(shell find infrastructure/terraform -type f -name '*.tf' -not -path '*/.terraform/*' -exec dirname {} \; 2>/dev/null | sort -u)
@@ -10,13 +10,13 @@ BOOTSTRAP_DIR := infrastructure/terraform/_bootstrap
 # The _bootstrap stack uses a remote backend and import-based adoption, so it is
 # driven by the dedicated bootstrap-* targets rather than the generic plan/apply.
 PLANNABLE_TERRAFORM_DIRS := $(filter-out $(BOOTSTRAP_DIR) infrastructure/terraform/_modules/%,$(TERRAFORM_DIRS))
-HELM_CHART_DIRS := $(shell find . -type f -name 'Chart.yaml' -not -path './.git/*' -exec dirname {} \; 2>/dev/null | sort -u)
-K8S_MANIFESTS := $(shell find platform-gitops templates/_partials -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null | sort)
+HELM_CHART_DIRS := $(shell find . -type f -name 'Chart.yaml' -not -path './.git/*' -not -path './templates/*/skeleton/*' -not -path './golden-path-requests/*' -exec dirname {} \; 2>/dev/null | sort -u)
+K8S_MANIFESTS := $(shell find platform-gitops templates/_partials -type f \( -name '*.yaml' -o -name '*.yml' \) -not -path 'templates/_partials/mkdocs.yml' -not -path 'templates/_partials/on-call-annotations.yaml' 2>/dev/null | sort)
 STAGE08_ALERT_RULES := $(shell { find platform-gitops/clusters/_base/addon-config/observability -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null; printf '%s\n' infrastructure/terraform/platform/monitoring.tf; } | sort)
 CONTRACT_REQUESTS := $(shell find docs/contracts -type f \( -path '*/examples/*.yaml' -o -name 'vending-request.yaml' \) ! -name 'team-onboarding-request.yaml' 2>/dev/null | sort)
 CONTRACT_NEGATIVE_REQUESTS := $(shell find docs/contracts/tests -type f -name '*.yaml' 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts alert-runbook-lint finops-cost-test azure-test-stage08 azure-test-stage09 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts stage11-contracts alert-runbook-lint finops-cost-test azure-test-stage08 azure-test-stage09 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -39,7 +39,7 @@ lint: pre-commit terraform-fmt tflint ## Run local linting checks.
 pre-commit: ## Run pre-commit hooks across tracked files.
 	$(MISE_EXEC) pre-commit run --all-files
 
-validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts ## Run validation checks that do not deploy resources.
+validate: terraform-validate checkov kubeconform helm-lint contract-test workflow-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts stage11-contracts ## Run validation checks that do not deploy resources.
 
 terraform-fmt: ## Check Terraform formatting.
 	@if [ -z "$(TERRAFORM_DIRS)" ]; then \
@@ -139,6 +139,9 @@ stage09-contracts: ## Validate Stage 09 Backstage MVP contracts.
 stage10-contracts: ## Validate Stage 10 multi-tenancy, onboarding, and ownership contracts.
 	$(PYTHON) scripts/backstage/validate_stage10_multitenancy.py
 	bash scripts/test/onboarding-smoke.sh
+
+stage11-contracts: ## Validate Stage 11 golden-path template contracts.
+	$(PYTHON) scripts/backstage/validate_stage11_golden_paths.py
 
 alert-runbook-lint: ## Ensure Prometheus alert rules carry runbook_url annotations.
 	$(PYTHON) scripts/observability/lint_alert_runbooks.py $(STAGE08_ALERT_RULES)

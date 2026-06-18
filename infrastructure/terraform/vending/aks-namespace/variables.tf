@@ -21,7 +21,7 @@ variable "subscription_id" {
 variable "location" {
   type        = string
   description = "Azure region for the workload identity."
-  default     = "westeurope"
+  default     = "swedencentral"
 }
 
 variable "resource_group_name" {
@@ -64,8 +64,8 @@ variable "namespace" {
   description = "Kubernetes namespace to vend."
 
   validation {
-    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", var.namespace))
-    error_message = "namespace must be a DNS-safe lowercase slug."
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,56}[a-z0-9]$", var.namespace))
+    error_message = "namespace must be a DNS-safe lowercase slug no longer than 58 characters so the derived helm-<namespace> storage namespace remains valid."
   }
 }
 
@@ -74,8 +74,8 @@ variable "service_account_name" {
   description = "ServiceAccount name bound to Azure Workload Identity."
 
   validation {
-    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", var.service_account_name))
-    error_message = "service_account_name must be a DNS-safe lowercase slug."
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,55}[a-z0-9]$", var.service_account_name))
+    error_message = "service_account_name must be a DNS-safe lowercase slug no longer than 57 characters so derived helm-<service_account_name> and federated identity credential names stay within platform limits."
   }
 }
 
@@ -158,6 +158,38 @@ variable "egress_allowlist_cidrs" {
       can(regex("^(10\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|172\\.(1[6-9]|2[0-9]|3[0-1])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|192\\.168\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))/(1[6-9]|2[0-9]|3[0-2])$", cidr))
     ])
     error_message = "egress_allowlist_cidrs must contain RFC1918 IPv4 CIDRs with /16 or narrower prefixes. Use the egress exception workflow for public or broader access."
+  }
+}
+
+variable "egress_allowlist_ports" {
+  type = list(object({
+    protocol = string
+    port     = number
+  }))
+  description = "Protocol and port pairs allowed to egress_allowlist_cidrs. Defaults cover HTTPS, PostgreSQL Flexible Server, and Service Bus AMQP."
+  default = [
+    {
+      protocol = "TCP"
+      port     = 443
+    },
+    {
+      protocol = "TCP"
+      port     = 5432
+    },
+    {
+      protocol = "TCP"
+      port     = 5671
+    },
+  ]
+
+  validation {
+    condition = length(var.egress_allowlist_ports) > 0 && alltrue([
+      for allowed in var.egress_allowlist_ports :
+      contains(["TCP", "UDP", "SCTP"], allowed.protocol) &&
+      allowed.port >= 1 &&
+      allowed.port <= 65535
+    ])
+    error_message = "egress_allowlist_ports must contain at least one TCP, UDP, or SCTP port between 1 and 65535."
   }
 }
 

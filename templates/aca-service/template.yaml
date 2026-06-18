@@ -1,0 +1,160 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: aca-service
+  title: Azure Container Apps service
+  description: Create an ACA service repository targeting the platform-managed ACA environment.
+  deprecated: false
+  annotations:
+    scaffolder.platform.example.io/api-version: scaffolder.platform.example.io/v1
+  tags:
+    - stage-11
+    - golden-path
+    - team-scoped
+    - aca
+spec:
+  owner: group:default/pe-platform-admins
+  type: service
+  parameters:
+    - title: Service ownership
+      required:
+        - componentId
+        - componentTitle
+        - language
+        - teamName
+        - productName
+        - costCenter
+        - dataClassification
+        - confidentiality
+        - onCallRotationId
+      properties:
+        componentId:
+          title: Component ID
+          type: string
+          maxLength: 21
+          pattern: "^[a-z0-9][a-z0-9-]{1,19}[a-z0-9]$"
+          ui:autofocus: true
+        componentTitle:
+          title: Display name
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: "^[A-Za-z0-9][A-Za-z0-9 ._-]{1,62}[A-Za-z0-9]$"
+        language:
+          title: Runtime language
+          type: string
+          enum:
+            - node-ts
+            - python
+            - dotnet
+          default: node-ts
+        teamName:
+          title: Team name
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$"
+        productName:
+          title: Product
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{1,20}[a-z0-9]$"
+        costCenter:
+          title: Cost center
+          type: string
+          pattern: "^cc-[a-z0-9-]{2,32}$"
+        dataClassification:
+          title: Data classification
+          type: string
+          enum:
+            - public
+            - internal
+            - confidential
+            - restricted
+        confidentiality:
+          title: Confidentiality
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+          default: medium
+        onCallRotationId:
+          title: On-call rotation
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]{1,126}[A-Za-z0-9]$"
+    - title: ACA deployment
+      required:
+        - environment
+        - publicRoute
+        - port
+        - scaleRule
+      properties:
+        environment:
+          title: Initial environment
+          type: string
+          enum:
+            - demo
+            - nonprod
+            - prod
+          default: demo
+        publicRoute:
+          title: Public route
+          type: boolean
+          default: true
+        port:
+          title: Container port
+          type: integer
+          default: 8080
+          minimum: 1024
+          maximum: 65535
+        scaleRule:
+          title: Scale rule
+          type: string
+          enum:
+            - http
+            - queue
+            - cron
+          default: http
+  steps:
+    - id: fetch-base
+      name: Render repository
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: ${{ parameters.componentId }}
+        values:
+          stage11GoldenPath: "true"
+          goldenPathType: aca-service
+          componentId: ${{ parameters.componentId }}
+          componentTitle: ${{ parameters.componentTitle }}
+          description: ${{ parameters.componentTitle }} Azure Container Apps service
+          language: ${{ parameters.language }}
+          teamName: ${{ parameters.teamName }}
+          productName: ${{ parameters.productName }}
+          costCenter: ${{ parameters.costCenter }}
+          dataClassification: ${{ parameters.dataClassification }}
+          confidentiality: ${{ parameters.confidentiality }}
+          onCallRotationId: ${{ parameters.onCallRotationId }}
+          environment: ${{ parameters.environment }}
+          publicRoute: ${{ parameters.publicRoute }}
+          port: ${{ parameters.port }}
+          scaleRule: ${{ parameters.scaleRule }}
+          repoName: ${{ parameters.teamName }}-${{ parameters.componentId }}
+    - id: publish-request
+      name: Open service repository request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?owner=edinc&repo=platform-engineering-landing-zone
+        branchName: golden-path-aca-${{ parameters.teamName }}
+        title: Create ACA service for ${{ parameters.teamName }}
+        description: Stage 11 ACA service repository request. Platform reviewers create edinc/${{ parameters.teamName }}-${{ parameters.componentId }} with private visibility, branch protection, CODEOWNERS, app-team-${{ parameters.teamName }} push access, protected environment variables, and the generated skeleton under golden-path-requests/aca/${{ parameters.teamName }}/${{ parameters.componentId }} in this PR.
+        targetPath: golden-path-requests/aca/${{ parameters.teamName }}
+        teamReviewers:
+          - pe-platform-admins
+          - pe-security-reviewers
+        labels:
+          - stage-11
+          - golden-path
+          - aca
+  output:
+    links:
+      - title: Golden-path repository request
+        url: ${{ steps['publish-request'].output.remoteUrl }}
