@@ -147,6 +147,7 @@ jobs:
       TFSTATE_RESOURCE_GROUP: ${{ vars.TFSTATE_RESOURCE_GROUP }}
       TFSTATE_STORAGE_ACCOUNT: ${{ vars.TFSTATE_STORAGE_ACCOUNT }}
       TFSTATE_CONTAINER: ${{ vars.TFSTATE_CONTAINER }}
+      AZURE_CONFIG_DIR: ${{ github.workspace }}/.tools/tmp/azure-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
@@ -314,8 +315,10 @@ jobs:
           PLAN_NAME: ${{ inputs.plan_name }}
         run: mise exec -- terraform -chdir="$STACK_PATH" apply -input=false -lock-timeout=120s "$PLAN_NAME"
 
-      - name: Remove materialized Terraform variables
+      - name: Remove materialized Terraform variables and Azure CLI cache
         if: ${{ always() }}
         env:
           STACK_PATH: ${{ inputs.stack_path }}
-        run: rm -f "$STACK_PATH"/zz-workflow.auto.tfvars.json "$STACK_PATH"/zz-workflow-secret.auto.tfvars.json
+        run: |
+          rm -f "$STACK_PATH"/zz-workflow.auto.tfvars.json "$STACK_PATH"/zz-workflow-secret.auto.tfvars.json
+          rm -rf "$AZURE_CONFIG_DIR"
