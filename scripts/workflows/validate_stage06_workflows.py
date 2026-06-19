@@ -166,6 +166,7 @@ def validate_workflow_specific_contracts() -> None:
         "cluster-state-repo",
         "platform",
         "./.github/workflows/terraform-plan-apply.yml",
+        "profile:",
         "subscription_id:",
         "TERRAFORM_TFVARS_PLATFORM_SECRET_JSON",
     ]:

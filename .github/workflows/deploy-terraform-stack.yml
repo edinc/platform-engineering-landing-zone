@@ -30,6 +30,15 @@ on:
           - dev
           - nonprod
           - prod
+      profile:
+        description: Terraform deployment profile and state-key prefix.
+        required: true
+        type: choice
+        default: demo
+        options:
+          - demo
+          - nonprod
+          - prod
       subscription_id:
         description: Azure subscription ID used in subscription-baseline state keys.
         required: true
@@ -60,7 +69,7 @@ jobs:
       stack_path: infrastructure/terraform/connectivity
       environment: ${{ inputs.environment }}
       backend_container: connectivity
-      backend_key: ${{ inputs.environment }}/connectivity.tfstate
+      backend_key: ${{ inputs.profile }}/connectivity.tfstate
       apply: ${{ inputs.action == 'apply' }}
       tfvars_json_variable: TERRAFORM_TFVARS_CONNECTIVITY_JSON
     permissions:
@@ -74,7 +83,7 @@ jobs:
       stack_path: infrastructure/terraform/identity
       environment: ${{ inputs.environment }}
       backend_container: identity
-      backend_key: ${{ inputs.environment }}/identity.tfstate
+      backend_key: ${{ inputs.profile }}/identity.tfstate
       apply: ${{ inputs.action == 'apply' }}
       tfvars_json_variable: TERRAFORM_TFVARS_IDENTITY_JSON
     permissions:
@@ -103,7 +112,7 @@ jobs:
       stack_path: infrastructure/terraform/platform
       environment: ${{ inputs.environment }}
       backend_container: platform
-      backend_key: ${{ inputs.environment }}/platform.tfstate
+      backend_key: ${{ inputs.profile }}/platform.tfstate
       apply: ${{ inputs.action == 'apply' }}
       tfvars_json_variable: TERRAFORM_TFVARS_PLATFORM_JSON
       tfvars_json_secret: TERRAFORM_TFVARS_PLATFORM_SECRET_JSON

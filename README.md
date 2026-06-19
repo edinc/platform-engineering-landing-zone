@@ -76,12 +76,13 @@ because Terraform state, ACR, Key Vault, AKS, and TechDocs storage are private.
    and bootstrap monitoring.
 2. **Deploy infrastructure stacks**: run **Deploy infrastructure stack** once
    per stack below. First run with `action=plan`, then rerun the same stack with
-   `action=apply` after review. Set `environment=dev` for the demo profile
-   unless you have split GitHub Environments per profile. Set `subscription_id`
-   to the Azure subscription ID; it is used by the subscription-baseline state
-   key and keeps dispatch input consistent across stacks. The reusable Terraform
-   workflow remains `workflow_call` only; the deploy entrypoint maps approved
-   stack choices to it from `main`.
+   `action=apply` after review. Set `environment=dev` for the protected GitHub
+   Environment and `profile=demo` for the demo Terraform state/profile unless
+   you have split GitHub Environments per profile. Set `subscription_id` to the
+   Azure subscription ID; it is used by the subscription-baseline state key and
+   keeps dispatch input consistent across stacks. The reusable Terraform workflow
+   remains `workflow_call` only; the deploy entrypoint maps approved stack
+   choices to it from `main`.
 
    | Order | `stack` input | `tfvars_json_variable` |
    | --- | --- | --- |
