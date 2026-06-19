@@ -20,4 +20,6 @@ Namespace vending creates the managed identity and federated credential for
 `${{ values.serviceAccountName }}` and the namespace-scoped Helm impersonation
 service account `helm-${{ values.serviceAccountName }}`. Keep
 `serviceAccount.create` disabled unless platform vending changes the ownership
-contract.
+contract. Flux source-controller uses the platform source identity for private
+ACR chart reads; workload identity for `${{ values.serviceAccountName }}` is for
+the running workload, not the `OCIRepository` source.

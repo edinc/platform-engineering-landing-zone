@@ -27,8 +27,11 @@ spec:
       cluster_state_root_path: ${cluster_state_root_path}
       external_dns_client_id: ${external_dns_client_id}
       external_secrets_client_id: ${external_secrets_client_id}
+      github_owner: ${github_owner}
+      platform_acr_login_server: ${platform_acr_login_server}
       platform_key_vault_name: ${platform_key_vault_name}
       platform_profile: ${platform_profile}
+      platform_repository_name: ${platform_repository_name}
       platform_root_domain: ${platform_root_domain}
       platform_subscription_id: ${platform_subscription_id}
       platform_tenant_id: ${platform_tenant_id}

@@ -23,6 +23,8 @@ resources:
   - resources/oci-repository-unsigned.yaml
   - resources/oci-repository-broad-subject.yaml
   - resources/oci-repository-extra-matcher.yaml
+  - resources/oci-repository-wrong-registry.yaml
+  - resources/oci-repository-service-account.yaml
   - resources/helmrelease-compliant.yaml
   - resources/helmrelease-unrestricted.yaml
   - resources/pod-helm-serviceaccount.yaml
@@ -117,6 +119,21 @@ results:
   - policy: require-tenant-gitops-guardrails
     rule: require-verified-oci-repositories
     resource: checkout-extra-matcher
+    kind: OCIRepository
+    result: fail
+  - policy: require-tenant-gitops-guardrails
+    rule: require-verified-oci-repositories
+    resource: checkout-service-account
+    kind: OCIRepository
+    result: fail
+  - policy: require-tenant-gitops-guardrails
+    rule: require-platform-helm-oci-url
+    resource: checkout-signed
+    kind: OCIRepository
+    result: pass
+  - policy: require-tenant-gitops-guardrails
+    rule: require-platform-helm-oci-url
+    resource: checkout-wrong-registry
     kind: OCIRepository
     result: fail
   - policy: require-tenant-gitops-guardrails
