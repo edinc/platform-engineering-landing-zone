@@ -306,7 +306,22 @@ jobs:
         env:
           STACK_PATH: ${{ inputs.stack_path }}
           PLAN_NAME: ${{ inputs.plan_name }}
-        run: mise exec -- terraform -chdir="$STACK_PATH" plan -input=false -lock-timeout=120s -out="$PLAN_NAME"
+        run: |
+          set +e
+          mise exec -- terraform -chdir="$STACK_PATH" plan -detailed-exitcode -input=false -lock-timeout=120s -out="$PLAN_NAME"
+          plan_exit=$?
+          set -e
+          case "$plan_exit" in
+            0)
+              echo "Terraform plan completed with no changes."
+              ;;
+            2)
+              echo "Terraform plan completed with changes."
+              ;;
+            *)
+              exit "$plan_exit"
+              ;;
+          esac
 
       - name: Terraform apply
         if: ${{ inputs.apply }}
