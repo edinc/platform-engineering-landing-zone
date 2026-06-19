@@ -2,7 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespace.yaml
+  - flux-applier-rbac.yaml
   - serviceaccount.yaml
+  - source-controller-token-rbac.yaml
   - secretstore.yaml
   - runtime-externalsecret.yaml
   - ocirepository.yaml

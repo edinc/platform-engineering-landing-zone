@@ -23,5 +23,6 @@ spec:
       name: cert-manager
       annotations:
         azure.workload.identity/client-id: ${cert_manager_client_id}
+        azure.workload.identity/tenant-id: ${platform_tenant_id}
     extraArgs:
       - --cluster-resource-namespace=cert-manager

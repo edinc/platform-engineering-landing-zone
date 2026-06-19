@@ -33,6 +33,8 @@ spec:
       create: false
       name: backstage
       workloadIdentityClientId: ${backstage_client_id}
+    podLabels:
+      azure.workload.identity/use: "true"
     ingress:
       host: ${platform_profile}.backstage.${platform_root_domain}
     appConfig:

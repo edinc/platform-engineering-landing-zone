@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: external-dns-azure-config
+  namespace: external-dns
+  labels:
+    app: external-dns
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+data:
+  azure.json: |
+    {
+      "tenantId": "${platform_tenant_id}",
+      "subscriptionId": "${platform_subscription_id}",
+      "resourceGroup": "${azure_dns_resource_group_name}",
+      "useWorkloadIdentityExtension": true,
+      "userAssignedIdentityID": "${external_dns_client_id}"
+    }

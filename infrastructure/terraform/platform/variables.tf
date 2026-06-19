@@ -353,6 +353,29 @@ variable "gitops_repository_provider" {
   }
 }
 
+variable "cluster_state_ssh_private_key_base64" {
+  type        = string
+  description = "Base64-encoded SSH private key used by Flux to clone a private cluster-state repository. Store this in a protected secret, not in committed tfvars."
+  default     = ""
+  sensitive   = true
+
+  validation {
+    condition     = var.cluster_state_ssh_private_key_base64 == "" || can(base64decode(var.cluster_state_ssh_private_key_base64))
+    error_message = "cluster_state_ssh_private_key_base64 must be empty or valid base64."
+  }
+}
+
+variable "cluster_state_ssh_known_hosts_base64" {
+  type        = string
+  description = "Base64-encoded known_hosts content for the SSH host used by the Flux cluster-state repository."
+  default     = ""
+
+  validation {
+    condition     = var.cluster_state_ssh_known_hosts_base64 == "" || can(base64decode(var.cluster_state_ssh_known_hosts_base64))
+    error_message = "cluster_state_ssh_known_hosts_base64 must be empty or valid base64."
+  }
+}
+
 variable "platform_root_domain" {
   type        = string
   description = "Root DNS zone for platform hostnames, for example platform.contoso.com."

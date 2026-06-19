@@ -21,6 +21,8 @@ resource "azurerm_kubernetes_cluster_extension" "flux" {
     "multiTenancy.enforce"                          = "true"
     "kustomize-controller.strict-substitution-mode" = "true"
     "helm-controller.detectDrift"                   = "true"
+    "source-controller.featureGates"                = "ObjectLevelWorkloadIdentity=true"
+    "sourceController.featureGates"                 = "ObjectLevelWorkloadIdentity=true"
   }
 }
 
@@ -38,6 +40,8 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
     reference_type           = "branch"
     reference_value          = var.cluster_state_branch
     provider                 = var.gitops_repository_provider == "" ? null : var.gitops_repository_provider
+    ssh_private_key_base64   = var.cluster_state_ssh_private_key_base64 == "" ? null : var.cluster_state_ssh_private_key_base64
+    ssh_known_hosts_base64   = var.cluster_state_ssh_known_hosts_base64 == "" ? null : var.cluster_state_ssh_known_hosts_base64
     sync_interval_in_seconds = var.gitops_sync_interval_seconds
     timeout_in_seconds       = var.gitops_timeout_seconds
   }
@@ -100,6 +104,8 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
     reference_type           = "branch"
     reference_value          = var.cluster_state_branch
     provider                 = var.gitops_repository_provider == "" ? null : var.gitops_repository_provider
+    ssh_private_key_base64   = var.cluster_state_ssh_private_key_base64 == "" ? null : var.cluster_state_ssh_private_key_base64
+    ssh_known_hosts_base64   = var.cluster_state_ssh_known_hosts_base64 == "" ? null : var.cluster_state_ssh_known_hosts_base64
     sync_interval_in_seconds = var.gitops_sync_interval_seconds
     timeout_in_seconds       = var.gitops_timeout_seconds
   }
