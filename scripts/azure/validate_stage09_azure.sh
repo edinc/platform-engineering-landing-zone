@@ -95,9 +95,35 @@ if [ "$private_endpoint_count" -lt 1 ]; then
 fi
 echo "Approved TechDocs private endpoints: $private_endpoint_count"
 
-if command -v curl >/dev/null 2>&1; then
-  curl --fail --silent --show-error --max-time 10 "https://${BACKSTAGE_HOST}/.backstage/health/v1/readiness" >/dev/null
-  echo "Backstage readiness endpoint responded successfully."
-else
-  echo "curl is not installed; skipped Backstage HTTPS health check."
-fi
+curl_args=(--fail --silent --show-error --max-time 10)
+ca_file=""
+case "${BACKSTAGE_TRUST_PRIVATE_CA:-false}" in
+  true|TRUE|1)
+    if [ -z "${BACKSTAGE_TLS_CA_KEY_VAULT_NAME:-}" ]; then
+      echo "BACKSTAGE_TLS_CA_KEY_VAULT_NAME is required when BACKSTAGE_TRUST_PRIVATE_CA is true." >&2
+      exit 2
+    fi
+    ca_file="$(mktemp)"
+    trap 'rm -f "$ca_file"' EXIT
+    az keyvault secret show \
+      --vault-name "$BACKSTAGE_TLS_CA_KEY_VAULT_NAME" \
+      --name "${BACKSTAGE_TLS_CA_SECRET_NAME:-platform-private-ca-crt}" \
+      --query value \
+      --output tsv > "$ca_file"
+    if ! grep -q "BEGIN CERTIFICATE" "$ca_file"; then
+      echo "Backstage TLS CA secret ${BACKSTAGE_TLS_CA_SECRET_NAME:-platform-private-ca-crt} does not contain a PEM certificate." >&2
+      exit 1
+    fi
+    curl_args+=(--cacert "$ca_file")
+    echo "Backstage readiness TLS verification uses private CA from Key Vault."
+    ;;
+  false|FALSE|0|"")
+    ;;
+  *)
+    echo "BACKSTAGE_TRUST_PRIVATE_CA must be true or false." >&2
+    exit 2
+    ;;
+esac
+
+curl "${curl_args[@]}" "https://${BACKSTAGE_HOST}/.backstage/health/v1/readiness" >/dev/null
+echo "Backstage readiness endpoint responded successfully."

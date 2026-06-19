@@ -111,6 +111,12 @@ because Terraform state, ACR, Key Vault, AKS, and TechDocs storage are private.
    corresponding `*_workload_identity_*` variables only when adopting existing
    identities; for brownfield add-on identities, the operator also owns the
    matching DNS/Key Vault RBAC grants.
+   Backstage is exposed as `<profile>.backstage.<platform_root_domain>` so its
+   TLS host stays under the namespace-scoped certificate policy. When adopting
+   an existing non-demo Backstage deployment, update DNS and the Microsoft Entra
+   app redirect URI to
+   `https://<profile>.backstage.<platform_root_domain>/api/auth/microsoft/handler/frame`
+   before cutting traffic over.
 5. **Seed Backstage runtime secrets** in the platform Key Vault from a
    VNet-connected runner/operator session before expecting pods to become ready:
    `backstage-session-secret`,
@@ -124,7 +130,17 @@ because Terraform state, ACR, Key Vault, AKS, and TechDocs storage are private.
 6. **Smoke the deployed platform**:
    - Run **Backstage CI** with `run_azure_smoke=true` to validate AKS Workload
      Identity, TechDocs storage, private endpoint wiring, and the Backstage
-     readiness endpoint.
+     readiness endpoint. The `demo` Backstage overlay uses the
+     `platform-private-ca` issuer so a clone can deploy without public DNS
+     delegation; seed `platform-private-ca-crt` and `platform-private-ca-key`
+     as described in [`docs/runbooks/cert-management.md`](docs/runbooks/cert-management.md),
+     then set `BACKSTAGE_TRUST_PRIVATE_CA=true` and
+     `BACKSTAGE_TLS_CA_KEY_VAULT_NAME=<platform-key-vault>` as `dev`
+     environment-scoped variables for the private-CA demo smoke. Use a
+     delegated public platform domain and keep the default public CA validation
+     path for nonprod/prod. Without public DNS delegation, make
+     `<profile>.backstage.<platform_root_domain>` resolve from the
+     VNet-connected runner to the internal ingress endpoint.
    - Run **Supply-chain smoke test** to build/sign the sample image.
      Set `run_nonprod_promotion=true` and `run_prod_promotion=true` only when
      disposable cluster-state Kustomize paths exist and environment approvals are

@@ -33,7 +33,7 @@ spec:
               imagePullPolicy: IfNotPresent
               env:
                 - name: BACKSTAGE_BASE_URL
-                  value: https://backstage.${platform_profile}.${platform_root_domain}
+                  value: https://${platform_profile}.backstage.${platform_root_domain}
                 - name: GITHUB_ORG
                   value: ${github_owner}
                 - name: BACKSTAGE_SERVICE_TOKEN_FILE
