@@ -148,7 +148,8 @@ def validate_workflow_specific_contracts() -> None:
         "secrets[inputs.tfvars_json_secret]",
         "zz-workflow.auto.tfvars.json",
         "zz-workflow-secret.auto.tfvars.json",
-        "Remove materialized Terraform variables",
+        "AZURE_CONFIG_DIR:",
+        "Remove materialized Terraform variables and Azure CLI cache",
         '"refs/heads/main"',
     ]:
         if fragment not in terraform_plan_apply:
