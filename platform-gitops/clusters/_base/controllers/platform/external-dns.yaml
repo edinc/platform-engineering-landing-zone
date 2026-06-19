@@ -31,8 +31,16 @@ spec:
       name: external-dns
       annotations:
         azure.workload.identity/client-id: ${external_dns_client_id}
+        azure.workload.identity/tenant-id: ${platform_tenant_id}
     extraArgs:
       - --azure-resource-group=${azure_dns_resource_group_name}
       - --azure-subscription-id=${platform_subscription_id}
       - --azure-user-assigned-identity-client-id=${external_dns_client_id}
-      - --azure-use-workload-identity-extension=true
+    extraVolumes:
+      - name: azure-config
+        configMap:
+          name: external-dns-azure-config
+    extraVolumeMounts:
+      - name: azure-config
+        mountPath: /etc/kubernetes
+        readOnly: true

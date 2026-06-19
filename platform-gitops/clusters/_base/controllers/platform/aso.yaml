@@ -26,3 +26,4 @@ spec:
       name: azure-service-operator
       annotations:
         azure.workload.identity/client-id: ${aso_client_id}
+        azure.workload.identity/tenant-id: ${platform_tenant_id}

@@ -244,7 +244,9 @@ def validate_gitops() -> None:
     require_contains("platform-gitops/clusters/overlays/demo/backstage/kustomization.yaml", "platform-private-ca")
     for expected in [
         "namespace.yaml",
+        "flux-applier-rbac.yaml",
         "serviceaccount.yaml",
+        "source-controller-token-rbac.yaml",
         "secretstore.yaml",
         "runtime-externalsecret.yaml",
         "ocirepository.yaml",
@@ -264,6 +266,10 @@ def validate_gitops() -> None:
     ]:
         require_contains("infrastructure/terraform/platform/workload-identities.tf", expected)
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "create: false")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", "platform:tenant-helm-release-storage")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", "name: flux-applier")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/source-controller-token-rbac.yaml", "serviceaccounts/token")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/source-controller-token-rbac.yaml", "source-controller")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/ocirepository.yaml", "digest: ${backstage_chart_digest}")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "backstage_aks_apiserver_url")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "postgresAuthMode: ${backstage_postgres_auth_mode}")

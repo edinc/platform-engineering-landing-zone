@@ -1,0 +1,36 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backstage-source-controller-token
+  namespace: backstage
+  labels:
+    app: backstage
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backstage-source-controller-token
+  namespace: backstage
+  labels:
+    app: backstage
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: backstage-source-controller-token
+subjects:
+  - kind: ServiceAccount
+    name: source-controller
+    namespace: flux-system

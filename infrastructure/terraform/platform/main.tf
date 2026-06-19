@@ -127,6 +127,18 @@ resource "terraform_data" "input_guard" {
     }
 
     precondition {
+      condition = (
+        !var.enable_gitops ||
+        var.cluster_state_ssh_private_key_base64 == "" ||
+        (
+          var.cluster_state_ssh_known_hosts_base64 != "" &&
+          can(regex("^(ssh://|git@)", local.gitops_repository_url))
+        )
+      )
+      error_message = "cluster_state_ssh_private_key_base64 requires an SSH cluster_state_repository_url and cluster_state_ssh_known_hosts_base64."
+    }
+
+    precondition {
       condition     = !var.enable_aks_node_auto_provisioning || var.enable_aks
       error_message = "enable_aks_node_auto_provisioning requires enable_aks."
     }
