@@ -74,6 +74,17 @@ because Terraform state, ACR, Key Vault, AKS, and TechDocs storage are private.
    `action=apply`.
    This creates/repairs remote state, seed Key Vault, OIDC, state containers,
    and bootstrap monitoring.
+   Before running Azure-backed stack plans, grant the GitHub OIDC deployment
+   principal enough RBAC for the target scopes. For a demo platform stack where
+   Terraform creates the platform workload identities, use `Owner` on the
+   platform resource group, or an equivalent custom deployment role that can
+   create platform resources, role assignments, and the ASO custom role
+   definition. Grant DNS role-assignment permissions only at the public DNS zone
+   scope used by cert-manager and ExternalDNS. If Terraform links existing
+   Private DNS zones to the platform VNet, grant the deployment principal Private
+   DNS zone link/write permissions only on those zone scopes; if Terraform also
+   assigns the AKS managed identity to an existing AKS Private DNS zone, grant
+   role-assignment permissions on that AKS Private DNS zone scope only.
 2. **Deploy infrastructure stacks**: run **Deploy infrastructure stack** once
    per stack below. First run with `action=plan`, then rerun the same stack with
    `action=apply` after review. Set `environment=dev` for the protected GitHub
