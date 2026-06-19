@@ -27,7 +27,7 @@ service:
 ingress:
   enabled: true
   className: nginx
-  host: backstage.nonprod.platform.example.com
+  host: nonprod.backstage.platform.example.com
   clusterIssuer: letsencrypt-dns01
 
 resources:
@@ -49,7 +49,7 @@ podDisruptionBudget:
   minAvailable: 1
 
 appConfig:
-  baseUrl: https://backstage.nonprod.platform.example.com
+  baseUrl: https://nonprod.backstage.platform.example.com
   postgresAuthMode: password
   postgresHost: pg-pe-nonprod-sec-example.postgres.database.azure.com
   postgresUser: backstage

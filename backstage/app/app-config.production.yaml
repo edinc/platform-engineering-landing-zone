@@ -1,8 +1,8 @@
 app:
-  baseUrl: https://backstage.${PLATFORM_ENV}.${PLATFORM_ROOT_DOMAIN}
+  baseUrl: https://${PLATFORM_ENV}.backstage.${PLATFORM_ROOT_DOMAIN}
 
 backend:
-  baseUrl: https://backstage.${PLATFORM_ENV}.${PLATFORM_ROOT_DOMAIN}
+  baseUrl: https://${PLATFORM_ENV}.backstage.${PLATFORM_ROOT_DOMAIN}
   database:
     connection:
       host: ${POSTGRES_HOST}

@@ -3,6 +3,7 @@
 
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 
@@ -68,6 +69,22 @@ def require_file(path: str) -> None:
 def require_contains(path: str, needle: str) -> None:
     if needle not in read(path):
         fail(f"{path} must contain {needle!r}")
+
+
+def render_kustomize(path: str) -> str:
+    try:
+        result = subprocess.run(
+            ["kubectl", "kustomize", path],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        fail("kubectl is required to render Backstage Kustomize overlays")
+    if result.returncode != 0:
+        fail(f"kubectl kustomize {path} failed:\n{result.stderr}")
+    return result.stdout
 
 
 def validate_backstage_config() -> None:
@@ -198,6 +215,8 @@ def validate_permissions() -> None:
         "scripts/azure/validate_stage09_azure.sh",
         "runs-on: [self-hosted, azure, private-acr, swedencentral]",
         "github.ref == 'refs/heads/main'",
+        "BACKSTAGE_TRUST_PRIVATE_CA",
+        "BACKSTAGE_TLS_CA_KEY_VAULT_NAME",
         '"enable_backstage": true',
         '"enable_gitops": true',
         '"enable_techdocs_storage": true',
@@ -207,6 +226,8 @@ def validate_permissions() -> None:
         'jq -r \'.oidc\'',
         'jq -r \'.workloadIdentity\'',
         "for tool in az curl jq",
+        "BACKSTAGE_TRUST_PRIVATE_CA must be true or false.",
+        "Backstage readiness TLS verification uses private CA from Key Vault.",
         'TechDocs storage public network access is not disabled.',
         'TechDocs container exists.',
         'Approved TechDocs private endpoints:',
@@ -220,6 +241,7 @@ def validate_gitops() -> None:
         fail("Backstage must not be part of the Stage 07/08 base addon-config; enable_backstage uses a dedicated Flux configuration")
     for overlay in ["demo", "nonprod", "prod"]:
         require_contains(f"platform-gitops/clusters/overlays/{overlay}/backstage/kustomization.yaml", "../../../_base/addon-config/backstage")
+    require_contains("platform-gitops/clusters/overlays/demo/backstage/kustomization.yaml", "platform-private-ca")
     for expected in [
         "namespace.yaml",
         "serviceaccount.yaml",
@@ -245,6 +267,7 @@ def validate_gitops() -> None:
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/ocirepository.yaml", "digest: ${backstage_chart_digest}")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "backstage_aks_apiserver_url")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "postgresAuthMode: ${backstage_postgres_auth_mode}")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "${platform_profile}.backstage.${platform_root_domain}")
     require_contains("infrastructure/terraform/platform/variables.tf", 'variable "backstage_postgres_auth_mode"')
     require_contains("backstage/deploy/templates/deployment.yaml", "command:")
     require_contains("backstage/deploy/templates/deployment.yaml", "scripts/start-backstage.mjs")
@@ -288,7 +311,7 @@ def validate_gitops() -> None:
     require_contains("backstage/catalog-reconciler/Dockerfile", "COPY --chown=65532:65532 reconciler.py")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/networkpolicy.yaml", "backstage-catalog-reconciler")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/secretstore.yaml", "backstage-catalog-reconciler")
-    require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "https://backstage.${platform_profile}.${platform_root_domain}")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "https://${platform_profile}.backstage.${platform_root_domain}")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "serviceAccountToken")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/rbac-groups-configmap.yaml", 'applicationTeamGroupRefs: "${backstage_application_team_group_refs}"')
     require_contains("infrastructure/terraform/platform/gitops.tf", "azurerm_role_assignment.backstage_key_vault_secret_user")
@@ -297,6 +320,17 @@ def validate_gitops() -> None:
         fail("Catalog reconciler must use a signed platform image, not Docker Hub python")
     for expected in ["BACKSTAGE_BASE_URL", "GITHUB_ORG"]:
         require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", expected)
+
+    rendered_demo_backstage = render_kustomize("platform-gitops/clusters/overlays/demo/backstage")
+    for expected in [
+        "clusterIssuer: platform-private-ca",
+        "host: ${platform_profile}.backstage.${platform_root_domain}",
+        "baseUrl: https://${platform_profile}.backstage.${platform_root_domain}",
+        "value: http://backstage.backstage.svc.cluster.local:7007",
+        "port: 7007",
+    ]:
+        if expected not in rendered_demo_backstage:
+            fail(f"Rendered demo Backstage overlay must contain {expected!r}")
 
 
 def validate_terraform() -> None:
