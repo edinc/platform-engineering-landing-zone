@@ -34,9 +34,9 @@ spec:
       name: backstage
       workloadIdentityClientId: ${backstage_client_id}
     ingress:
-      host: backstage.${platform_profile}.${platform_root_domain}
+      host: ${platform_profile}.backstage.${platform_root_domain}
     appConfig:
-      baseUrl: https://backstage.${platform_profile}.${platform_root_domain}
+      baseUrl: https://${platform_profile}.backstage.${platform_root_domain}
       postgresAuthMode: ${backstage_postgres_auth_mode}
       aksApiServerUrl: ${backstage_aks_apiserver_url}
       postgresHost: ${backstage_postgres_host}

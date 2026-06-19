@@ -17,3 +17,28 @@ patches:
           minReplicas: 1
           maxReplicas: 2
           targetCPUUtilizationPercentage: 70
+      - op: add
+        path: /spec/values/ingress/clusterIssuer
+        value: platform-private-ca
+  - target:
+      kind: CronJob
+      name: backstage-catalog-reconciler
+    patch: |-
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/0/value
+        value: http://backstage.backstage.svc.cluster.local:7007
+  - target:
+      kind: NetworkPolicy
+      name: backstage-catalog-reconciler
+    patch: |-
+      - op: add
+        path: /spec/egress/-
+        value:
+          to:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: backstage
+                  app.kubernetes.io/instance: backstage
+          ports:
+            - protocol: TCP
+              port: 7007

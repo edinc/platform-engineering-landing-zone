@@ -219,6 +219,9 @@ jobs:
       TECHDOCS_STORAGE_ACCOUNT_NAME: ${{ vars.TECHDOCS_STORAGE_ACCOUNT_NAME }}
       TECHDOCS_STORAGE_CONTAINER_NAME: ${{ vars.TECHDOCS_STORAGE_CONTAINER_NAME || 'techdocs' }}
       BACKSTAGE_HOST: ${{ vars.BACKSTAGE_HOST }}
+      BACKSTAGE_TRUST_PRIVATE_CA: ${{ vars.BACKSTAGE_TRUST_PRIVATE_CA || 'false' }}
+      BACKSTAGE_TLS_CA_KEY_VAULT_NAME: ${{ vars.BACKSTAGE_TLS_CA_KEY_VAULT_NAME }}
+      BACKSTAGE_TLS_CA_SECRET_NAME: ${{ vars.BACKSTAGE_TLS_CA_SECRET_NAME || 'platform-private-ca-crt' }}
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
