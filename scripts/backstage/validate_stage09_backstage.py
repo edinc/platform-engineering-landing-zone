@@ -246,7 +246,6 @@ def validate_gitops() -> None:
         "namespace.yaml",
         "flux-applier-rbac.yaml",
         "serviceaccount.yaml",
-        "source-controller-token-rbac.yaml",
         "secretstore.yaml",
         "runtime-externalsecret.yaml",
         "ocirepository.yaml",
@@ -266,10 +265,17 @@ def validate_gitops() -> None:
     ]:
         require_contains("infrastructure/terraform/platform/workload-identities.tf", expected)
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "create: false")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "serviceAccountName: flux-applier")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", "backstage-helm-manager")
+    for resource in ["deployments", "services", "configmaps", "horizontalpodautoscalers", "ingresses", "networkpolicies", "poddisruptionbudgets"]:
+        require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", resource)
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", "platform:tenant-helm-release-storage")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", "name: flux-applier")
-    require_contains("platform-gitops/clusters/_base/addon-config/backstage/source-controller-token-rbac.yaml", "serviceaccounts/token")
-    require_contains("platform-gitops/clusters/_base/addon-config/backstage/source-controller-token-rbac.yaml", "source-controller")
+    backstage_addon_dir = ROOT / "platform-gitops/clusters/_base/addon-config/backstage"
+    if any("serviceaccounts/token" in path.read_text(encoding="utf-8") for path in backstage_addon_dir.glob("*.yaml")):
+        fail("Backstage GitOps must not grant namespace token minting to source-controller")
+    if "serviceAccountName:" in read("platform-gitops/clusters/_base/addon-config/backstage/ocirepository.yaml"):
+        fail("Backstage OCIRepository uses controller-level Flux Workload Identity and must not set serviceAccountName")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/ocirepository.yaml", "digest: ${backstage_chart_digest}")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "backstage_aks_apiserver_url")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "postgresAuthMode: ${backstage_postgres_auth_mode}")
@@ -386,7 +392,8 @@ def validate_terraform() -> None:
     require_contains("infrastructure/terraform/platform/main.tf", "enable_techdocs_storage requires enable_private_endpoints")
     require_contains("infrastructure/terraform/platform/aks.tf", "Azure Kubernetes Service Cluster User Role")
     require_contains("infrastructure/terraform/platform/aks.tf", "Azure Kubernetes Service RBAC Reader")
-    require_contains("infrastructure/terraform/platform/acr.tf", "backstage_acr_pull")
+    require_contains("infrastructure/terraform/platform/acr.tf", "flux_source_acr_pull")
+    require_contains("infrastructure/terraform/platform/acr.tf", "local.gitops_enabled && var.enable_acr")
     require_contains("infrastructure/terraform/platform/key-vault.tf", "backstage_key_vault_secret_user")
     require_contains("infrastructure/terraform/platform/key-vault.tf", "backstage_catalog_reconciler_key_vault_secret_user")
     require_contains("infrastructure/terraform/platform/key-vault.tf", "/secrets/")

@@ -656,17 +656,6 @@ variable "backstage_cost_showback_container_id" {
   }
 }
 
-variable "otel_trace_sampling_percentage" {
-  type        = number
-  description = "Baseline OpenTelemetry trace sampling percentage substituted into the collector. Use 100 for demo/dev and 10 for nonprod/prod."
-  default     = null
-
-  validation {
-    condition     = var.otel_trace_sampling_percentage == null ? true : (var.otel_trace_sampling_percentage >= 0 && var.otel_trace_sampling_percentage <= 100)
-    error_message = "otel_trace_sampling_percentage must be null or a value between 0 and 100."
-  }
-}
-
 variable "gitops_sync_interval_seconds" {
   type        = number
   description = "Flux Git source and Kustomization sync interval in seconds."

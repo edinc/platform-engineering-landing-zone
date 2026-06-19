@@ -28,6 +28,7 @@ spec:
                 - ingress-nginx
                 - kyverno
                 - observability
+                - azureserviceoperator-system
       validate:
         message: Workload namespaces must enforce Pod Security Admission restricted.
         pattern:

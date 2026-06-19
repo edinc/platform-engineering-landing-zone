@@ -10,6 +10,7 @@ metadata:
     dataClassification: internal
 spec:
   interval: 10m
+  serviceAccountName: flux-applier
   chartRef:
     kind: OCIRepository
     name: backstage-chart

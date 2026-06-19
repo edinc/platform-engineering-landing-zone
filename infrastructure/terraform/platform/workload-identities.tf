@@ -24,6 +24,12 @@ locals {
       namespace            = "azureserviceoperator-system"
       service_account_name = "azure-service-operator"
     }
+    flux_source = {
+      enabled              = local.gitops_enabled
+      name                 = "id-${local.name_prefix}-flux-source"
+      namespace            = var.gitops_flux_namespace
+      service_account_name = "source-controller"
+    }
     backstage = {
       enabled              = local.backstage_enabled && var.backstage_workload_identity_client_id == ""
       name                 = "id-${local.name_prefix}-backstage"
@@ -50,6 +56,8 @@ locals {
   aso_workload_identity_client_id = (
     var.aso_workload_identity_client_id != "" ? var.aso_workload_identity_client_id : try(azurerm_user_assigned_identity.platform_workload["aso"].client_id, "")
   )
+  flux_source_workload_identity_client_id    = try(azurerm_user_assigned_identity.platform_workload["flux_source"].client_id, "")
+  flux_source_workload_identity_principal_id = try(azurerm_user_assigned_identity.platform_workload["flux_source"].principal_id, "")
   backstage_workload_identity_client_id = (
     var.backstage_workload_identity_client_id != "" ? var.backstage_workload_identity_client_id : try(azurerm_user_assigned_identity.platform_workload["backstage"].client_id, "")
   )

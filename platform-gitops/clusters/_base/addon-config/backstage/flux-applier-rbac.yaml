@@ -10,6 +10,100 @@ metadata:
     dataClassification: internal
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backstage-helm-manager
+  namespace: backstage
+  labels:
+    app: flux
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - services
+      - serviceaccounts
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backstage-helm-manager
+  namespace: backstage
+  labels:
+    app: flux
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: backstage-helm-manager
+subjects:
+  - kind: ServiceAccount
+    name: flux-applier
+    namespace: backstage
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: backstage-helm-storage
