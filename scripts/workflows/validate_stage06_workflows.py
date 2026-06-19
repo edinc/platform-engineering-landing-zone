@@ -149,6 +149,8 @@ def validate_workflow_specific_contracts() -> None:
         "zz-workflow.auto.tfvars.json",
         "zz-workflow-secret.auto.tfvars.json",
         "AZURE_CONFIG_DIR:",
+        "plan -detailed-exitcode",
+        "Terraform plan completed with changes.",
         "Remove materialized Terraform variables and Azure CLI cache",
         '"refs/heads/main"',
     ]:
