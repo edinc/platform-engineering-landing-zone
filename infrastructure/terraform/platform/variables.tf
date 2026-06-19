@@ -639,7 +639,7 @@ variable "otel_trace_sampling_percentage" {
   default     = null
 
   validation {
-    condition     = var.otel_trace_sampling_percentage == null || (var.otel_trace_sampling_percentage >= 0 && var.otel_trace_sampling_percentage <= 100)
+    condition     = var.otel_trace_sampling_percentage == null ? true : (var.otel_trace_sampling_percentage >= 0 && var.otel_trace_sampling_percentage <= 100)
     error_message = "otel_trace_sampling_percentage must be null or a value between 0 and 100."
   }
 }

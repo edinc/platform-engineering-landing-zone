@@ -85,6 +85,7 @@ def main() -> None:
     require_contains("platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml", "type: probabilistic")
     require_contains("platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml", "${otel_trace_sampling_percentage}")
     require_contains("infrastructure/terraform/platform/gitops.tf", "otel_trace_sampling_percentage")
+    require_contains("infrastructure/terraform/platform/variables.tf", "var.otel_trace_sampling_percentage == null ? true")
     require_contains("infrastructure/terraform/platform/gitops.tf", "platform_profile")
 
     require_contains("platform-gitops/clusters/_base/controllers/platform/vpa.yaml", "chart: vpa")
