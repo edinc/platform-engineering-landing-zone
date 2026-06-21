@@ -84,7 +84,7 @@ spec:
             - name: baseline
               type: probabilistic
               probabilistic:
-                sampling_percentage: ${otel_trace_sampling_percentage}
+                sampling_percentage: 10
       exporters:
         otlphttp/azure:
           endpoint: ${application_insights_ingestion_endpoint}

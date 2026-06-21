@@ -83,8 +83,11 @@ def main() -> None:
     require_contains("platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml", "tail_sampling")
     require_contains("platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml", "replicaCount: 1")
     require_contains("platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml", "type: probabilistic")
-    require_contains("platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml", "${otel_trace_sampling_percentage}")
-    require_contains("infrastructure/terraform/platform/gitops.tf", "otel_trace_sampling_percentage")
+    require_contains("platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml", "sampling_percentage: 10")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml", "sampling_percentage")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml", "value: 100")
+    if "platform/opentelemetry-collector-node.yaml" in read("platform-gitops/clusters/_base/controllers/kustomization.yaml"):
+        fail("Node OpenTelemetry collector uses hostPath and hostPort; keep it out of the default PSA-baseline controller set")
     require_contains("infrastructure/terraform/platform/gitops.tf", "platform_profile")
 
     require_contains("platform-gitops/clusters/_base/controllers/platform/vpa.yaml", "chart: vpa")

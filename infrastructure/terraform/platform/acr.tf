@@ -53,11 +53,11 @@ resource "azurerm_container_registry_cache_rule" "platform" {
   target_repo           = each.value.target_repo
 }
 
-resource "azurerm_role_assignment" "backstage_acr_pull" {
-  count = local.backstage_enabled ? 1 : 0
+resource "azurerm_role_assignment" "flux_source_acr_pull" {
+  count = local.gitops_enabled && var.enable_acr ? 1 : 0
 
   scope                = azurerm_container_registry.platform[0].id
   role_definition_name = "AcrPull"
-  principal_id         = local.backstage_workload_identity_principal_id
+  principal_id         = local.flux_source_workload_identity_principal_id
   principal_type       = "ServicePrincipal"
 }

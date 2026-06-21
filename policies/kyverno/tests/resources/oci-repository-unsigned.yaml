@@ -5,8 +5,7 @@ metadata:
   namespace: team-payments
 spec:
   interval: 5m
-  url: oci://acrpedemosec.azurecr.io/helm/checkout
+  url: oci://${platform_acr_login_server}/helm/checkout
   provider: azure
-  serviceAccountName: app
   ref:
     digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef

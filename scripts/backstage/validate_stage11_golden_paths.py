@@ -263,7 +263,6 @@ def validate_aks_microservice() -> None:
             'namespace: "${{ values.namespace }}"',
             "$(PLATFORM_ACR_LOGIN_SERVER)",
             "provider: azure",
-            'serviceAccountName: "${{ values.serviceAccountName }}"',
             "sha256:REPLACE_WITH_SIGNED_CHART_DIGEST",
             "matchOIDCIdentity:",
             "${{ values.platformRepoOwner }}/${{ values.platformRepoName }}/\\\\.github/workflows/helm-publish\\\\.yml@refs/heads/main",

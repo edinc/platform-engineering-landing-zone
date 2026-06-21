@@ -44,6 +44,7 @@ output "platform_workload_identity_client_ids" {
     external_dns                 = local.external_dns_workload_identity_client_id
     external_secrets             = local.external_secrets_workload_identity_client_id
     aso                          = local.aso_workload_identity_client_id
+    flux_source                  = local.flux_source_workload_identity_client_id
     backstage                    = local.backstage_workload_identity_client_id
     backstage_catalog_reconciler = local.backstage_catalog_reconciler_workload_identity_client_id
   }
@@ -52,6 +53,7 @@ output "platform_workload_identity_client_ids" {
 
 output "platform_workload_identity_principal_ids" {
   value = {
+    flux_source                  = local.flux_source_workload_identity_principal_id
     backstage                    = local.backstage_workload_identity_principal_id
     backstage_catalog_reconciler = local.backstage_catalog_reconciler_workload_identity_principal_id
   }

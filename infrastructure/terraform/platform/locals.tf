@@ -68,12 +68,6 @@ locals {
     sev2 = "ag-${local.name_prefix}-sev2"
     sev3 = "ag-${local.name_prefix}-sev3"
   }
-  otel_trace_sampling_percentage = (
-    var.otel_trace_sampling_percentage != null ? var.otel_trace_sampling_percentage : (
-      var.profile == "demo" ? 100 : 10
-    )
-  )
-
   acr_geo_replication_locations = (
     length(var.acr_geo_replication_locations) > 0 ? var.acr_geo_replication_locations : (
       var.profile == "demo" ? [] : [var.paired_location]

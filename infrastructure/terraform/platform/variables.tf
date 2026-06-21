@@ -353,6 +353,29 @@ variable "gitops_repository_provider" {
   }
 }
 
+variable "cluster_state_ssh_private_key_base64" {
+  type        = string
+  description = "Base64-encoded SSH private key used by Flux to clone a private cluster-state repository. Store this in a protected secret, not in committed tfvars."
+  default     = ""
+  sensitive   = true
+
+  validation {
+    condition     = var.cluster_state_ssh_private_key_base64 == "" || can(base64decode(var.cluster_state_ssh_private_key_base64))
+    error_message = "cluster_state_ssh_private_key_base64 must be empty or valid base64."
+  }
+}
+
+variable "cluster_state_ssh_known_hosts_base64" {
+  type        = string
+  description = "Base64-encoded known_hosts content for the SSH host used by the Flux cluster-state repository."
+  default     = ""
+
+  validation {
+    condition     = var.cluster_state_ssh_known_hosts_base64 == "" || can(base64decode(var.cluster_state_ssh_known_hosts_base64))
+    error_message = "cluster_state_ssh_known_hosts_base64 must be empty or valid base64."
+  }
+}
+
 variable "platform_root_domain" {
   type        = string
   description = "Root DNS zone for platform hostnames, for example platform.contoso.com."
@@ -630,17 +653,6 @@ variable "backstage_cost_showback_container_id" {
       can(regex("^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.Storage/storageAccounts/[^/]+/blobServices/default/containers/[^/]+$", var.backstage_cost_showback_container_id))
     )
     error_message = "backstage_cost_showback_container_id must be empty or a full storage container resource ID."
-  }
-}
-
-variable "otel_trace_sampling_percentage" {
-  type        = number
-  description = "Baseline OpenTelemetry trace sampling percentage substituted into the collector. Use 100 for demo/dev and 10 for nonprod/prod."
-  default     = null
-
-  validation {
-    condition     = var.otel_trace_sampling_percentage == null || (var.otel_trace_sampling_percentage >= 0 && var.otel_trace_sampling_percentage <= 100)
-    error_message = "otel_trace_sampling_percentage must be null or a value between 0 and 100."
   }
 }
 

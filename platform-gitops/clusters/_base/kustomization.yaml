@@ -2,7 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - flux-system/namespace.yaml
-  - flux-system/platform-cluster-state-source.yaml
   - flux-system/platform-reconciler-serviceaccount.yaml
   - flux-system/platform-reconciler-clusterrolebinding.yaml
   - flux-system/tenant-reconciler-clusterrole.yaml

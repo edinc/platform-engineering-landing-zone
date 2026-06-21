@@ -20,3 +20,10 @@ patches:
       - op: replace
         path: /spec/values/controller/replicaCount
         value: 1
+  - target:
+      kind: HelmRelease
+      name: opentelemetry-collector
+    patch: |-
+      - op: replace
+        path: /spec/values/config/processors/tail_sampling/policies/1/probabilistic/sampling_percentage
+        value: 100
