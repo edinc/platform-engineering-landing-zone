@@ -17,9 +17,6 @@ serviceAccount:
 
 podLabels:
   azure.workload.identity/use: "true"
-  team: platform-engineering
-  costCenter: cc-platform
-  dataClassification: internal
 
 service:
   port: 7007

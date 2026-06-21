@@ -39,7 +39,7 @@ spec:
                 operator: NotEquals
                 value: azure
               - key: "{{ request.object.spec.serviceAccountName || '' }}"
-                operator: Equals
+                operator: NotEquals
                 value: ""
               - key: "{{ request.object.spec.verify.provider || '' }}"
                 operator: NotEquals
@@ -53,6 +53,31 @@ spec:
               - key: "{{ request.object.spec.verify.matchOIDCIdentity[0].subject || '' }}"
                 operator: NotEquals
                 value: ^https://github.com/${github_owner}/${platform_repository_name}/\.github/workflows/helm-publish\.yml@refs/heads/main$
+    - name: require-platform-helm-oci-url
+      match:
+        any:
+          - resources:
+              kinds:
+                - OCIRepository
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - flux-system
+                - kyverno
+                - cert-manager
+                - external-dns
+                - external-secrets
+                - azureserviceoperator-system
+                - keda
+                - ingress-nginx
+                - observability
+                - backstage
+      validate:
+        message: Tenant OCIRepository resources must read charts from the platform ACR Helm namespace.
+        pattern:
+          spec:
+            url: oci://${platform_acr_login_server}/helm/*
     - name: require-restricted-helm-releases
       match:
         any:

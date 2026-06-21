@@ -30,7 +30,6 @@ EXPECTED_POLICIES = {
 EXPECTED_ADDONS = {
     "cert-manager": "platform-gitops/clusters/_base/controllers/platform/cert-manager.yaml",
     "external-dns": "platform-gitops/clusters/_base/controllers/platform/external-dns.yaml",
-    "secrets-store-csi-driver": "platform-gitops/clusters/_base/controllers/platform/secrets-store-csi-driver.yaml",
     "external-secrets": "platform-gitops/clusters/_base/controllers/platform/external-secrets.yaml",
     "kyverno": "platform-gitops/clusters/_base/controllers/platform/kyverno.yaml",
     "azure-service-operator": "platform-gitops/clusters/_base/controllers/platform/aso.yaml",
@@ -84,13 +83,13 @@ def validate_policies() -> None:
 def validate_gitops_seed() -> None:
     required_files = [
         "platform-gitops/clusters/_base/kustomization.yaml",
-        "platform-gitops/clusters/_base/flux-system/platform-cluster-state-source.yaml",
         "platform-gitops/clusters/_base/flux-system/platform-reconciler-serviceaccount.yaml",
         "platform-gitops/clusters/_base/flux-system/platform-reconciler-clusterrolebinding.yaml",
         "platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml",
         "platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml",
         "platform-gitops/clusters/_base/flux-system/tenant-reconciler-clusterrole.yaml",
         "platform-gitops/clusters/_base/controllers/kustomization.yaml",
+        "platform-gitops/clusters/_base/controllers/platform/external-dns-azure-config.yaml",
         "platform-gitops/clusters/_base/addon-config/kustomization.yaml",
         "platform-gitops/clusters/overlays/demo/tenants/kustomization.yaml",
         "platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml",
@@ -136,7 +135,11 @@ def validate_terraform_and_workflows() -> None:
     require_contains("infrastructure/terraform/platform/gitops.tf", "azurerm_kubernetes_cluster_extension")
     require_contains("infrastructure/terraform/platform/gitops.tf", "azurerm_kubernetes_flux_configuration")
     require_contains("infrastructure/terraform/platform/gitops.tf", '"multiTenancy.enforce"')
+    require_contains("infrastructure/terraform/platform/gitops.tf", '"workloadIdentity.enable"')
+    require_contains("infrastructure/terraform/platform/gitops.tf", "flux_source_workload_identity_client_id")
     require_contains("infrastructure/terraform/platform/gitops.tf", "post_build")
+    require_contains("infrastructure/terraform/platform/gitops.tf", "ssh_private_key_base64")
+    require_contains("infrastructure/terraform/platform/gitops.tf", "ssh_known_hosts_base64")
     require_contains("infrastructure/terraform/platform/gitops.tf", "external_secrets_client_id")
     require_contains("infrastructure/terraform/platform/gitops.tf", "cluster_state_root_path")
     require_contains("infrastructure/terraform/platform/workload-identities.tf", "azurerm_user_assigned_identity")
@@ -152,6 +155,23 @@ def validate_terraform_and_workflows() -> None:
         "platform-gitops/clusters/_base/controllers/platform/aso.yaml": "name: azure-service-operator",
     }.items():
         require_contains(path, service_account_name)
+        require_contains(path, "azure.workload.identity/tenant-id: ${platform_tenant_id}")
+    for path in [
+        "platform-gitops/clusters/_base/addon-config/backstage/serviceaccount.yaml",
+        "platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/serviceaccount.yaml",
+    ]:
+        require_contains(path, "azure.workload.identity/tenant-id: ${platform_tenant_id}")
+    require_contains("platform-gitops/clusters/_base/controllers/kustomization.yaml", "platform/external-dns-azure-config.yaml")
+    require_contains("platform-gitops/clusters/_base/controllers/platform/external-dns.yaml", "external-dns-azure-config")
+    require_contains("platform-gitops/clusters/_base/controllers/platform/external-dns-azure-config.yaml", '"useWorkloadIdentityExtension": true')
+    require_contains("platform-gitops/clusters/_base/controllers/platform/namespace-azureserviceoperator-system.yaml", "platform.example.io/pod-security-exception: aso-chart-pre-upgrade-hook")
+    require_contains("platform-gitops/clusters/_base/controllers/platform/namespace-azureserviceoperator-system.yaml", "pod-security.kubernetes.io/enforce: baseline")
+    require_contains("policies/kyverno/require-pod-security-restricted.yaml", "azureserviceoperator-system")
+    controllers_kustomization = read("platform-gitops/clusters/_base/controllers/kustomization.yaml")
+    if "platform/secrets-store-csi-driver.yaml" in controllers_kustomization:
+        fail("AKS key_vault_secrets_provider installs the CSI driver; do not deploy the duplicate Helm driver chart")
+    if "platform/csi-secrets-store-provider-azure.yaml" in controllers_kustomization:
+        fail("AKS key_vault_secrets_provider installs the Azure provider; do not deploy the duplicate Helm provider chart")
     require_contains("infrastructure/terraform/vending/aks-namespace/main.tf", "Azure Kubernetes Service RBAC Reader")
     require_contains("infrastructure/terraform/cluster-state-repo/locals.tf", "legacy_seed_files")
     require_contains("infrastructure/terraform/cluster-state-repo/variables.tf", "stage07_seed_files_enabled")
@@ -170,8 +190,16 @@ def validate_terraform_and_workflows() -> None:
     require_contains(".github/workflows/vend-namespace.yml", "tenant_bootstrap=")
     require_contains(".github/workflows/vend-namespace.yml", "scripts/gitops/update_tenant_index.py")
     require_contains("policies/kyverno/verify-cosign-signatures.yaml", "subjectRegExp: ^https://github\\.com/${github_owner}/${platform_repository_name}/\\.github/workflows/container-build-sign\\.yml@refs/heads/main$")
+    require_contains("policies/kyverno/require-tenant-gitops-guardrails.yaml", "require-platform-helm-oci-url")
+    require_contains("policies/kyverno/require-tenant-gitops-guardrails.yaml", "oci://${platform_acr_login_server}/helm/*")
+    require_contains("policies/kyverno/require-tenant-gitops-guardrails.yaml", "request.object.spec.serviceAccountName")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "postBuild")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "postBuild")
+    require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "github_owner: ${github_owner}")
+    require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "platform_acr_login_server: ${platform_acr_login_server}")
+    require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "platform_repository_name: ${platform_repository_name}")
+    require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
+    require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "serviceAccountName: platform-reconciler")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "serviceAccountName: platform-reconciler")
 

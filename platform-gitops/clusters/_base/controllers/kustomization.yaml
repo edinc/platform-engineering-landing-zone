@@ -10,8 +10,6 @@ resources:
   - platform/namespace-ingress-nginx.yaml
   - platform/namespace-observability.yaml
   - platform/helmrepository-jetstack.yaml
-  - platform/helmrepository-secrets-store-csi-driver.yaml
-  - platform/helmrepository-csi-secrets-store-provider-azure.yaml
   - platform/helmrepository-external-dns.yaml
   - platform/helmrepository-external-secrets.yaml
   - platform/helmrepository-kyverno.yaml
@@ -20,10 +18,9 @@ resources:
   - platform/helmrepository-ingress-nginx.yaml
   - platform/helmrepository-open-telemetry.yaml
   - platform/helmrepository-fairwinds-stable.yaml
-  - platform/secrets-store-csi-driver.yaml
-  - platform/csi-secrets-store-provider-azure.yaml
   - platform/external-secrets.yaml
   - platform/cert-manager.yaml
+  - platform/external-dns-azure-config.yaml
   - platform/external-dns.yaml
   - platform/kyverno.yaml
   - platform/aso.yaml
@@ -32,4 +29,3 @@ resources:
   - platform/ama-metrics-settings-configmap.yaml
   - platform/vpa.yaml
   - platform/opentelemetry-collector.yaml
-  - platform/opentelemetry-collector-node.yaml

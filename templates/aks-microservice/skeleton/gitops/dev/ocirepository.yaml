@@ -7,7 +7,6 @@ spec:
   interval: 5m
   url: "oci://$(PLATFORM_ACR_LOGIN_SERVER)/helm/${{ values.componentId }}"
   provider: azure
-  serviceAccountName: "${{ values.serviceAccountName }}"
   ref:
     digest: "sha256:REPLACE_WITH_SIGNED_CHART_DIGEST"
   verify:

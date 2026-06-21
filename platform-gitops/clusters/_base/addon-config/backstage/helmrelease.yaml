@@ -10,6 +10,7 @@ metadata:
     dataClassification: internal
 spec:
   interval: 10m
+  serviceAccountName: flux-applier
   chartRef:
     kind: OCIRepository
     name: backstage-chart
@@ -33,6 +34,8 @@ spec:
       create: false
       name: backstage
       workloadIdentityClientId: ${backstage_client_id}
+    podLabels:
+      azure.workload.identity/use: "true"
     ingress:
       host: ${platform_profile}.backstage.${platform_root_domain}
     appConfig:

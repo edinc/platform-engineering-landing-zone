@@ -21,6 +21,9 @@ resource "azurerm_kubernetes_cluster_extension" "flux" {
     "multiTenancy.enforce"                          = "true"
     "kustomize-controller.strict-substitution-mode" = "true"
     "helm-controller.detectDrift"                   = "true"
+    "workloadIdentity.enable"                       = "true"
+    "workloadIdentity.azureClientId"                = local.flux_source_workload_identity_client_id
+    "workloadIdentity.azureTenantId"                = var.tenant_id
   }
 }
 
@@ -38,6 +41,8 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
     reference_type           = "branch"
     reference_value          = var.cluster_state_branch
     provider                 = var.gitops_repository_provider == "" ? null : var.gitops_repository_provider
+    ssh_private_key_base64   = var.cluster_state_ssh_private_key_base64 == "" ? null : var.cluster_state_ssh_private_key_base64
+    ssh_known_hosts_base64   = var.cluster_state_ssh_known_hosts_base64 == "" ? null : var.cluster_state_ssh_known_hosts_base64
     sync_interval_in_seconds = var.gitops_sync_interval_seconds
     timeout_in_seconds       = var.gitops_timeout_seconds
   }
@@ -64,7 +69,7 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
         external_dns_client_id                  = local.external_dns_workload_identity_client_id
         external_secrets_client_id              = local.external_secrets_workload_identity_client_id
         github_owner                            = var.github_owner
-        otel_trace_sampling_percentage          = tostring(local.otel_trace_sampling_percentage)
+        platform_acr_login_server               = try(azurerm_container_registry.platform[0].login_server, "")
         platform_key_vault_name                 = local.key_vault_name
         platform_profile                        = var.profile
         platform_repository_name                = var.github_repo
@@ -78,6 +83,7 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
   depends_on = [
     azurerm_kubernetes_cluster_extension.flux,
     azurerm_federated_identity_credential.platform_workload,
+    azurerm_role_assignment.flux_source_acr_pull,
     azurerm_role_assignment.aso_platform_operator,
     azurerm_role_assignment.cert_manager_dns,
     azurerm_role_assignment.cert_manager_key_vault_secret_user,
@@ -100,6 +106,8 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
     reference_type           = "branch"
     reference_value          = var.cluster_state_branch
     provider                 = var.gitops_repository_provider == "" ? null : var.gitops_repository_provider
+    ssh_private_key_base64   = var.cluster_state_ssh_private_key_base64 == "" ? null : var.cluster_state_ssh_private_key_base64
+    ssh_known_hosts_base64   = var.cluster_state_ssh_known_hosts_base64 == "" ? null : var.cluster_state_ssh_known_hosts_base64
     sync_interval_in_seconds = var.gitops_sync_interval_seconds
     timeout_in_seconds       = var.gitops_timeout_seconds
   }
@@ -135,7 +143,7 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
         backstage_postgres_host                         = local.backstage_postgres_host
         backstage_postgres_user                         = local.backstage_postgres_user
         github_owner                                    = var.github_owner
-        platform_acr_login_server                       = azurerm_container_registry.platform[0].login_server
+        platform_acr_login_server                       = try(azurerm_container_registry.platform[0].login_server, "")
         platform_key_vault_name                         = local.key_vault_name
         platform_profile                                = var.profile
         platform_repository_name                        = var.github_repo
@@ -152,7 +160,7 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
   depends_on = [
     azurerm_federated_identity_credential.platform_workload,
     azurerm_kubernetes_flux_configuration.platform,
-    azurerm_role_assignment.backstage_acr_pull,
+    azurerm_role_assignment.flux_source_acr_pull,
     azurerm_role_assignment.backstage_aks_cluster_user,
     azurerm_role_assignment.backstage_aks_rbac_reader,
     azurerm_role_assignment.backstage_cost_showback_reader,

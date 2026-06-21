@@ -11,7 +11,6 @@ metadata:
 spec:
   interval: 5m
   provider: azure
-  serviceAccountName: backstage
   url: oci://${platform_acr_login_server}/helm/backstage
   ref:
     digest: ${backstage_chart_digest}
