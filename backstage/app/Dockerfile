@@ -8,7 +8,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     apt-get install -y --no-install-recommends python3 g++ build-essential libsqlite3-dev && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    tmp_dir="$(mktemp -d)" && \
+    npm install --prefix "$tmp_dir" --omit=dev --ignore-scripts --no-audit --no-fund undici@6.27.0 && \
+    rm -rf /usr/local/lib/node_modules/npm/node_modules/undici && \
+    cp -a "$tmp_dir/node_modules/undici" /usr/local/lib/node_modules/npm/node_modules/undici && \
+    rm -rf "$tmp_dir" && \
+    npm cache clean --force
 
 USER node
 WORKDIR /app
