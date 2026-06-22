@@ -133,10 +133,7 @@ if [ -n "${BACKSTAGE_CLUSTER_READINESS:-}" ] && [ "${BACKSTAGE_CLUSTER_READINESS
   az aks command invoke \
     --resource-group "$PLATFORM_RESOURCE_GROUP_NAME" \
     --name "$PLATFORM_AKS_CLUSTER_NAME" \
-    --command "python3 - <<'PY'
-import urllib.request
-urllib.request.urlopen('http://backstage.backstage.svc.cluster.local:7007/.backstage/health/v1/readiness', timeout=10).read()
-PY" \
+    --command "kubectl -n backstage exec deploy/backstage -- node -e \"fetch('http://127.0.0.1:7007/.backstage/health/v1/readiness').then(r=>{if(!r.ok){console.error('status '+r.status);process.exit(1)}}).catch(e=>{console.error(e);process.exit(1)})\"" \
     --query logs \
     --output tsv >/dev/null
   echo "Backstage in-cluster readiness endpoint responded successfully."
