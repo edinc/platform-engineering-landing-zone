@@ -1,5 +1,8 @@
 replicaCount: 2
 
+standardLabels:
+  enabled: false
+
 image:
   repository: ghcr.io/edinc/platform-backstage
   digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
@@ -16,6 +19,10 @@ serviceAccount:
   workloadIdentityClientId: ""
 
 podLabels:
+  app: backstage
+  team: platform-engineering
+  costCenter: cc-platform
+  dataClassification: internal
   azure.workload.identity/use: "true"
 
 service:

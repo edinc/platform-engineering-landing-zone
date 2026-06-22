@@ -17,7 +17,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+{{- if .Values.standardLabels.enabled }}
 team: platform-engineering
 costCenter: cc-platform
 dataClassification: internal
+{{- end }}
 {{- end -}}

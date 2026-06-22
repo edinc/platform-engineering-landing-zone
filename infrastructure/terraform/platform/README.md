@@ -78,6 +78,15 @@ Identity client IDs, and Application Insights ingestion endpoint inputs.
 The Microsoft Flux extension explicitly keeps `multiTenancy.enforce = true`; do
 not disable it for workload tenant reconciliation.
 
+If a brownfield or failed migration leaves stale Flux extension Helm values that
+cannot be removed in-place, use the recovery path in
+`docs/runbooks/flux-extension-recovery.md`. The first migration after introducing
+`recreate_flux_extension_epoch` uses explicit Terraform `-replace` flags because
+the trigger resource is new; later resets can change the epoch once the trigger
+exists in state. Keep the token stable after a successful migration unless
+another extension reset is required. See
+[`docs/runbooks/flux-extension-recovery.md`](../../../docs/runbooks/flux-extension-recovery.md).
+
 By default, this stack creates managed identities and federated credentials for
 cert-manager, external-dns, External Secrets, and ASO. Supplying a
 `*_workload_identity_client_id` adopts a brownfield identity instead; in that

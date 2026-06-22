@@ -22,6 +22,8 @@ spec:
     remediation:
       retries: 3
   values:
+    standardLabels:
+      enabled: false
     replicaCount: 2
     image:
       repository: ${backstage_image_repository}
@@ -35,6 +37,10 @@ spec:
       name: backstage
       workloadIdentityClientId: ${backstage_client_id}
     podLabels:
+      app: backstage
+      team: platform-engineering
+      costCenter: cc-platform
+      dataClassification: internal
       azure.workload.identity/use: "true"
     ingress:
       host: ${platform_profile}.backstage.${platform_root_domain}
