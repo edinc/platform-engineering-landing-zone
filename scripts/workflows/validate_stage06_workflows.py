@@ -153,6 +153,8 @@ def validate_workflow_specific_contracts() -> None:
         "Pull-request Terraform validation cannot use Terraform -replace arguments",
         "Terraform -replace arguments are only approved for the platform Flux extension recovery path",
         "Terraform -replace address is not approved for Flux extension recovery",
+        "azurerm_kubernetes_flux_configuration.backstage[0]",
+        "azurerm_kubernetes_flux_configuration.platform[0]",
         "azurerm_kubernetes_cluster_extension.flux[0]",
         "AZURE_CONFIG_DIR:",
         'plan "${replace_args[@]}" -detailed-exitcode',
