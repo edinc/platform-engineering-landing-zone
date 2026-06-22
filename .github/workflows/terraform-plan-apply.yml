@@ -41,6 +41,11 @@ on:
         required: false
         type: string
         default: ""
+      replace_addresses:
+        description: Optional whitespace- or comma-separated Terraform resource addresses to pass as -replace arguments for approved recovery operations.
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -77,6 +82,7 @@ jobs:
           PLAN_NAME: ${{ inputs.plan_name }}
           TFVARS_JSON_VARIABLE_NAME: ${{ inputs.tfvars_json_variable }}
           TFVARS_JSON_SECRET_NAME: ${{ inputs.tfvars_json_secret }}
+          REPLACE_ADDRESSES: ${{ inputs.replace_addresses }}
         run: |
           set -euo pipefail
           case "$STACK_PATH" in
@@ -113,6 +119,10 @@ jobs:
               esac
             fi
           done
+          if [ -n "$REPLACE_ADDRESSES" ]; then
+            echo "::error::Pull-request Terraform validation cannot use Terraform -replace arguments. Re-run a protected branch workflow for recovery operations."
+            exit 1
+          fi
 
       - name: Terraform init without backend
         env:
@@ -173,6 +183,7 @@ jobs:
           PLAN_NAME: ${{ inputs.plan_name }}
           TFVARS_JSON_VARIABLE_NAME: ${{ inputs.tfvars_json_variable }}
           TFVARS_JSON_SECRET_NAME: ${{ inputs.tfvars_json_secret }}
+          REPLACE_ADDRESSES: ${{ inputs.replace_addresses }}
         run: |
           set -euo pipefail
           case "$STACK_PATH" in
@@ -233,6 +244,26 @@ jobs:
               esac
             fi
           done
+          replace_args_file="$STACK_PATH/.terraform-replace-args"
+          : > "$replace_args_file"
+          if [ -n "$REPLACE_ADDRESSES" ]; then
+            if [ "$STACK_PATH" != "infrastructure/terraform/platform" ]; then
+              echo "::error::Terraform -replace arguments are only approved for the platform Flux extension recovery path."
+              exit 1
+            fi
+            replace_addresses="${REPLACE_ADDRESSES//,/ }"
+            for address in $replace_addresses; do
+              case "$address" in
+                azurerm_kubernetes_flux_configuration.backstage[0]|azurerm_kubernetes_flux_configuration.platform[0]|azurerm_kubernetes_cluster_extension.flux[0])
+                  printf -- '-replace=%s\n' "$address" >> "$replace_args_file"
+                  ;;
+                *)
+                  echo "::error::Terraform -replace address is not approved for Flux extension recovery: $address"
+                  exit 1
+                  ;;
+              esac
+            done
+          fi
 
       - name: Azure login (OIDC)
         uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
@@ -307,8 +338,12 @@ jobs:
           STACK_PATH: ${{ inputs.stack_path }}
           PLAN_NAME: ${{ inputs.plan_name }}
         run: |
+          replace_args=()
+          if [ -s "$STACK_PATH/.terraform-replace-args" ]; then
+            mapfile -t replace_args < "$STACK_PATH/.terraform-replace-args"
+          fi
           set +e
-          mise exec -- terraform -chdir="$STACK_PATH" plan -detailed-exitcode -input=false -lock-timeout=120s -out="$PLAN_NAME"
+          mise exec -- terraform -chdir="$STACK_PATH" plan "${replace_args[@]}" -detailed-exitcode -input=false -lock-timeout=120s -out="$PLAN_NAME"
           plan_exit=$?
           set -e
           case "$plan_exit" in
@@ -335,5 +370,5 @@ jobs:
         env:
           STACK_PATH: ${{ inputs.stack_path }}
         run: |
-          rm -f "$STACK_PATH"/zz-workflow.auto.tfvars.json "$STACK_PATH"/zz-workflow-secret.auto.tfvars.json
+          rm -f "$STACK_PATH"/zz-workflow.auto.tfvars.json "$STACK_PATH"/zz-workflow-secret.auto.tfvars.json "$STACK_PATH"/.terraform-replace-args
           rm -rf "$AZURE_CONFIG_DIR"

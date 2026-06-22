@@ -292,6 +292,12 @@ variable "enable_gitops" {
   default     = false
 }
 
+variable "recreate_flux_extension_epoch" {
+  type        = string
+  description = "Optional one-time migration token used to force replacement of the microsoft.flux extension when stale extension Helm values cannot be removed in-place. Keep empty for normal deploys; once set, do not clear or change it unless another extension reset is required."
+  default     = ""
+}
+
 variable "gitops_flux_namespace" {
   type        = string
   description = "Namespace where the AKS Flux extension installs Flux controllers."
