@@ -21,6 +21,7 @@ spec:
         any:
           - resources:
               namespaces:
+                - aks-command
                 - kube-system
                 - flux-system
                 - cert-manager

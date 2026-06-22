@@ -273,7 +273,7 @@ def validate_gitops() -> None:
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "create: false")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "serviceAccountName: flux-applier")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", "backstage-helm-manager")
-    for resource in ["deployments", "services", "configmaps", "horizontalpodautoscalers", "ingresses", "networkpolicies", "poddisruptionbudgets"]:
+    for resource in ["deployments", "replicasets", "services", "configmaps", "horizontalpodautoscalers", "ingresses", "networkpolicies", "poddisruptionbudgets"]:
         require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", resource)
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", "platform:tenant-helm-release-storage")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/flux-applier-rbac.yaml", "name: flux-applier")
