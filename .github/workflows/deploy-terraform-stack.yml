@@ -43,6 +43,11 @@ on:
         description: Azure subscription ID used in subscription-baseline state keys.
         required: true
         type: string
+      replace_addresses:
+        description: Optional Terraform -replace addresses for approved recovery operations. Use only with stack=platform during Flux extension recovery.
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -116,6 +121,7 @@ jobs:
       apply: ${{ inputs.action == 'apply' }}
       tfvars_json_variable: TERRAFORM_TFVARS_PLATFORM_JSON
       tfvars_json_secret: TERRAFORM_TFVARS_PLATFORM_SECRET_JSON
+      replace_addresses: ${{ inputs.replace_addresses }}
     permissions:
       contents: read
       id-token: write

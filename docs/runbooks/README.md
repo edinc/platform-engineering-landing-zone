@@ -19,6 +19,7 @@ Backstage, onboarding, golden paths, and day-2 operations.
 | [`ghas-cost.md`](ghas-cost.md) | GHAS and CodeQL opt-in and cost controls. |
 | [`secret-rotation.md`](secret-rotation.md) | Key Vault-backed secret and certificate rotation contract. |
 | [`cert-management.md`](cert-management.md) | cert-manager issuer choice and troubleshooting. |
+| [`flux-extension-recovery.md`](flux-extension-recovery.md) | Controlled recovery for stale AKS Flux extension settings and GitOps rehydration. |
 | [`platform-slos.md`](platform-slos.md) | Platform SLO targets, monthly review cadence, and alert requirements. |
 | [`backstage-ops.md`](backstage-ops.md) | Backstage upgrade, restore, TechDocs, Kubernetes plugin, RBAC, and catalog reconciliation operations. |
 | [`ownership-matrix.md`](ownership-matrix.md) | Canonical RACI for platform, workload, identity, GitOps, and cost artifacts. |

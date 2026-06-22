@@ -53,6 +53,11 @@ def require_contains(path: str, needle: str) -> None:
         fail(f"{path} must contain {needle!r}")
 
 
+def require_not_contains(path: str, needle: str) -> None:
+    if needle in read(path):
+        fail(f"{path} must not contain {needle!r}")
+
+
 def validate_policies() -> None:
     policy_dir = ROOT / "policies/kyverno"
     policy_files = {path.name for path in policy_dir.glob("*.yaml")}
@@ -134,9 +139,19 @@ def validate_gitops_seed() -> None:
 def validate_terraform_and_workflows() -> None:
     require_contains("infrastructure/terraform/platform/gitops.tf", "azurerm_kubernetes_cluster_extension")
     require_contains("infrastructure/terraform/platform/gitops.tf", "azurerm_kubernetes_flux_configuration")
+    require_contains("infrastructure/terraform/platform/variables.tf", 'variable "recreate_flux_extension_epoch"')
+    require_contains("infrastructure/terraform/platform/gitops.tf", 'resource "terraform_data" "flux_extension_recreate_epoch"')
+    require_contains("infrastructure/terraform/platform/gitops.tf", "replace_triggered_by")
+    require_contains("infrastructure/terraform/platform/gitops.tf", "terraform_data.flux_extension_recreate_epoch")
     require_contains("infrastructure/terraform/platform/gitops.tf", '"multiTenancy.enforce"')
     require_contains("infrastructure/terraform/platform/gitops.tf", '"workloadIdentity.enable"')
     require_contains("infrastructure/terraform/platform/gitops.tf", "flux_source_workload_identity_client_id")
+    for stale_setting in [
+        "source-controller.featureGates",
+        "sourceController.featureGates",
+        "ObjectLevelWorkloadIdentity",
+    ]:
+        require_not_contains("infrastructure/terraform/platform/gitops.tf", stale_setting)
     require_contains("infrastructure/terraform/platform/gitops.tf", "post_build")
     require_contains("infrastructure/terraform/platform/gitops.tf", "ssh_private_key_base64")
     require_contains("infrastructure/terraform/platform/gitops.tf", "ssh_known_hosts_base64")
