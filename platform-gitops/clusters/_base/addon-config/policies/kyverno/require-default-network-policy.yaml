@@ -20,6 +20,7 @@ spec:
         any:
           - resources:
               names:
+                - aks-command
                 - kube-system
                 - kube-public
                 - kube-node-lease
