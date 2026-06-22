@@ -222,6 +222,7 @@ jobs:
       BACKSTAGE_TRUST_PRIVATE_CA: ${{ vars.BACKSTAGE_TRUST_PRIVATE_CA || 'false' }}
       BACKSTAGE_TLS_CA_KEY_VAULT_NAME: ${{ vars.BACKSTAGE_TLS_CA_KEY_VAULT_NAME }}
       BACKSTAGE_TLS_CA_SECRET_NAME: ${{ vars.BACKSTAGE_TLS_CA_SECRET_NAME || 'platform-private-ca-crt' }}
+      AZURE_CONFIG_DIR: ${{ github.workspace }}/.tools/tmp/azure-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -243,3 +244,7 @@ jobs:
 
       - name: Validate deployed Backstage
         run: bash scripts/azure/validate_stage09_azure.sh
+
+      - name: Remove Azure CLI cache
+        if: ${{ always() }}
+        run: rm -rf "$AZURE_CONFIG_DIR"
