@@ -253,15 +253,14 @@ jobs:
             fi
             replace_addresses="${REPLACE_ADDRESSES//,/ }"
             for address in $replace_addresses; do
-              case "$address" in
-                azurerm_kubernetes_flux_configuration.backstage[0]|azurerm_kubernetes_flux_configuration.platform[0]|azurerm_kubernetes_cluster_extension.flux[0])
-                  printf -- '-replace=%s\n' "$address" >> "$replace_args_file"
-                  ;;
-                *)
-                  echo "::error::Terraform -replace address is not approved for Flux extension recovery: $address"
-                  exit 1
-                  ;;
-              esac
+              if [ "$address" = "azurerm_kubernetes_flux_configuration.backstage[0]" ] ||
+                 [ "$address" = "azurerm_kubernetes_flux_configuration.platform[0]" ] ||
+                 [ "$address" = "azurerm_kubernetes_cluster_extension.flux[0]" ]; then
+                printf -- '-replace=%s\n' "$address" >> "$replace_args_file"
+              else
+                echo "::error::Terraform -replace address is not approved for Flux extension recovery: $address"
+                exit 1
+              fi
             done
           fi
 
