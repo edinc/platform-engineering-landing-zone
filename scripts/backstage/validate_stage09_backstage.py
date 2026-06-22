@@ -224,6 +224,7 @@ def validate_permissions() -> None:
         "BACKSTAGE_TRUST_PRIVATE_CA",
         "BACKSTAGE_TLS_CA_KEY_VAULT_NAME",
         "BACKSTAGE_RESOLVE_IP",
+        "BACKSTAGE_CLUSTER_READINESS",
         "AZURE_CONFIG_DIR:",
         "Remove Azure CLI cache",
         '"enable_backstage": true',
