@@ -223,6 +223,7 @@ def validate_permissions() -> None:
         "github.ref == 'refs/heads/main'",
         "BACKSTAGE_TRUST_PRIVATE_CA",
         "BACKSTAGE_TLS_CA_KEY_VAULT_NAME",
+        "BACKSTAGE_RESOLVE_IP",
         "AZURE_CONFIG_DIR:",
         "Remove Azure CLI cache",
         '"enable_backstage": true',

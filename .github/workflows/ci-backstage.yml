@@ -84,7 +84,7 @@ jobs:
 
   publish-image:
     name: Publish Backstage image
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.run_azure_smoke))
     permissions:
       contents: read
       id-token: write
@@ -100,7 +100,7 @@ jobs:
 
   publish-reconciler-image:
     name: Publish Backstage catalog reconciler image
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.run_azure_smoke))
     permissions:
       contents: read
       id-token: write
@@ -115,7 +115,7 @@ jobs:
 
   publish-chart:
     name: Publish Backstage chart
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.run_azure_smoke))
     permissions:
       contents: read
       id-token: write
@@ -131,7 +131,7 @@ jobs:
 
   deployment-values:
     name: Backstage deployment values
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.run_azure_smoke))
     runs-on: ubuntu-latest
     needs:
       - publish-image
@@ -219,6 +219,7 @@ jobs:
       TECHDOCS_STORAGE_ACCOUNT_NAME: ${{ vars.TECHDOCS_STORAGE_ACCOUNT_NAME }}
       TECHDOCS_STORAGE_CONTAINER_NAME: ${{ vars.TECHDOCS_STORAGE_CONTAINER_NAME || 'techdocs' }}
       BACKSTAGE_HOST: ${{ vars.BACKSTAGE_HOST }}
+      BACKSTAGE_RESOLVE_IP: ${{ vars.BACKSTAGE_RESOLVE_IP }}
       BACKSTAGE_TRUST_PRIVATE_CA: ${{ vars.BACKSTAGE_TRUST_PRIVATE_CA || 'false' }}
       BACKSTAGE_TLS_CA_KEY_VAULT_NAME: ${{ vars.BACKSTAGE_TLS_CA_KEY_VAULT_NAME }}
       BACKSTAGE_TLS_CA_SECRET_NAME: ${{ vars.BACKSTAGE_TLS_CA_SECRET_NAME || 'platform-private-ca-crt' }}

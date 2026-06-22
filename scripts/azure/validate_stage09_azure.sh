@@ -97,6 +97,10 @@ echo "Approved TechDocs private endpoints: $private_endpoint_count"
 
 curl_args=(--fail --silent --show-error --max-time 10)
 ca_file=""
+if [ -n "${BACKSTAGE_RESOLVE_IP:-}" ]; then
+  curl_args+=(--resolve "${BACKSTAGE_HOST}:443:${BACKSTAGE_RESOLVE_IP}")
+  echo "Backstage readiness resolves ${BACKSTAGE_HOST} to ${BACKSTAGE_RESOLVE_IP} for this private smoke."
+fi
 case "${BACKSTAGE_TRUST_PRIVATE_CA:-false}" in
   true|TRUE|1)
     if [ -z "${BACKSTAGE_TLS_CA_KEY_VAULT_NAME:-}" ]; then
