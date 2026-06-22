@@ -129,5 +129,18 @@ case "${BACKSTAGE_TRUST_PRIVATE_CA:-false}" in
     ;;
 esac
 
-curl "${curl_args[@]}" "https://${BACKSTAGE_HOST}/.backstage/health/v1/readiness" >/dev/null
+if [ -n "${BACKSTAGE_CLUSTER_READINESS:-}" ] && [ "${BACKSTAGE_CLUSTER_READINESS}" != "false" ]; then
+  az aks command invoke \
+    --resource-group "$PLATFORM_RESOURCE_GROUP_NAME" \
+    --name "$PLATFORM_AKS_CLUSTER_NAME" \
+    --command "python3 - <<'PY'
+import urllib.request
+urllib.request.urlopen('http://backstage.backstage.svc.cluster.local:7007/.backstage/health/v1/readiness', timeout=10).read()
+PY" \
+    --query logs \
+    --output tsv >/dev/null
+  echo "Backstage in-cluster readiness endpoint responded successfully."
+else
+  curl "${curl_args[@]}" "https://${BACKSTAGE_HOST}/.backstage/health/v1/readiness" >/dev/null
+fi
 echo "Backstage readiness endpoint responded successfully."
