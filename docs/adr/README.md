@@ -4,7 +4,7 @@ This directory contains accepted and proposed architecture decision records
 for the platform landing zone. Use [`0000-template.md`](0000-template.md) for
 new ADRs.
 
-Next free number: **0054**
+Next free number: **0055**
 
 | ADR | Title | Status | File |
 |-----|-------|--------|------|
@@ -61,6 +61,7 @@ Next free number: **0054**
 | 0051 | Cross-repo GitHub writes | Accepted | [`0051-cross-repo-github-writes.md`](0051-cross-repo-github-writes.md) |
 | 0052 | Backstage Postgres passwordless auth | Accepted | [`0052-backstage-postgres-auth.md`](0052-backstage-postgres-auth.md) |
 | 0053 | ACA GitOps exception | Accepted | [`0053-aca-gitops-exception.md`](0053-aca-gitops-exception.md) |
+| 0054 | Flux controller Workload Identity migration | Accepted | [`0054-flux-controller-workload-identity-migration.md`](0054-flux-controller-workload-identity-migration.md) |
 
 ADR seeds 0002-0020 are defined in [`plan/plan.md` section 9](../../plan/plan.md#9-key-architecture-decisions-adr-seeds).
 Later seeds are introduced by the stage files under [`plan/stages/`](../../plan/stages/).

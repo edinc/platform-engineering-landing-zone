@@ -9,6 +9,10 @@ locals {
   )
 }
 
+resource "terraform_data" "flux_extension_recreate_epoch" {
+  input = var.recreate_flux_extension_epoch
+}
+
 resource "azurerm_kubernetes_cluster_extension" "flux" {
   count = local.gitops_enabled ? 1 : 0
 
@@ -24,6 +28,12 @@ resource "azurerm_kubernetes_cluster_extension" "flux" {
     "workloadIdentity.enable"                       = "true"
     "workloadIdentity.azureClientId"                = local.flux_source_workload_identity_client_id
     "workloadIdentity.azureTenantId"                = var.tenant_id
+  }
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.flux_extension_recreate_epoch,
+    ]
   }
 }
 
@@ -90,6 +100,12 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
     azurerm_role_assignment.external_dns,
     azurerm_role_assignment.external_secrets_key_vault_secret_user,
   ]
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.flux_extension_recreate_epoch,
+    ]
+  }
 }
 
 resource "azurerm_kubernetes_flux_configuration" "backstage" {
@@ -169,4 +185,10 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
     azurerm_role_assignment.techdocs_backstage_writer,
     azurerm_role_assignment.techdocs_publisher_writer,
   ]
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.flux_extension_recreate_epoch,
+    ]
+  }
 }

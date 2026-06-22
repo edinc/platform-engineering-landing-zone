@@ -197,6 +197,12 @@ def validate_permissions() -> None:
         fail("Application-team Kubernetes access must remain disabled until Stage 10 namespace RBAC")
     require_contains("backstage/deploy/templates/configmap.yaml", "BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER")
     require_contains("backstage/deploy/templates/deployment.yaml", "BACKSTAGE_APPLICATION_TEAM_GROUP_REFS")
+    require_contains("backstage/deploy/values.yaml", "standardLabels:")
+    require_contains("backstage/deploy/values.yaml", "app: backstage")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "standardLabels:")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "enabled: false")
+    for label in ["app: backstage", "team: platform-engineering", "costCenter: cc-platform", "dataClassification: internal"]:
+        require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", label)
     require_contains("backstage/app/app-config.yaml", "platformRepositoryUrl:")
     require_contains("backstage/app/app-config.yaml", "platformRepositoryOwner:")
     require_contains("backstage/app/app-config.yaml", "platformRepositoryName:")
