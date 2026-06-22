@@ -30,6 +30,7 @@ spec:
                 - external-secrets
                 - kyverno
                 - azureserviceoperator-system
+                - backstage
                 - keda
                 - ingress-nginx
                 - observability
