@@ -20,6 +20,7 @@ spec:
         any:
           - resources:
               namespaces:
+                - aks-command
                 - flux-system
                 - kyverno
                 - cert-manager
@@ -63,6 +64,7 @@ spec:
         any:
           - resources:
               namespaces:
+                - aks-command
                 - flux-system
                 - kyverno
                 - cert-manager
@@ -88,6 +90,7 @@ spec:
         any:
           - resources:
               namespaces:
+                - aks-command
                 - flux-system
                 - kyverno
                 - cert-manager
