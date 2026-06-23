@@ -16,6 +16,7 @@ spec:
   postBuild:
     substitute:
       application_insights_ingestion_endpoint: ${application_insights_ingestion_endpoint}
+      aks_kubelet_client_id: ${aks_kubelet_client_id}
       aso_client_id: ${aso_client_id}
       azure_dns_resource_group_name: ${azure_dns_resource_group_name}
       cert_manager_client_id: ${cert_manager_client_id}
