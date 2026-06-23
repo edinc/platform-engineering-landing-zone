@@ -4,7 +4,6 @@ resources:
   - ../../../_base/controllers
   - namespace-ingress-nginx-public.yaml
   - ingress-nginx-public-ingressclass-rbac.yaml
-  - public-backstage-kustomization.yaml
 patches:
   - target:
       kind: HelmRelease

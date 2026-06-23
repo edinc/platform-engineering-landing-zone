@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - ../../../_base/addon-config
   - ingress-nginx-public.yaml
+  - public-backstage-kustomization.yaml

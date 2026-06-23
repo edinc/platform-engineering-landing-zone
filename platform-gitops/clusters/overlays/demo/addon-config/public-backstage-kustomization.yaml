@@ -24,6 +24,6 @@ spec:
   serviceAccountName: platform-reconciler
   sourceRef:
     kind: GitRepository
-    name: platform-cluster-state
+    name: platform-demo
   timeout: 5m
   wait: false
