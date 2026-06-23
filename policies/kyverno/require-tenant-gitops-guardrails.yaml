@@ -29,6 +29,7 @@ spec:
                 - azureserviceoperator-system
                 - keda
                 - ingress-nginx
+                - ingress-nginx-public
                 - observability
                 - backstage
       validate:
@@ -73,6 +74,7 @@ spec:
                 - azureserviceoperator-system
                 - keda
                 - ingress-nginx
+                - ingress-nginx-public
                 - observability
                 - backstage
       validate:
@@ -99,6 +101,7 @@ spec:
                 - azureserviceoperator-system
                 - keda
                 - ingress-nginx
+                - ingress-nginx-public
                 - observability
                 - backstage
       validate:

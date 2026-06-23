@@ -27,6 +27,7 @@ spec:
                 - flux-system
                 - cert-manager
                 - ingress-nginx
+                - ingress-nginx-public
                 - kyverno
                 - observability
                 - azureserviceoperator-system

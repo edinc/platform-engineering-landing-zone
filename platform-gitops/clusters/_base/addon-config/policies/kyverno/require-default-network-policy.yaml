@@ -33,6 +33,7 @@ spec:
                 - backstage
                 - keda
                 - ingress-nginx
+                - ingress-nginx-public
                 - observability
       preconditions:
         all:

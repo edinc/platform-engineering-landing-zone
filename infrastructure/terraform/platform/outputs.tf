@@ -100,6 +100,11 @@ output "front_door_profile_id" {
   description = "Front Door Premium profile ID, or null when disabled."
 }
 
+output "backstage_public_ingress_ip_address" {
+  value       = try(azurerm_public_ip.backstage_public_ingress[0].ip_address, null)
+  description = "Static public IP address for the dedicated public Backstage ingress, or null when disabled."
+}
+
 output "aks_node_auto_provisioning_enabled" {
   value       = var.enable_aks && var.enable_aks_node_auto_provisioning
   description = "Whether Stage 08 AKS Node Auto-Provisioning is enabled for the platform cluster."

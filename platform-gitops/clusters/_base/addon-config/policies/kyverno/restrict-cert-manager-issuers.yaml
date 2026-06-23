@@ -56,6 +56,11 @@ spec:
           - resources:
               kinds:
                 - Certificate
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - ingress-nginx-public
       validate:
         message: Certificate DNS names must stay under <namespace>.${platform_root_domain}.
         pattern:

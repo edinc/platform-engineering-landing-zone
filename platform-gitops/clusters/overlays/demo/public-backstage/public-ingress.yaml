@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backstage-public
+  namespace: ingress-nginx-public
+  labels:
+    app: ingress-nginx-public
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+    nginx.ingress.kubernetes.io/whitelist-source-range: ${backstage_public_ingress_allowed_cidr}
+    platform.example.io/external-dns: ${backstage_public_ingress_external_dns}
+spec:
+  ingressClassName: backstage-public
+  tls:
+    - hosts:
+        - ${platform_profile}.backstage.${platform_root_domain}
+      secretName: backstage-public-tls
+  rules:
+    - host: ${platform_profile}.backstage.${platform_root_domain}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backstage-public-backend
+                port:
+                  name: http
