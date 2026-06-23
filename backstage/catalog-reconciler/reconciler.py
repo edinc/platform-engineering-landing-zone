@@ -77,6 +77,7 @@ def github_catalog_repos():
             ),
             file=sys.stderr,
         )
+        return set()
     org_repos_url = f"https://api.github.com/orgs/{GITHUB_ORG}/repos?per_page=100"
     user_repos_url = f"https://api.github.com/users/{GITHUB_ORG}/repos?per_page=100"
     url = org_repos_url
