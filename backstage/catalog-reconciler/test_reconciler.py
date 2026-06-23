@@ -18,6 +18,7 @@ class GitHubCatalogReposTest(unittest.TestCase):
         os.environ["BACKSTAGE_BASE_URL"] = "http://backstage.example"
         os.environ["BACKSTAGE_SERVICE_TOKEN"] = "backstage-token"
         os.environ["GITHUB_ORG"] = "edinc"
+        os.environ["PLATFORM_ENV"] = "demo"
         os.environ["GITHUB_TOKEN"] = "github-token"
         self.reconciler = importlib.reload(importlib.import_module("reconciler"))
 
@@ -95,6 +96,14 @@ class GitHubCatalogReposTest(unittest.TestCase):
         self.assertEqual(repos, set())
         request_json_response.assert_not_called()
         request_json.assert_not_called()
+
+    def test_rejects_placeholder_github_token_outside_demo(self):
+        os.environ["PLATFORM_ENV"] = "prod"
+        os.environ["GITHUB_TOKEN"] = "placeholder-token-not-for-production"
+        reconciler = importlib.reload(importlib.import_module("reconciler"))
+
+        with self.assertRaisesRegex(RuntimeError, "outside demo"):
+            reconciler.github_catalog_repos()
 
 
 if __name__ == "__main__":
