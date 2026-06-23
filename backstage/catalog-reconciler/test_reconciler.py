@@ -82,6 +82,38 @@ class GitHubCatalogReposTest(unittest.TestCase):
             "github-token",
         )
 
+    def test_ignores_placeholder_github_token(self):
+        os.environ["GITHUB_TOKEN"] = "placeholder-token-not-for-production"
+        reconciler = importlib.reload(importlib.import_module("reconciler"))
+
+        with (
+            patch.object(
+                reconciler,
+                "request_json_response",
+                return_value=(
+                    [
+                        {
+                            "name": "platform-engineering-landing-zone",
+                            "contents_url": "https://api.github.com/repos/edinc/platform-engineering-landing-zone/contents/{+path}",
+                        }
+                    ],
+                    Headers(),
+                ),
+            ) as request_json_response,
+            patch.object(reconciler, "request_json", return_value={}) as request_json,
+        ):
+            repos = reconciler.github_catalog_repos()
+
+        self.assertEqual(repos, {"platform-engineering-landing-zone"})
+        request_json_response.assert_called_once_with(
+            "https://api.github.com/orgs/edinc/repos?per_page=100",
+            None,
+        )
+        request_json.assert_called_once_with(
+            "https://api.github.com/repos/edinc/platform-engineering-landing-zone/contents/catalog-info.yaml",
+            None,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

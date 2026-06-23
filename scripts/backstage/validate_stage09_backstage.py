@@ -329,6 +329,7 @@ def validate_gitops() -> None:
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "backstage_catalog_reconciler_image_digest")
     require_contains("backstage/catalog-reconciler/reconciler.py", "rel=\"next\"")
     require_contains("backstage/catalog-reconciler/reconciler.py", "users/{GITHUB_ORG}/repos")
+    require_contains("backstage/catalog-reconciler/reconciler.py", "placeholder-or-empty-token")
     require_contains("backstage/catalog-reconciler/reconciler.py", "backstage.io/kubernetes-id")
     require_contains("backstage/catalog-reconciler/reconciler.py", "backstage.io/managed-by-origin-location")
     require_contains("backstage/catalog-reconciler/reconciler.py", "OWNER_PREFIX")
