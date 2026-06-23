@@ -218,6 +218,7 @@ def validate_terraform_and_workflows() -> None:
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", "timeout: 15m")
     require_contains("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", "retries: 3")
+    require_contains("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", "bitnamilegacy/kubectl")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "serviceAccountName: platform-reconciler")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "serviceAccountName: platform-reconciler")
 
