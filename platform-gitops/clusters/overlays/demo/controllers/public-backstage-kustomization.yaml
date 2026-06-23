@@ -3,6 +3,8 @@ kind: Kustomization
 metadata:
   name: public-backstage
   namespace: flux-system
+  annotations:
+    clusterconfig.azure.com/use-managed-source: "true"
   labels:
     app: backstage
     team: platform-engineering
