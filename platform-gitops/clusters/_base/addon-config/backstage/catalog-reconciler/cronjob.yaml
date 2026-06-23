@@ -25,6 +25,12 @@ spec:
             costCenter: cc-platform
             dataClassification: internal
         spec:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            seccompProfile:
+              type: RuntimeDefault
           serviceAccountName: backstage-catalog-reconciler
           restartPolicy: Never
           containers:

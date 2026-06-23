@@ -65,10 +65,18 @@ def catalog_components():
 
 
 def github_catalog_repos():
-    url = f"https://api.github.com/orgs/{GITHUB_ORG}/repos?per_page=100"
+    org_repos_url = f"https://api.github.com/orgs/{GITHUB_ORG}/repos?per_page=100"
+    user_repos_url = f"https://api.github.com/users/{GITHUB_ORG}/repos?per_page=100"
+    url = org_repos_url
     repos = []
     while url:
-        page, headers = request_json_response(url, GITHUB_TOKEN)
+        try:
+            page, headers = request_json_response(url, GITHUB_TOKEN)
+        except urllib.error.HTTPError as error:
+            if error.code == 404 and url == org_repos_url:
+                url = user_repos_url
+                continue
+            raise
         repos.extend(page)
         url = next_link(headers)
     discovered = set()
