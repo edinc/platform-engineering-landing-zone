@@ -162,6 +162,7 @@ def validate_terraform_and_workflows() -> None:
     require_contains("infrastructure/terraform/platform/gitops.tf", "ssh_known_hosts_base64")
     require_contains("infrastructure/terraform/platform/gitops.tf", "external_secrets_client_id")
     require_contains("infrastructure/terraform/platform/gitops.tf", "cluster_state_root_path")
+    require_contains("infrastructure/terraform/platform/gitops.tf", "jsonencode(local.backstage_public_ingress_allowed_cidr)")
     require_contains("infrastructure/terraform/platform/workload-identities.tf", "azurerm_user_assigned_identity")
     require_contains("infrastructure/terraform/platform/workload-identities.tf", "azurerm_federated_identity_credential")
     require_contains("infrastructure/terraform/platform/workload-identities.tf", "system:serviceaccount:")
