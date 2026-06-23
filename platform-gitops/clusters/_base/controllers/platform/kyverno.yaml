@@ -40,8 +40,7 @@ spec:
         - name: AZURE_CLIENT_ID
           value: ${aks_kubelet_client_id}
     policyReportsCleanup:
-      image:
-        repository: bitnamilegacy/kubectl
+      enabled: false
     features:
       admissionReports:
         enabled: true
