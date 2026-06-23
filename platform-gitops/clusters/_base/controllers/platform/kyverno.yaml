@@ -6,6 +6,13 @@ metadata:
 spec:
   interval: 30m
   targetNamespace: kyverno
+  timeout: 15m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
   chart:
     spec:
       chart: kyverno
