@@ -104,3 +104,8 @@ structured `platform-drift` log when GitHub catalog files or vended namespaces
 are missing from the Backstage catalog. It also posts to the optional
 `backstage-catalog-reconciler-teams-webhook-url` secret for the platform drift
 channel. Treat sustained drift as a platform incident for the owning team.
+
+For demo environments, a `backstage-catalog-reconciler-github-token` value that
+starts with `placeholder` intentionally disables GitHub repository discovery and
+emits a `github-token-disabled` log event. Namespace drift checks still run.
+Seed a real GitHub token to enable repository catalog drift detection.

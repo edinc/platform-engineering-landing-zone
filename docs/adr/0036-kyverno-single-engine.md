@@ -29,6 +29,18 @@ Kubernetes admission and mutation.
   add-on unless a future ADR replaces this decision.
 - Kyverno performance, webhook timeouts, and policy exceptions become Stage 07
   operational responsibilities.
+- Kyverno verifies signed images from the private platform ACR by running its
+  Azure registry credential helper with the AKS kubelet managed identity client
+  ID. The kubelet identity already has `AcrPull`, which avoids introducing a
+  separate static registry secret for admission-time verification.
+- The Kyverno HelmRelease gets a longer recovery budget than the default Helm
+  action timeout because post-upgrade migration hooks can exceed five minutes
+  after demo-cluster cold starts. The parent Flux `platform-controllers`
+  Kustomization must keep a longer wait timeout than the Kyverno HelmRelease.
+- The chart's optional `policyReportsCleanup` hook is disabled because the
+  upstream chart version references a removed `bitnami/kubectl` image. Admission
+  policy enforcement, reports controller deployment, and image verification stay
+  enabled.
 
 ## Alternatives considered
 

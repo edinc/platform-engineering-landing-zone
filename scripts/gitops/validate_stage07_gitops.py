@@ -58,6 +58,11 @@ def require_not_contains(path: str, needle: str) -> None:
         fail(f"{path} must not contain {needle!r}")
 
 
+def require_regex(path: str, pattern: str) -> None:
+    if not re.search(pattern, read(path), re.MULTILINE):
+        fail(f"{path} must match {pattern!r}")
+
+
 def validate_policies() -> None:
     policy_dir = ROOT / "policies/kyverno"
     policy_files = {path.name for path in policy_dir.glob("*.yaml")}
@@ -216,10 +221,10 @@ def validate_terraform_and_workflows() -> None:
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "aks_kubelet_client_id: ${aks_kubelet_client_id}")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
+    require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "timeout: 20m")
     require_contains("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", "timeout: 15m")
     require_contains("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", "retries: 3")
-    require_contains("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", "policyReportsCleanup:")
-    require_contains("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", "enabled: false")
+    require_regex("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", r"policyReportsCleanup:\n\s+enabled: false")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "serviceAccountName: platform-reconciler")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "serviceAccountName: platform-reconciler")
 
