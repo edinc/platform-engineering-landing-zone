@@ -13,7 +13,8 @@ if not BACKSTAGE_SERVICE_TOKEN and os.environ.get("BACKSTAGE_SERVICE_TOKEN_FILE"
         BACKSTAGE_SERVICE_TOKEN = token_file.read().strip()
 if not BACKSTAGE_SERVICE_TOKEN:
     raise RuntimeError("BACKSTAGE_SERVICE_TOKEN or BACKSTAGE_SERVICE_TOKEN_FILE is required")
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+RAW_GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_TOKEN = None if RAW_GITHUB_TOKEN.lower().startswith("placeholder") else RAW_GITHUB_TOKEN
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL", "")
 NAMESPACE_LABEL = "platform.example.io/team"
 OWNER_PREFIX = "group:default/"
@@ -65,6 +66,17 @@ def catalog_components():
 
 
 def github_catalog_repos():
+    if not GITHUB_TOKEN:
+        print(
+            json.dumps(
+                {
+                    "event": "github-token-disabled",
+                    "reason": "placeholder-or-empty-token",
+                },
+                sort_keys=True,
+            ),
+            file=sys.stderr,
+        )
     org_repos_url = f"https://api.github.com/orgs/{GITHUB_ORG}/repos?per_page=100"
     user_repos_url = f"https://api.github.com/users/{GITHUB_ORG}/repos?per_page=100"
     url = org_repos_url
