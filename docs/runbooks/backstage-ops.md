@@ -25,6 +25,38 @@ Backstage runs in AKS through Flux and the reusable supply-chain workflows.
 6. Re-run **Backstage CI** with `run_azure_smoke=true` to validate the deployed
    AKS, TechDocs storage, private endpoint, and readiness endpoint wiring.
 
+## Public demo access
+
+The default Backstage ingress remains private. Demo environments can enable a
+separate public Backstage-only ingress by setting
+`enable_backstage_public_ingress=true` in the protected platform Terraform
+tfvars JSON. Set `backstage_public_ingress_allowed_cidr` to the operator source
+IP CIDR, for example `203.0.113.10/32`, to restrict access.
+
+The public path uses a dedicated `ingress-nginx-public` controller that watches
+only its own namespace and the `backstage-public` IngressClass. It reaches
+Backstage through an `ExternalName` backend service pointing to
+`backstage.backstage.svc.cluster.local`; it does not need read access to
+Backstage runtime secrets and does not expose the AKS API server or the private
+platform ingress controller.
+The public route resources are reconciled by a separate wait-free Flux
+Kustomization so public certificate issuance cannot block the private Backstage
+release.
+Terraform outputs `backstage_public_ingress_ip_address` after apply. Trusted
+browser access requires public DNS for
+`<profile>.backstage.<platform_root_domain>` to resolve to that IP.
+
+Disabling `enable_backstage_public_ingress` reconciles the public controller to
+zero replicas, removes its LoadBalancer Service, and disables ExternalDNS for the
+public Ingress. The inert `backstage-public` Ingress object can remain in the
+cluster with its ExternalName backend service. The public TLS Secret is stored in
+the `ingress-nginx-public` namespace as the controller default certificate so the
+public controller does not need read access to Backstage runtime secrets.
+Cert-manager may retain or renew that TLS Secret while the manifest is present,
+but there is no public LoadBalancer path while the controller Service is
+disabled. Do not rely on Flux suspension as a disable mechanism because it does
+not uninstall a previously-created LoadBalancer.
+
 ## Runtime secrets
 
 Backstage runtime secrets live in the platform Key Vault and are consumed by

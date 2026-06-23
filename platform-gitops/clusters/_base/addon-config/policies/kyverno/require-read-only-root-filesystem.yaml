@@ -30,6 +30,7 @@ spec:
                 - azureserviceoperator-system
                 - keda
                 - ingress-nginx
+                - ingress-nginx-public
                 - observability
       validate:
         message: Containers must set securityContext.readOnlyRootFilesystem to true.

@@ -71,6 +71,11 @@ def require_contains(path: str, needle: str) -> None:
         fail(f"{path} must contain {needle!r}")
 
 
+def require_not_contains(path: str, needle: str) -> None:
+    if needle in read(path):
+        fail(f"{path} must not contain {needle!r}")
+
+
 def render_kustomize(path: str) -> str:
     try:
         result = subprocess.run(
@@ -306,6 +311,7 @@ def validate_gitops() -> None:
     require_contains("backstage/deploy/templates/deployment.yaml", "/.backstage/health/v1/liveness")
     require_contains("backstage/deploy/templates/deployment.yaml", "configMapKeyRef")
     require_contains("backstage/deploy/templates/networkpolicy.yaml", "backstage-catalog-reconciler")
+    require_contains("backstage/deploy/templates/networkpolicy.yaml", "ingress-nginx-public")
     require_contains("backstage/deploy/templates/configmap.yaml", "platformAdminsGroupRef")
     require_contains("backstage/deploy/templates/configmap.yaml", "accessRestrictions")
     require_contains("backstage/deploy/templates/configmap.yaml", "secret: ${BACKSTAGE_SESSION_SECRET}")
@@ -350,6 +356,15 @@ def validate_gitops() -> None:
         fail("Catalog reconciler must use a signed platform image, not Docker Hub python")
     for expected in ["BACKSTAGE_BASE_URL", "GITHUB_ORG"]:
         require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", expected)
+    require_not_contains("platform-gitops/clusters/overlays/demo/backstage/kustomization.yaml", "public-ingress.yaml")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-backend.yaml", "type: ExternalName")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-backend.yaml", "backstage.backstage.svc.cluster.local")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-certificate.yaml", "letsencrypt-dns01")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-certificate.yaml", "${platform_profile}.backstage.${platform_root_domain}")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "ingressClassName: backstage-public")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "force-ssl-redirect")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "platform.example.io/external-dns: ${backstage_public_ingress_external_dns}")
+    require_contains("infrastructure/terraform/platform/gitops.tf", "backstage_public_ingress_external_dns")
 
     rendered_demo_backstage = render_kustomize("platform-gitops/clusters/overlays/demo/backstage")
     for expected in [
@@ -383,6 +398,8 @@ def validate_terraform() -> None:
         'variable "backstage_microsoft_auth_client_id"',
         'variable "backstage_catalog_reconciler_workload_identity_client_id"',
         'variable "backstage_catalog_reconciler_workload_identity_principal_id"',
+        'variable "enable_backstage_public_ingress"',
+        'variable "backstage_public_ingress_allowed_cidr"',
         'variable "backstage_application_team_group_refs"',
         'variable "backstage_application_team_group_map_json"',
         'variable "backstage_microsoft_graph_group_object_ids"',
@@ -406,6 +423,12 @@ def validate_terraform() -> None:
     require_contains("infrastructure/terraform/platform/locals.tf", "blobServices/default")
     require_contains("infrastructure/terraform/platform/outputs.tf", "techdocs_storage_account_name")
     require_contains("infrastructure/terraform/platform/outputs.tf", "backstage_flux_configuration_id")
+    require_contains("infrastructure/terraform/platform/backstage-public-ingress.tf", "azurerm_public_ip")
+    require_contains("infrastructure/terraform/platform/backstage-public-ingress.tf", "Network Contributor")
+    require_contains("infrastructure/terraform/platform/outputs.tf", "backstage_public_ingress_ip_address")
+    require_contains("infrastructure/terraform/platform/main.tf", "backstage_public_ingress_allowed_cidr")
+    require_contains("infrastructure/terraform/platform/variables.tf", "all-source ranges are not allowed")
+    require_contains("infrastructure/terraform/platform/variables.tf", 'regex("/0+$"')
     require_contains("infrastructure/terraform/platform/main.tf", "enable_gitops requires platform_root_domain")
     require_contains("infrastructure/terraform/platform/main.tf", "enable_techdocs_storage requires enable_private_endpoints")
     require_contains("infrastructure/terraform/platform/aks.tf", "Azure Kubernetes Service Cluster User Role")

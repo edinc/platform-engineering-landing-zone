@@ -662,6 +662,29 @@ variable "backstage_cost_showback_container_id" {
   }
 }
 
+variable "enable_backstage_public_ingress" {
+  type        = bool
+  description = "Whether to expose Backstage through a dedicated public ingress-nginx controller and static public IP. The existing private ingress stays enabled."
+  default     = false
+}
+
+variable "backstage_public_ingress_allowed_cidr" {
+  type        = string
+  description = "Required source CIDR when public Backstage ingress is enabled. Use an operator public IP /32 or a trusted network CIDR; all-source ranges are rejected."
+  default     = ""
+
+  validation {
+    condition = (
+      var.backstage_public_ingress_allowed_cidr == "" ||
+      (
+        can(cidrhost(var.backstage_public_ingress_allowed_cidr, 0)) &&
+        !can(regex("/0+$", trimspace(var.backstage_public_ingress_allowed_cidr)))
+      )
+    )
+    error_message = "backstage_public_ingress_allowed_cidr must be empty or a valid source-restricted CIDR block; all-source ranges are not allowed."
+  }
+}
+
 variable "gitops_sync_interval_seconds" {
   type        = number
   description = "Flux Git source and Kustomization sync interval in seconds."

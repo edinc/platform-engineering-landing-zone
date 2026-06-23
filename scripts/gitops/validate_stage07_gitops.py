@@ -219,6 +219,15 @@ def validate_terraform_and_workflows() -> None:
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "platform_acr_login_server: ${platform_acr_login_server}")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "platform_repository_name: ${platform_repository_name}")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "aks_kubelet_client_id: ${aks_kubelet_client_id}")
+    for expected in [
+        'backstage_public_ingress_allowed_cidr: "${backstage_public_ingress_allowed_cidr}"',
+        'backstage_public_ingress_controller_replicas: "${backstage_public_ingress_controller_replicas}"',
+        'backstage_public_ingress_enabled: "${backstage_public_ingress_enabled}"',
+        'backstage_public_ingress_external_dns: "${backstage_public_ingress_external_dns}"',
+        'backstage_public_ingress_public_ip_name: "${backstage_public_ingress_public_ip_name}"',
+        'backstage_public_ingress_resource_group: "${backstage_public_ingress_resource_group}"',
+    ]:
+        require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", expected)
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "timeout: 20m")
@@ -227,6 +236,24 @@ def validate_terraform_and_workflows() -> None:
     require_regex("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", r"policyReportsCleanup:\n\s+enabled: false")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "serviceAccountName: platform-reconciler")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "serviceAccountName: platform-reconciler")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml", "ingress-nginx-public.yaml")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml", "ingress-nginx-public-ingressclass-rbac.yaml")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml", "public-backstage-kustomization.yaml")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/public-backstage-kustomization.yaml", "wait: false")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/public-backstage-kustomization.yaml", "public-backstage")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public.yaml", "default-ssl-certificate: ingress-nginx-public/backstage-public-tls")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public-ingressclass-rbac.yaml", "ingressclasses")
+    require_contains("policies/kyverno/restrict-cert-manager-issuers.yaml", "ingress-nginx-public")
+    require_contains("policies/kyverno/restrict-external-dns-hostnames.yaml", "ingress-nginx-public")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public.yaml", "replicaCount: ${backstage_public_ingress_controller_replicas}")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public.yaml", "scope: true")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public.yaml", "enabled: ${backstage_public_ingress_enabled}")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public.yaml", "backstage-public")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public.yaml", "service.beta.kubernetes.io/azure-pip-name")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public.yaml", "loadBalancerSourceRanges")
+    require_regex("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public.yaml", r"admissionWebhooks:\n\s+enabled: false")
+    require_contains("policies/kyverno/verify-cosign-signatures.yaml", "ingress-nginx-public")
+    require_contains("platform-gitops/clusters/_base/addon-config/policies/kyverno/verify-cosign-signatures.yaml", "ingress-nginx-public")
 
 
 def main() -> None:

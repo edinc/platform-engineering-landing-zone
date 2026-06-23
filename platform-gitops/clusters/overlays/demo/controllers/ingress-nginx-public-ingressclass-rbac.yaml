@@ -1,0 +1,36 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ingress-nginx-public-ingressclass-reader
+  labels:
+    app: ingress-nginx-public
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+rules:
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ingress-nginx-public-ingressclass-reader
+  labels:
+    app: ingress-nginx-public
+    team: platform-engineering
+    costCenter: cc-platform
+    dataClassification: internal
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ingress-nginx-public-ingressclass-reader
+subjects:
+  - kind: ServiceAccount
+    name: ingress-nginx-public
+    namespace: ingress-nginx-public

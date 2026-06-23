@@ -35,6 +35,11 @@ spec:
           - resources:
               kinds:
                 - Ingress
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - ingress-nginx-public
       preconditions:
         all:
           - key: "{{ request.object.metadata.annotations.\"platform.example.io/external-dns\" || '' }}"

@@ -18,6 +18,10 @@ locals {
   backstage_catalog_reconciler_image_repository = (
     var.backstage_catalog_reconciler_image_repository != "" ? var.backstage_catalog_reconciler_image_repository : try("${azurerm_container_registry.platform[0].login_server}/platform/backstage-catalog-reconciler", "")
   )
+  backstage_public_ingress_enabled = local.backstage_enabled && var.enable_backstage_public_ingress
+  backstage_public_ingress_allowed_cidr = (
+    trimspace(var.backstage_public_ingress_allowed_cidr) != "" ? trimspace(var.backstage_public_ingress_allowed_cidr) : "127.0.0.1/32"
+  )
   backstage_postgres_host = (
     var.backstage_postgres_host != "" ? var.backstage_postgres_host : try(azurerm_postgresql_flexible_server.platform[0].fqdn, "")
   )
