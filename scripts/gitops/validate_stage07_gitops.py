@@ -237,6 +237,7 @@ def validate_terraform_and_workflows() -> None:
     require_regex("platform-gitops/clusters/_base/controllers/platform/kyverno.yaml", r"policyReportsCleanup:\n\s+enabled: false")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "serviceAccountName: platform-reconciler")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "serviceAccountName: platform-reconciler")
+    require_contains("platform-gitops/clusters/overlays/demo/controllers/namespace-ingress-nginx-public.yaml", "pod-security.kubernetes.io/enforce: restricted")
     require_contains("platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml", "ingress-nginx-public.yaml")
     require_contains("platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml", "ingress-nginx-public-ingressclass-rbac.yaml")
     require_contains("platform-gitops/clusters/overlays/demo/controllers/kustomization.yaml", "public-backstage-kustomization.yaml")
