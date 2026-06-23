@@ -213,6 +213,7 @@ def validate_terraform_and_workflows() -> None:
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "github_owner: ${github_owner}")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "platform_acr_login_server: ${platform_acr_login_server}")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "platform_repository_name: ${platform_repository_name}")
+    require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "aks_kubelet_client_id: ${aks_kubelet_client_id}")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "serviceAccountName: platform-reconciler")
