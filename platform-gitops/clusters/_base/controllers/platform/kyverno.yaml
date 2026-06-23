@@ -17,6 +17,10 @@ spec:
   values:
     admissionController:
       replicas: 3
+      container:
+        extraEnvVars:
+          - name: AZURE_CLIENT_ID
+            value: ${aks_kubelet_client_id}
       serviceMonitor:
         enabled: false
     backgroundController:
@@ -25,6 +29,9 @@ spec:
       replicas: 2
     reportsController:
       replicas: 2
+      extraEnvVars:
+        - name: AZURE_CLIENT_ID
+          value: ${aks_kubelet_client_id}
     features:
       admissionReports:
         enabled: true

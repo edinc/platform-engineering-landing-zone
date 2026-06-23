@@ -69,6 +69,7 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
     post_build {
       substitute = {
         application_insights_ingestion_endpoint = var.application_insights_ingestion_endpoint
+        aks_kubelet_client_id                   = try(azurerm_kubernetes_cluster.platform[0].kubelet_identity[0].client_id, "")
         aso_client_id                           = local.aso_workload_identity_client_id
         azure_dns_resource_group_name           = var.azure_dns_resource_group_name
         cert_manager_client_id                  = local.cert_manager_workload_identity_client_id
