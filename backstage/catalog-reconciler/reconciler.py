@@ -7,6 +7,7 @@ import urllib.request
 
 BACKSTAGE_BASE_URL = os.environ["BACKSTAGE_BASE_URL"].rstrip("/")
 GITHUB_ORG = os.environ["GITHUB_ORG"]
+PLATFORM_ENV = os.environ.get("PLATFORM_ENV", "").strip().lower()
 BACKSTAGE_SERVICE_TOKEN = os.environ.get("BACKSTAGE_SERVICE_TOKEN")
 if not BACKSTAGE_SERVICE_TOKEN and os.environ.get("BACKSTAGE_SERVICE_TOKEN_FILE"):
     with open(os.environ["BACKSTAGE_SERVICE_TOKEN_FILE"], encoding="utf-8") as token_file:
@@ -14,7 +15,8 @@ if not BACKSTAGE_SERVICE_TOKEN and os.environ.get("BACKSTAGE_SERVICE_TOKEN_FILE"
 if not BACKSTAGE_SERVICE_TOKEN:
     raise RuntimeError("BACKSTAGE_SERVICE_TOKEN or BACKSTAGE_SERVICE_TOKEN_FILE is required")
 RAW_GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
-GITHUB_TOKEN = None if RAW_GITHUB_TOKEN.lower().startswith("placeholder") else RAW_GITHUB_TOKEN
+GITHUB_TOKEN_PLACEHOLDER = not RAW_GITHUB_TOKEN.strip() or RAW_GITHUB_TOKEN.lower().startswith("placeholder")
+GITHUB_TOKEN = None if GITHUB_TOKEN_PLACEHOLDER else RAW_GITHUB_TOKEN
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL", "")
 NAMESPACE_LABEL = "platform.example.io/team"
 OWNER_PREFIX = "group:default/"
@@ -67,6 +69,8 @@ def catalog_components():
 
 def github_catalog_repos():
     if not GITHUB_TOKEN:
+        if PLATFORM_ENV != "demo":
+            raise RuntimeError("GITHUB_TOKEN must be a real token outside demo environments")
         print(
             json.dumps(
                 {

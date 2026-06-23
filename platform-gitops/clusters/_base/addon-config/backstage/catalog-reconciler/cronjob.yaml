@@ -42,6 +42,8 @@ spec:
                   value: https://${platform_profile}.backstage.${platform_root_domain}
                 - name: GITHUB_ORG
                   value: ${github_owner}
+                - name: PLATFORM_ENV
+                  value: ${platform_profile}
                 - name: BACKSTAGE_SERVICE_TOKEN_FILE
                   value: /var/run/secrets/backstage/token
                 - name: GITHUB_TOKEN
