@@ -72,16 +72,16 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
         aks_kubelet_client_id                   = try(azurerm_kubernetes_cluster.platform[0].kubelet_identity[0].client_id, "")
         aso_client_id                           = local.aso_workload_identity_client_id
         azure_dns_resource_group_name           = var.azure_dns_resource_group_name
-        backstage_public_ingress_allowed_cidr   = local.backstage_public_ingress_allowed_cidr
+        backstage_public_ingress_allowed_cidr   = jsonencode(local.backstage_public_ingress_allowed_cidr)
         backstage_public_ingress_controller_replicas = (
-          local.backstage_public_ingress_enabled ? "1" : "0"
+          local.backstage_public_ingress_enabled ? jsonencode("1") : jsonencode("0")
         )
-        backstage_public_ingress_enabled = tostring(local.backstage_public_ingress_enabled)
+        backstage_public_ingress_enabled = jsonencode(tostring(local.backstage_public_ingress_enabled))
         backstage_public_ingress_external_dns = (
-          local.backstage_public_ingress_enabled ? "enabled" : "disabled"
+          local.backstage_public_ingress_enabled ? jsonencode("enabled") : jsonencode("disabled")
         )
-        backstage_public_ingress_public_ip_name = try(azurerm_public_ip.backstage_public_ingress[0].name, "")
-        backstage_public_ingress_resource_group = azurerm_resource_group.platform.name
+        backstage_public_ingress_public_ip_name = jsonencode(try(azurerm_public_ip.backstage_public_ingress[0].name, ""))
+        backstage_public_ingress_resource_group = jsonencode(azurerm_resource_group.platform.name)
         cert_manager_client_id                  = local.cert_manager_workload_identity_client_id
         cluster_state_branch                    = var.cluster_state_branch
         cluster_state_repository_provider       = var.gitops_repository_provider == "" ? "generic" : lower(var.gitops_repository_provider)
