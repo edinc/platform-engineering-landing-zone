@@ -48,7 +48,10 @@ the platform uses the Azure public IP DNS label FQDN
 `<label>.<region>.cloudapp.azure.com` with an HTTP-01 Let's Encrypt issuer. The
 public LoadBalancer accepts ports 80 and 443 so ACME can validate the FQDN, while
 the Backstage Ingress preserves client IPs and enforces
-`backstage_public_ingress_allowed_cidr`.
+`backstage_public_ingress_allowed_cidr`. The platform stack manages matching
+ports 80 and 443 allow rules on the AKS user-pool subnet NSG; if these rules are
+missing, the Azure Load Balancer can exist but public TCP connections will time
+out.
 
 Disabling `enable_backstage_public_ingress` reconciles the public controller to
 zero replicas and removes its LoadBalancer Service. The inert
