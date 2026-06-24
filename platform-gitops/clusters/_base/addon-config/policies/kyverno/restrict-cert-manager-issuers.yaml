@@ -48,6 +48,7 @@ spec:
               - key: "{{ request.object.spec.issuerRef.name || '' }}"
                 operator: NotIn
                 value:
+                  - letsencrypt-http01
                   - letsencrypt-dns01
                   - platform-private-ca
     - name: certificate-dnsnames-stay-in-namespace-subdomain

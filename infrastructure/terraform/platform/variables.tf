@@ -685,6 +685,23 @@ variable "backstage_public_ingress_allowed_cidr" {
   }
 }
 
+variable "backstage_public_ingress_dns_label" {
+  type        = string
+  description = "Optional Azure public IP DNS label for public Backstage. Defaults to a deterministic pe-<profile>-<location_short>-<suffix>-backstage label."
+  default     = ""
+
+  validation {
+    condition = (
+      var.backstage_public_ingress_dns_label == "" ||
+      (
+        length(var.backstage_public_ingress_dns_label) <= 63 &&
+        can(regex("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", var.backstage_public_ingress_dns_label))
+      )
+    )
+    error_message = "backstage_public_ingress_dns_label must be empty or a valid Azure public IP DNS label of 1-63 lowercase letters, numbers, or hyphens without leading or trailing hyphens."
+  }
+}
+
 variable "gitops_sync_interval_seconds" {
   type        = number
   description = "Flux Git source and Kustomization sync interval in seconds."
