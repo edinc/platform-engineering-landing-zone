@@ -76,6 +76,15 @@ def require_not_contains(path: str, needle: str) -> None:
         fail(f"{path} must not contain {needle!r}")
 
 
+def require_no_sign_in_page_auto_prop(path: str) -> None:
+    text = read(path)
+    match = re.search(r"<SignInPage\b[^>]*>", text)
+    if not match:
+        fail(f"{path} must render a SignInPage opening tag")
+    if re.search(r"\bauto\b(?!\s*=\s*\{\s*false\s*\})", match.group(0)):
+        fail(f"{path} SignInPage must not set the auto prop; users should click sign in explicitly")
+
+
 def render_kustomize(path: str) -> str:
     try:
         result = subprocess.run(
@@ -170,6 +179,7 @@ def validate_backstage_config() -> None:
     ]:
         if needle not in app_frontend:
             fail(f"Backstage frontend must include {needle!r}")
+    require_no_sign_in_page_auto_prop("backstage/app/packages/app/src/App.tsx")
 
     catalog = read("backstage/app/catalog-info.yaml")
     entity_count = len(re.findall(r"^kind:\s+", catalog, flags=re.MULTILINE))
