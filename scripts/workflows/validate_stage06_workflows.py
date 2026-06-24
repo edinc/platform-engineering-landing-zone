@@ -111,6 +111,18 @@ def validate_workflow_specific_contracts() -> None:
     container_build = (ROOT / ".github/workflows/container-build-sign.yml").read_text(encoding="utf-8")
     if "AZURE_CONFIG_DIR:" not in container_build:
         fail(".github/workflows/container-build-sign.yml must isolate Azure CLI state with AZURE_CONFIG_DIR")
+    for fragment in [
+        "Pre-clean runner container state",
+        "Reclaim build space before scan",
+        "Cleanup runner container state",
+        "docker buildx rm --all-inactive --force",
+        "docker buildx prune --all --force",
+        "docker system prune --all --force",
+        "df -h /var/lib/docker",
+        "rm -rf /tmp/stereoscope-* /tmp/trivy-* /tmp/syft-*",
+    ]:
+        if fragment not in container_build:
+            fail(f".github/workflows/container-build-sign.yml must include runner cleanup fragment {fragment!r}")
 
     helm_publish = (ROOT / ".github/workflows/helm-publish.yml").read_text(encoding="utf-8")
     for fragment in [
