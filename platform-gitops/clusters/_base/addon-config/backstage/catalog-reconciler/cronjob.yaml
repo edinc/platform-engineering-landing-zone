@@ -39,7 +39,7 @@ spec:
               imagePullPolicy: IfNotPresent
               env:
                 - name: BACKSTAGE_BASE_URL
-                  value: https://${platform_profile}.backstage.${platform_root_domain}
+                  value: http://backstage.backstage.svc.cluster.local:7007
                 - name: GITHUB_ORG
                   value: ${github_owner}
                 - name: PLATFORM_ENV

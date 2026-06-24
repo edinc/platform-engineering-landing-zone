@@ -42,13 +42,17 @@ platform ingress controller.
 The public route resources are reconciled by a separate wait-free Flux
 Kustomization so public certificate issuance cannot block the private Backstage
 release.
-Terraform outputs `backstage_public_ingress_ip_address` after apply. Trusted
-browser access requires public DNS for
-`<profile>.backstage.<platform_root_domain>` to resolve to that IP.
+Terraform outputs `backstage_public_ingress_ip_address` and
+`backstage_public_ingress_fqdn` after apply. When no custom domain is available,
+the platform uses the Azure public IP DNS label FQDN
+`<label>.<region>.cloudapp.azure.com` with an HTTP-01 Let's Encrypt issuer. The
+public LoadBalancer accepts ports 80 and 443 so ACME can validate the FQDN, while
+the Backstage Ingress preserves client IPs and enforces
+`backstage_public_ingress_allowed_cidr`.
 
 Disabling `enable_backstage_public_ingress` reconciles the public controller to
-zero replicas, removes its LoadBalancer Service, and disables ExternalDNS for the
-public Ingress. The inert `backstage-public` Ingress object can remain in the
+zero replicas and removes its LoadBalancer Service. The inert
+`backstage-public` Ingress object can remain in the
 cluster with its ExternalName backend service. The public TLS Secret is stored in
 the `ingress-nginx-public` namespace as the controller default certificate so the
 public controller does not need read access to Backstage runtime secrets.

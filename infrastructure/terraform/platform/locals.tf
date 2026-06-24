@@ -22,6 +22,12 @@ locals {
   backstage_public_ingress_allowed_cidr = (
     trimspace(var.backstage_public_ingress_allowed_cidr) != "" ? trimspace(var.backstage_public_ingress_allowed_cidr) : "127.0.0.1/32"
   )
+  backstage_public_ingress_dns_label = (
+    var.backstage_public_ingress_dns_label != "" ? var.backstage_public_ingress_dns_label : lower("pe-${var.profile}-${var.location_short}-${var.name_suffix}-backstage")
+  )
+  backstage_public_ingress_host = (
+    local.backstage_public_ingress_enabled ? try(azurerm_public_ip.backstage_public_ingress[0].fqdn, "") : "${var.profile}.backstage.${var.platform_root_domain}"
+  )
   backstage_postgres_host = (
     var.backstage_postgres_host != "" ? var.backstage_postgres_host : try(azurerm_postgresql_flexible_server.platform[0].fqdn, "")
   )

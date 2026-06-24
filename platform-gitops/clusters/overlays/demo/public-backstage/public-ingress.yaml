@@ -12,15 +12,14 @@ metadata:
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "20m"
     nginx.ingress.kubernetes.io/whitelist-source-range: ${backstage_public_ingress_allowed_cidr}
-    platform.example.io/external-dns: ${backstage_public_ingress_external_dns}
 spec:
   ingressClassName: backstage-public
   tls:
     - hosts:
-        - ${platform_profile}.backstage.${platform_root_domain}
+        - ${backstage_public_ingress_host}
       secretName: backstage-public-tls
   rules:
-    - host: ${platform_profile}.backstage.${platform_root_domain}
+    - host: ${backstage_public_ingress_host}
       http:
         paths:
           - path: /

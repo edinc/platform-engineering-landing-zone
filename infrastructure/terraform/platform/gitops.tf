@@ -76,10 +76,8 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
         backstage_public_ingress_controller_replicas = (
           local.backstage_public_ingress_enabled ? jsonencode("1") : jsonencode("0")
         )
-        backstage_public_ingress_enabled = jsonencode(tostring(local.backstage_public_ingress_enabled))
-        backstage_public_ingress_external_dns = (
-          local.backstage_public_ingress_enabled ? jsonencode("enabled") : jsonencode("disabled")
-        )
+        backstage_public_ingress_enabled        = jsonencode(tostring(local.backstage_public_ingress_enabled))
+        backstage_public_ingress_host           = jsonencode(local.backstage_public_ingress_host)
         backstage_public_ingress_public_ip_name = jsonencode(try(azurerm_public_ip.backstage_public_ingress[0].name, ""))
         backstage_public_ingress_resource_group = jsonencode(azurerm_resource_group.platform.name)
         cert_manager_client_id                  = local.cert_manager_workload_identity_client_id
@@ -160,6 +158,7 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
         backstage_chart_version                         = var.backstage_chart_version
         backstage_cost_showback_url                     = local.backstage_cost_showback_container_url
         backstage_client_id                             = local.backstage_workload_identity_client_id
+        backstage_public_ingress_host                   = local.backstage_public_ingress_host
         backstage_image_digest                          = var.backstage_image_digest
         backstage_image_repository                      = local.backstage_image_repository
         backstage_microsoft_auth_client_id              = var.backstage_microsoft_auth_client_id
@@ -170,7 +169,6 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
         backstage_postgres_host                         = local.backstage_postgres_host
         backstage_postgres_user                         = local.backstage_postgres_user
         backstage_public_ingress_allowed_cidr           = local.backstage_public_ingress_allowed_cidr
-        backstage_public_ingress_external_dns           = local.backstage_public_ingress_enabled ? "enabled" : "disabled"
         github_owner                                    = var.github_owner
         platform_acr_login_server                       = try(azurerm_container_registry.platform[0].login_server, "")
         platform_key_vault_name                         = local.key_vault_name
