@@ -1,7 +1,7 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: generate-default-network-policy-v2
+  name: generate-default-network-policy-v3
   annotations:
     policies.kyverno.io/title: Generate default NetworkPolicy
     policies.kyverno.io/category: Network Security
