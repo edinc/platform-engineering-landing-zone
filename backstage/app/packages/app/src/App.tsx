@@ -58,7 +58,6 @@ export default createApp({
         SignInPage: props => (
           <SignInPage
             {...props}
-            auto
             provider={{
               id: 'microsoft-auth-provider',
               title: 'Microsoft Entra ID',
