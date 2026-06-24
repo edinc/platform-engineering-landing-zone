@@ -670,18 +670,23 @@ variable "enable_backstage_public_ingress" {
 
 variable "backstage_public_ingress_allowed_cidr" {
   type        = string
-  description = "Required source CIDR when public Backstage ingress is enabled. Use an operator public IP /32 or a trusted network CIDR; all-source ranges are rejected."
+  description = "Required source CIDR list when public Backstage ingress is enabled. Use one or more comma-separated operator public IP /32 values or trusted network CIDRs; all-source ranges are rejected."
   default     = ""
 
   validation {
     condition = (
       var.backstage_public_ingress_allowed_cidr == "" ||
-      (
-        can(cidrhost(var.backstage_public_ingress_allowed_cidr, 0)) &&
-        !can(regex("/0+$", trimspace(var.backstage_public_ingress_allowed_cidr)))
-      )
+      alltrue([
+        for cidr in split(",", var.backstage_public_ingress_allowed_cidr) :
+        trimspace(cidr) != "" &&
+        can(cidrhost(trimspace(cidr), 0)) &&
+        (
+          can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/(2[4-9]|3[0-2])$", trimspace(cidr))) ||
+          can(regex("^[0-9A-Fa-f:]+/(6[4-9]|[7-9][0-9]|1[0-1][0-9]|12[0-8])$", trimspace(cidr)))
+        )
+      ])
     )
-    error_message = "backstage_public_ingress_allowed_cidr must be empty or a valid source-restricted CIDR block; all-source ranges are not allowed."
+    error_message = "backstage_public_ingress_allowed_cidr must be empty or one or more comma-separated source-restricted CIDR blocks. IPv4 ranges must be /24 or narrower, IPv6 ranges must be /64 or narrower, and all-source ranges are not allowed."
   }
 }
 

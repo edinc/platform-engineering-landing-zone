@@ -12,6 +12,9 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/rbac-groups: {{ toJson .Values.rbacGroups | sha256sum }}
       labels:
         {{- include "backstage.labels" . | nindent 8 }}
         backstage.io/kubernetes-id: backstage

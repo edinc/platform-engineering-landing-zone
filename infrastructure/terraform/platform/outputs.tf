@@ -110,6 +110,11 @@ output "backstage_public_ingress_fqdn" {
   description = "Azure cloudapp FQDN for the dedicated public Backstage ingress, or null when disabled."
 }
 
+output "backstage_microsoft_auth_redirect_uri" {
+  value       = local.backstage_enabled ? "https://${local.backstage_microsoft_auth_redirect_uri}" : null
+  description = "Redirect URI that must be configured on the Backstage Microsoft Entra app registration."
+}
+
 output "aks_node_auto_provisioning_enabled" {
   value       = var.enable_aks && var.enable_aks_node_auto_provisioning
   description = "Whether Stage 08 AKS Node Auto-Provisioning is enabled for the platform cluster."
