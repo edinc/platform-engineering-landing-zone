@@ -23,7 +23,7 @@ spec:
       backstage_public_ingress_allowed_cidr: "${backstage_public_ingress_allowed_cidr}"
       backstage_public_ingress_controller_replicas: "${backstage_public_ingress_controller_replicas}"
       backstage_public_ingress_enabled: "${backstage_public_ingress_enabled}"
-      backstage_public_ingress_external_dns: "${backstage_public_ingress_external_dns}"
+      backstage_public_ingress_host: "${backstage_public_ingress_host}"
       backstage_public_ingress_public_ip_name: "${backstage_public_ingress_public_ip_name}"
       backstage_public_ingress_resource_group: "${backstage_public_ingress_resource_group}"
       cert_manager_client_id: ${cert_manager_client_id}

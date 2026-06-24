@@ -45,7 +45,7 @@ spec:
     ingress:
       host: ${platform_profile}.backstage.${platform_root_domain}
     appConfig:
-      baseUrl: https://${platform_profile}.backstage.${platform_root_domain}
+      baseUrl: https://${backstage_public_ingress_host}
       postgresAuthMode: ${backstage_postgres_auth_mode}
       aksApiServerUrl: ${backstage_aks_apiserver_url}
       postgresHost: ${backstage_postgres_host}

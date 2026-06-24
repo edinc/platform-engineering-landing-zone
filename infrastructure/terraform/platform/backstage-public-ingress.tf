@@ -6,6 +6,7 @@ resource "azurerm_public_ip" "backstage_public_ingress" {
   location            = azurerm_resource_group.platform.location
   allocation_method   = "Static"
   sku                 = "Standard"
+  domain_name_label   = local.backstage_public_ingress_dns_label
   zones               = var.profile == "prod" && length(var.availability_zones) > 0 ? var.availability_zones : null
   tags                = local.tags
 }
