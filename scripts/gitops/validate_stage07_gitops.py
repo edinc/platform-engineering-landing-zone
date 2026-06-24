@@ -229,6 +229,7 @@ def validate_terraform_and_workflows() -> None:
         'backstage_public_ingress_resource_group: "${backstage_public_ingress_resource_group}"',
     ]:
         require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", expected)
+        require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", expected)
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", 'clusterconfig.azure.com/use-managed-source: "true"')
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "timeout: 20m")
