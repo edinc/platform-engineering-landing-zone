@@ -35,11 +35,14 @@ spec:
       service:
         enabled: ${backstage_public_ingress_enabled}
         annotations:
+          service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
           service.beta.kubernetes.io/azure-pip-name: ${backstage_public_ingress_public_ip_name}
           service.beta.kubernetes.io/azure-load-balancer-resource-group: ${backstage_public_ingress_resource_group}
         externalTrafficPolicy: Local
-        loadBalancerSourceRanges:
-          - ${backstage_public_ingress_allowed_cidr}
+        nodePorts:
+          http: 32080
+          https: 32443
+        healthCheckNodePort: 32081
       metrics:
         enabled: true
         serviceMonitor:

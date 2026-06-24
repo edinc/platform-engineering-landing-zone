@@ -224,7 +224,7 @@ def validate_terraform_and_workflows() -> None:
         'backstage_public_ingress_allowed_cidr: "${backstage_public_ingress_allowed_cidr}"',
         'backstage_public_ingress_controller_replicas: "${backstage_public_ingress_controller_replicas}"',
         'backstage_public_ingress_enabled: "${backstage_public_ingress_enabled}"',
-        'backstage_public_ingress_external_dns: "${backstage_public_ingress_external_dns}"',
+        'backstage_public_ingress_host: "${backstage_public_ingress_host}"',
         'backstage_public_ingress_public_ip_name: "${backstage_public_ingress_public_ip_name}"',
         'backstage_public_ingress_resource_group: "${backstage_public_ingress_resource_group}"',
     ]:
@@ -247,16 +247,23 @@ def validate_terraform_and_workflows() -> None:
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/public-backstage-kustomization.yaml", "name: platform-demo")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/public-backstage-kustomization.yaml", "wait: false")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/public-backstage-kustomization.yaml", "public-backstage")
+    require_contains("platform-gitops/clusters/overlays/demo/addon-config/public-backstage-kustomization.yaml", "backstage_public_ingress_host")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "default-ssl-certificate: ingress-nginx-public/backstage-public-tls")
+    require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "healthCheckNodePort: 32081")
+    require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "http: 32080")
+    require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "https: 32443")
     require_contains("platform-gitops/clusters/overlays/demo/controllers/ingress-nginx-public-ingressclass-rbac.yaml", "ingressclasses")
     require_contains("policies/kyverno/restrict-cert-manager-issuers.yaml", "ingress-nginx-public")
+    require_contains("policies/kyverno/restrict-cert-manager-issuers.yaml", "letsencrypt-http01")
     require_contains("policies/kyverno/restrict-external-dns-hostnames.yaml", "ingress-nginx-public")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "replicaCount: ${backstage_public_ingress_controller_replicas}")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "scope: true")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "enabled: ${backstage_public_ingress_enabled}")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "backstage-public")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "service.beta.kubernetes.io/azure-pip-name")
-    require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "loadBalancerSourceRanges")
+    require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "externalTrafficPolicy: Local")
+    require_not_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "loadBalancerSourceRanges")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "nginx.ingress.kubernetes.io/whitelist-source-range: ${backstage_public_ingress_allowed_cidr}")
     require_regex("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", r"admissionWebhooks:\n\s+enabled: false")
     require_contains("policies/kyverno/verify-cosign-signatures.yaml", "ingress-nginx-public")
     require_contains("platform-gitops/clusters/_base/addon-config/policies/kyverno/verify-cosign-signatures.yaml", "ingress-nginx-public")

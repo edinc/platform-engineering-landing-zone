@@ -294,7 +294,7 @@ def validate_gitops() -> None:
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/ocirepository.yaml", "digest: ${backstage_chart_digest}")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "backstage_aks_apiserver_url")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "postgresAuthMode: ${backstage_postgres_auth_mode}")
-    require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "${platform_profile}.backstage.${platform_root_domain}")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "host: ${platform_profile}.backstage.${platform_root_domain}")
     require_contains("infrastructure/terraform/platform/variables.tf", 'variable "backstage_postgres_auth_mode"')
     require_contains("backstage/deploy/templates/deployment.yaml", "command:")
     require_contains("backstage/deploy/templates/deployment.yaml", "scripts/start-backstage.mjs")
@@ -343,7 +343,7 @@ def validate_gitops() -> None:
     require_contains("backstage/catalog-reconciler/Dockerfile", "COPY --chown=65532:65532 reconciler.py")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/networkpolicy.yaml", "backstage-catalog-reconciler")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/secretstore.yaml", "backstage-catalog-reconciler")
-    require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "https://${platform_profile}.backstage.${platform_root_domain}")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "http://backstage.backstage.svc.cluster.local:7007")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "PLATFORM_ENV")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "serviceAccountToken")
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/catalog-reconciler/cronjob.yaml", "runAsNonRoot: true")
@@ -359,18 +359,19 @@ def validate_gitops() -> None:
     require_not_contains("platform-gitops/clusters/overlays/demo/backstage/kustomization.yaml", "public-ingress.yaml")
     require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-backend.yaml", "type: ExternalName")
     require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-backend.yaml", "backstage.backstage.svc.cluster.local")
-    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-certificate.yaml", "letsencrypt-dns01")
-    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-certificate.yaml", "${platform_profile}.backstage.${platform_root_domain}")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-certificate.yaml", "letsencrypt-http01")
+    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-certificate.yaml", "${backstage_public_ingress_host}")
     require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "ingressClassName: backstage-public")
     require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "force-ssl-redirect")
-    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "platform.example.io/external-dns: ${backstage_public_ingress_external_dns}")
-    require_contains("infrastructure/terraform/platform/gitops.tf", "backstage_public_ingress_external_dns")
+    require_contains("infrastructure/terraform/platform/gitops.tf", "backstage_public_ingress_host")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "baseUrl: https://${backstage_public_ingress_host}")
+    require_contains("platform-gitops/clusters/_base/addon-config/backstage/helmrelease.yaml", "host: ${platform_profile}.backstage.${platform_root_domain}")
 
     rendered_demo_backstage = render_kustomize("platform-gitops/clusters/overlays/demo/backstage")
     for expected in [
         "clusterIssuer: platform-private-ca",
         "host: ${platform_profile}.backstage.${platform_root_domain}",
-        "baseUrl: https://${platform_profile}.backstage.${platform_root_domain}",
+        "baseUrl: https://${backstage_public_ingress_host}",
         "value: http://backstage.backstage.svc.cluster.local:7007",
         "port: 7007",
     ]:

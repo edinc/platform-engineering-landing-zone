@@ -16,9 +16,7 @@ spec:
   postBuild:
     substitute:
       backstage_public_ingress_allowed_cidr: ${backstage_public_ingress_allowed_cidr}
-      backstage_public_ingress_external_dns: ${backstage_public_ingress_external_dns}
-      platform_profile: ${platform_profile}
-      platform_root_domain: ${platform_root_domain}
+      backstage_public_ingress_host: ${backstage_public_ingress_host}
   prune: true
   retryInterval: 1m
   serviceAccountName: platform-reconciler

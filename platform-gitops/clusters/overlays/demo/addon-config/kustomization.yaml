@@ -2,5 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ../../../_base/addon-config
+  - letsencrypt-http01-clusterissuer.yaml
   - ingress-nginx-public.yaml
   - public-backstage-kustomization.yaml
