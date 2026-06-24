@@ -24,9 +24,14 @@ Terraform creates a static Standard public IP when
 `enable_backstage_public_ingress` is true and grants the AKS control-plane
 managed identity Network Contributor on that public IP. Enabling public access
 requires `backstage_public_ingress_allowed_cidr`; the platform does not allow the
-Backstage route to default to `0.0.0.0/0`. Flux passes the public IP name,
-resource group, DNS label host, and source CIDR allowlist into the demo addon
-overlay. When public Backstage ingress is disabled, the public controller
+Backstage route to default to `0.0.0.0/0`. The allowlist supports one or more
+comma-separated trusted CIDRs so browser egress and automation egress can both be
+represented without broadening to all sources; each IPv4 range must be `/24` or
+narrower and each IPv6 range must be `/64` or narrower. Flux passes the public IP
+name, resource group, DNS label host, and source CIDR allowlist into the demo
+addon overlay. Terraform outputs the Microsoft Entra redirect URI that must be
+added to the externally supplied Backstage app registration. When public Backstage
+ingress is disabled, the public controller
 reconciles to zero replicas and has no LoadBalancer Service.
 The public route resources are reconciled by a separate wait-free Flux
 Kustomization so certificate issuance cannot block private Backstage rollout.

@@ -31,7 +31,10 @@ The default Backstage ingress remains private. Demo environments can enable a
 separate public Backstage-only ingress by setting
 `enable_backstage_public_ingress=true` in the protected platform Terraform
 tfvars JSON. Set `backstage_public_ingress_allowed_cidr` to the operator source
-IP CIDR, for example `203.0.113.10/32`, to restrict access.
+IP CIDR, for example `203.0.113.10/32`, or to a comma-separated list such as
+`203.0.113.10/32,198.51.100.25/32` when browsers egress through multiple
+trusted addresses. For template safety, IPv4 ranges must be `/24` or narrower
+and IPv6 ranges must be `/64` or narrower.
 
 The public path uses a dedicated `ingress-nginx-public` controller that watches
 only its own namespace and the `backstage-public` IngressClass. It reaches
@@ -43,8 +46,10 @@ The public route resources are reconciled by a separate wait-free Flux
 Kustomization so public certificate issuance cannot block the private Backstage
 release.
 Terraform outputs `backstage_public_ingress_ip_address` and
-`backstage_public_ingress_fqdn` after apply. When no custom domain is available,
-the platform uses the Azure public IP DNS label FQDN
+`backstage_public_ingress_fqdn` after apply. It also outputs
+`backstage_microsoft_auth_redirect_uri`; add that URI to the Backstage Microsoft
+Entra app registration's web redirect URIs before testing sign-in. When no
+custom domain is available, the platform uses the Azure public IP DNS label FQDN
 `<label>.<region>.cloudapp.azure.com` with an HTTP-01 Let's Encrypt issuer. The
 public LoadBalancer accepts ports 80 and 443 so ACME can validate the FQDN, while
 the Backstage Ingress preserves client IPs and enforces
@@ -63,6 +68,10 @@ Cert-manager may retain or renew that TLS Secret while the manifest is present,
 but there is no public LoadBalancer path while the controller Service is
 disabled. Do not rely on Flux suspension as a disable mechanism because it does
 not uninstall a previously-created LoadBalancer.
+
+When `appConfig.baseUrl`, RBAC group references, or other ConfigMap-backed
+Backstage values change, the Helm chart rolls the Backstage Deployment through
+checksum annotations so the running process picks up the new configuration.
 
 ## Runtime secrets
 
