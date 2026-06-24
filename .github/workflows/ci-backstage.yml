@@ -96,6 +96,8 @@ jobs:
       image_name: platform/backstage
       context: backstage/app
       dockerfile: backstage/app/Dockerfile
+      # This heavy Node.js image runs only on x86-64 AKS demo nodes; avoid slow QEMU arm64 emulation.
+      platforms: linux/amd64
       environment: dev
 
   publish-reconciler-image:
