@@ -85,6 +85,23 @@ def require_no_sign_in_page_auto_prop(path: str) -> None:
         fail(f"{path} SignInPage must not set the auto prop; users should click sign in explicitly")
 
 
+def require_backstage_image_amd64_platform(path: str) -> None:
+    text = read(path)
+    match = re.search(r"(?ms)^  publish-image:\n(?P<block>.*?)(?=^  [a-zA-Z0-9_-]+:|\Z)", text)
+    if not match:
+        fail(f"{path} must define the Backstage publish-image job")
+    block = match.group("block")
+    for needle in [
+        "image_name: platform/backstage",
+        "context: backstage/app",
+        "dockerfile: backstage/app/Dockerfile",
+    ]:
+        if needle not in block:
+            fail(f"{path} publish-image job must contain {needle!r}")
+    if not re.search(r"(?m)^\s+platforms:\s+linux/amd64\s*$", block):
+        fail(f"{path} publish-image job must build only linux/amd64 to avoid slow QEMU arm64 emulation")
+
+
 def render_kustomize(path: str) -> str:
     try:
         result = subprocess.run(
@@ -247,6 +264,7 @@ def validate_permissions() -> None:
         '"enable_techdocs_storage": true',
     ]:
         require_contains(".github/workflows/ci-backstage.yml", needle)
+    require_backstage_image_amd64_platform(".github/workflows/ci-backstage.yml")
     for needle in [
         'jq -r \'.oidc\'',
         'jq -r \'.workloadIdentity\'',
