@@ -73,6 +73,12 @@ appConfig:
   azureSubscriptionId: ""
   costShowbackContainerUrl: ""
 
+rbacGroups:
+  platformAdminsGroupRef: group:default/pe-platform-admins
+  platformOperatorsGroupRef: group:default/pe-platform-operators
+  applicationTeamGroupRefs: ""
+  applicationTeamGroupMapJson: "{}"
+
 extraEnv:
   - name: NODE_OPTIONS
     value: "--no-node-snapshot --max-old-space-size=512"
