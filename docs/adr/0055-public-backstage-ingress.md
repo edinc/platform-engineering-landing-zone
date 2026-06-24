@@ -43,6 +43,9 @@ HTTP-01 Let's Encrypt issuer and the Azure public IP DNS-label FQDN
 on ports 80 and 443 so ACME HTTP-01 challenges can complete, but the Backstage
 Ingress itself preserves client IPs and enforces
 `backstage_public_ingress_allowed_cidr` with the nginx allowlist annotation.
+Terraform also opens ports 80 and 443 on the AKS user-pool subnet NSG when the
+public ingress is enabled; otherwise the platform-owned subnet NSG denies client
+traffic after Azure Load Balancer forwards it to the nodes.
 
 ## Consequences
 
