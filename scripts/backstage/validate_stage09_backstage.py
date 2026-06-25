@@ -190,12 +190,21 @@ def validate_backstage_config() -> None:
         "convertLegacyPlugin",
         "@backstage/plugin-techdocs/alpha",
         "@backstage/plugin-scaffolder/alpha",
-        "@backstage-community/plugin-cost-insights/alpha",
+        "@backstage-community/plugin-cost-insights",
         "Microsoft Entra ID",
         "microsoftAuthApiRef",
     ]:
         if needle not in app_frontend:
             fail(f"Backstage frontend must include {needle!r}")
+    if "@backstage-community/plugin-cost-insights/alpha" in app_frontend:
+        fail(
+            "Backstage frontend must use the legacy Cost Insights page with the platform "
+            "costInsightsApiRef factory; the alpha plugin also registers an example API provider"
+        )
+    require_contains("backstage/app/packages/app/src/App.tsx", "PlatformCostInsightsClient")
+    require_contains("backstage/app/packages/app/src/modules/nav/Sidebar.tsx", 'to="/cost-insights"')
+    require_contains("backstage/app/packages/app/src/modules/nav/Sidebar.tsx", 'text="Cost Insights"')
+    require_contains("backstage/app/packages/app/src/modules/nav/Sidebar.tsx", "MonetizationOn")
     require_no_sign_in_page_auto_prop("backstage/app/packages/app/src/App.tsx")
 
     catalog = read("backstage/app/catalog-info.yaml")
