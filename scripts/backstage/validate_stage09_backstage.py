@@ -433,7 +433,6 @@ def validate_terraform() -> None:
         'variable "backstage_catalog_reconciler_workload_identity_client_id"',
         'variable "backstage_catalog_reconciler_workload_identity_principal_id"',
         'variable "enable_backstage_public_ingress"',
-        'variable "backstage_public_ingress_allowed_cidr"',
         'variable "backstage_application_team_group_refs"',
         'variable "backstage_application_team_group_map_json"',
         'variable "backstage_microsoft_graph_group_object_ids"',
@@ -460,9 +459,7 @@ def validate_terraform() -> None:
     require_contains("infrastructure/terraform/platform/backstage-public-ingress.tf", "azurerm_public_ip")
     require_contains("infrastructure/terraform/platform/backstage-public-ingress.tf", "Network Contributor")
     require_contains("infrastructure/terraform/platform/outputs.tf", "backstage_public_ingress_ip_address")
-    require_contains("infrastructure/terraform/platform/main.tf", "backstage_public_ingress_allowed_cidr")
-    require_contains("infrastructure/terraform/platform/variables.tf", "all-source ranges are not allowed")
-    require_contains("infrastructure/terraform/platform/variables.tf", "IPv4 ranges must be /24 or narrower")
+    require_not_contains("infrastructure/terraform/platform/main.tf", "backstage_public_ingress_allowed_cidr")
     require_contains("infrastructure/terraform/platform/main.tf", "enable_gitops requires platform_root_domain")
     require_contains("infrastructure/terraform/platform/main.tf", "enable_techdocs_storage requires enable_private_endpoints")
     require_contains("infrastructure/terraform/platform/aks.tf", "Azure Kubernetes Service Cluster User Role")

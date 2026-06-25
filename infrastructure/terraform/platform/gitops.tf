@@ -72,7 +72,6 @@ resource "azurerm_kubernetes_flux_configuration" "platform" {
         aks_kubelet_client_id                   = try(azurerm_kubernetes_cluster.platform[0].kubelet_identity[0].client_id, "")
         aso_client_id                           = local.aso_workload_identity_client_id
         azure_dns_resource_group_name           = var.azure_dns_resource_group_name
-        backstage_public_ingress_allowed_cidr   = jsonencode(local.backstage_public_ingress_allowed_cidr)
         backstage_public_ingress_controller_replicas = (
           local.backstage_public_ingress_enabled ? jsonencode("1") : jsonencode("0")
         )
@@ -168,7 +167,6 @@ resource "azurerm_kubernetes_flux_configuration" "backstage" {
         backstage_postgres_auth_mode                    = var.backstage_postgres_auth_mode
         backstage_postgres_host                         = local.backstage_postgres_host
         backstage_postgres_user                         = local.backstage_postgres_user
-        backstage_public_ingress_allowed_cidr           = local.backstage_public_ingress_allowed_cidr
         github_owner                                    = var.github_owner
         platform_acr_login_server                       = try(azurerm_container_registry.platform[0].login_server, "")
         platform_key_vault_name                         = local.key_vault_name

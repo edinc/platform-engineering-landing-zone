@@ -30,11 +30,12 @@ Backstage runs in AKS through Flux and the reusable supply-chain workflows.
 The default Backstage ingress remains private. Demo environments can enable a
 separate public Backstage-only ingress by setting
 `enable_backstage_public_ingress=true` in the protected platform Terraform
-tfvars JSON. Set `backstage_public_ingress_allowed_cidr` to the operator source
-IP CIDR, for example `203.0.113.10/32`, or to a comma-separated list such as
-`203.0.113.10/32,198.51.100.25/32` when browsers egress through multiple
-trusted addresses. For template safety, IPv4 ranges must be `/24` or narrower
-and IPv6 ranges must be `/64` or narrower.
+tfvars JSON. The public demo route is reachable from the internet and relies on
+Microsoft Entra ID sign-in plus Backstage RBAC for access control. Keep the
+private ingress as the default path for non-demo profiles that require network
+source restrictions. Remove any older `backstage_public_ingress_allowed_cidr`
+entry from protected platform tfvars before applying this model; the public demo
+route no longer uses client source IP allowlisting.
 
 The public path uses a dedicated `ingress-nginx-public` controller that watches
 only its own namespace and the `backstage-public` IngressClass. It reaches
@@ -51,9 +52,9 @@ Terraform outputs `backstage_public_ingress_ip_address` and
 Entra app registration's web redirect URIs before testing sign-in. When no
 custom domain is available, the platform uses the Azure public IP DNS label FQDN
 `<label>.<region>.cloudapp.azure.com` with an HTTP-01 Let's Encrypt issuer. The
-public LoadBalancer accepts ports 80 and 443 so ACME can validate the FQDN, while
-the Backstage Ingress preserves client IPs and enforces
-`backstage_public_ingress_allowed_cidr`. The platform stack manages matching
+public LoadBalancer accepts ports 80 and 443 so ACME can validate the FQDN and
+browser users can reach the Entra-backed Backstage sign-in page. The platform
+stack manages matching
 ports 80 and 443 allow rules on the AKS user-pool subnet NSG; if these rules are
 missing, the Azure Load Balancer can exist but public TCP connections will time
 out.

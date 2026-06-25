@@ -20,7 +20,6 @@ spec:
       application_insights_ingestion_endpoint: ${application_insights_ingestion_endpoint}
       aso_client_id: ${aso_client_id}
       azure_dns_resource_group_name: ${azure_dns_resource_group_name}
-      backstage_public_ingress_allowed_cidr: "${backstage_public_ingress_allowed_cidr}"
       backstage_public_ingress_controller_replicas: "${backstage_public_ingress_controller_replicas}"
       backstage_public_ingress_enabled: "${backstage_public_ingress_enabled}"
       backstage_public_ingress_host: "${backstage_public_ingress_host}"
