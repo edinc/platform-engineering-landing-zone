@@ -141,10 +141,54 @@ token.
    Backstage audit logs.
 3. For onboarding, add users to Entra groups that sync through Microsoft Graph;
    do not change code for each team.
-4. The Microsoft Graph application used by Backstage needs read-only Graph
-   permissions for users and groups. Backstage scopes ingestion to the immutable
-   Entra group object IDs in `backstage_microsoft_graph_group_object_ids` and
-   their members; do not authorize RBAC from mutable display-name prefixes.
+4. The Backstage workload identity service principal, not the Microsoft auth app
+   registration, needs read-only Microsoft Graph application permissions so the
+   `microsoftGraphOrg` provider can ingest users and groups. Grant admin consent
+   for `User.Read.All`, `Group.Read.All`, and `GroupMember.Read.All` to the
+   service principal whose client ID is exported after the platform stack is
+   applied as
+   `platform_workload_identity_client_ids.backstage` and whose object ID is exported as
+   `platform_workload_identity_principal_ids.backstage`:
+
+   ```bash
+   set -euo pipefail
+
+   BACKSTAGE_CLIENT_ID="<platform_workload_identity_client_ids.backstage>"
+   BACKSTAGE_SP_ID="$(az ad sp show --id "$BACKSTAGE_CLIENT_ID" --query id -o tsv)"
+   GRAPH_SP_ID="$(az ad sp show --id 00000003-0000-0000-c000-000000000000 --query id -o tsv)"
+
+   if [ -z "$BACKSTAGE_SP_ID" ] || [ -z "$GRAPH_SP_ID" ]; then
+     echo "Backstage or Microsoft Graph service principal was not found." >&2
+     exit 1
+   fi
+
+   # Microsoft Graph application roles:
+   # User.Read.All=df021288-bdef-4463-88db-98f22de89214
+   # Group.Read.All=5b567255-7703-4780-807c-7be8301ae99b
+   # GroupMember.Read.All=98830695-27a2-44f7-8c18-0c3ebc9698f6
+   for role_id in \
+     df021288-bdef-4463-88db-98f22de89214 \
+     5b567255-7703-4780-807c-7be8301ae99b \
+     98830695-27a2-44f7-8c18-0c3ebc9698f6; do
+     existing_assignment="$(az rest --method GET \
+       --url "https://graph.microsoft.com/v1.0/servicePrincipals/${BACKSTAGE_SP_ID}/appRoleAssignments" \
+       | jq -r --arg role_id "$role_id" '.value[]? | select(.appRoleId == $role_id) | .id' \
+       | head -1)"
+     if [ -z "$existing_assignment" ]; then
+       az rest --method POST \
+         --url "https://graph.microsoft.com/v1.0/servicePrincipals/${BACKSTAGE_SP_ID}/appRoleAssignments" \
+         --headers 'Content-Type=application/json' \
+         --body "$(jq -n --arg principalId "$BACKSTAGE_SP_ID" --arg resourceId "$GRAPH_SP_ID" --arg appRoleId "$role_id" '{principalId:$principalId,resourceId:$resourceId,appRoleId:$appRoleId}')"
+     fi
+   done
+   ```
+
+   Backstage scopes ingestion to the immutable Entra group object IDs in
+   `backstage_microsoft_graph_group_object_ids` and their members; do not
+   authorize RBAC from mutable display-name prefixes. When a guest user cannot
+   sign in and Backstage reports that it cannot resolve user identity, confirm
+   the guest user is a member of one of those synced groups and that a matching
+   `User` entity exists in the catalog.
 
 ## Catalog reconciliation
 
