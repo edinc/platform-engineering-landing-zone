@@ -51,3 +51,7 @@ backend.hcl
 # Brownfield discovery output (tenant inventory snapshots — never commit)
 .discovery/
 *.discovery/
+
+# GitHub App manifest-flow credential output (never commit)
+*github-app-creds*.json
+backstage-github-app-creds.json

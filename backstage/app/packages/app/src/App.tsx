@@ -22,8 +22,10 @@ import {
 import kubernetesPlugin from '@backstage/plugin-kubernetes/alpha';
 import notificationsPlugin from '@backstage/plugin-notifications/alpha';
 import scaffolderPlugin from '@backstage/plugin-scaffolder/alpha';
+import searchPlugin from '@backstage/plugin-search/alpha';
 import signalsPlugin from '@backstage/plugin-signals/alpha';
 import techdocsPlugin from '@backstage/plugin-techdocs/alpha';
+import userSettingsPlugin from '@backstage/plugin-user-settings/alpha';
 import {
   CostInsightsPage,
   costInsightsApiRef,
@@ -98,8 +100,10 @@ export default createApp({
     kubernetesPlugin,
     notificationsPlugin,
     scaffolderPlugin,
+    searchPlugin,
     signalsPlugin,
     techdocsPlugin,
+    userSettingsPlugin,
     navModule,
   ],
 });
