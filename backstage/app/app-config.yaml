@@ -1,6 +1,16 @@
 app:
   title: Azure Platform Engineering Portal
   baseUrl: ${BACKSTAGE_BASE_URL}
+  extensions:
+    # Land the index route on the catalog instead of a 404 for the Stage 09 MVP.
+    - app/routes:
+        config:
+          redirects:
+            - from: /
+              to: /catalog
+    # Kubernetes is entity-scoped only; the global page mounts without an entity
+    # context and throws "Entity context is not available".
+    - page:kubernetes: false
 
 organization:
   name: Platform Engineering

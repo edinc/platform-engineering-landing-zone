@@ -94,6 +94,21 @@ def require_app_feature(path: str, feature: str) -> None:
         fail(f"{path} must register {feature!r} in the createApp features array")
 
 
+def require_root_redirect(path: str, target: str) -> None:
+    text = read(path)
+    if not re.search(
+        rf"(?ms)redirects:\s*\n\s*-\s*from:\s*/\s*\n\s*to:\s*{re.escape(target)}\b",
+        text,
+    ):
+        fail(f"{path} must redirect the root route '/' to {target!r} via app/routes")
+
+
+def require_extension_disabled(path: str, extension_id: str) -> None:
+    text = read(path)
+    if not re.search(rf"(?m)^\s*-\s*{re.escape(extension_id)}:\s*false\s*$", text):
+        fail(f"{path} must disable the {extension_id!r} app extension")
+
+
 def require_backstage_image_amd64_platform(path: str) -> None:
     text = read(path)
     match = re.search(r"(?ms)^  publish-image:\n(?P<block>.*?)(?=^  [a-zA-Z0-9_-]+:|\Z)", text)
@@ -222,6 +237,23 @@ def validate_backstage_config() -> None:
     require_app_feature("backstage/app/packages/app/src/App.tsx", "notificationsPlugin")
     require_app_feature("backstage/app/packages/app/src/App.tsx", "signalsPlugin")
     require_no_sign_in_page_auto_prop("backstage/app/packages/app/src/App.tsx")
+
+    # Stage 09 E2E frontend remediation guardrails: keep the index route, search,
+    # settings, single Notifications entry, and entity-scoped Kubernetes wired.
+    require_contains("backstage/app/packages/app/src/App.tsx", "@backstage/plugin-search/alpha")
+    require_contains("backstage/app/packages/app/src/App.tsx", "@backstage/plugin-user-settings/alpha")
+    require_app_feature("backstage/app/packages/app/src/App.tsx", "searchPlugin")
+    require_app_feature("backstage/app/packages/app/src/App.tsx", "userSettingsPlugin")
+    require_root_redirect("backstage/app/app-config.yaml", "/catalog")
+    require_extension_disabled("backstage/app/app-config.yaml", "page:kubernetes")
+    # The deployed app loads config only from the Helm configmap, so the same
+    # extensions must be present there for the fixes to take effect at runtime.
+    require_root_redirect("backstage/deploy/templates/configmap.yaml", "/catalog")
+    require_extension_disabled("backstage/deploy/templates/configmap.yaml", "page:kubernetes")
+    require_contains(
+        "backstage/app/packages/app/src/modules/nav/Sidebar.tsx",
+        "nav.take('page:notifications')",
+    )
 
     catalog = read("backstage/app/catalog-info.yaml")
     entity_count = len(re.findall(r"^kind:\s+", catalog, flags=re.MULTILINE))
