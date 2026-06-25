@@ -22,8 +22,11 @@ import {
 import kubernetesPlugin from '@backstage/plugin-kubernetes/alpha';
 import scaffolderPlugin from '@backstage/plugin-scaffolder/alpha';
 import techdocsPlugin from '@backstage/plugin-techdocs/alpha';
-import costInsightsPlugin from '@backstage-community/plugin-cost-insights/alpha';
-import { costInsightsApiRef } from '@backstage-community/plugin-cost-insights';
+import {
+  CostInsightsPage,
+  costInsightsApiRef,
+  costInsightsPlugin,
+} from '@backstage-community/plugin-cost-insights';
 import {
   FluxRuntimePage,
   fluxPlugin,
@@ -47,12 +50,20 @@ const fluxFeature = convertLegacyPlugin(fluxPlugin, {
   ],
 });
 
+const costInsightsFeature = convertLegacyPlugin(costInsightsPlugin, {
+  extensions: [
+    convertLegacyPageExtension(CostInsightsPage, {
+      path: '/cost-insights',
+    }),
+  ],
+});
+
 export default createApp({
   features: [
     apiDocsPlugin,
     catalogPlugin,
     catalogImportPlugin,
-    costInsightsPlugin,
+    costInsightsFeature,
     convertLegacyAppOptions({
       components: {
         SignInPage: props => (
