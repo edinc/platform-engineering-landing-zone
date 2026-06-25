@@ -456,6 +456,8 @@ def validate_terraform() -> None:
     require_contains("infrastructure/terraform/platform/locals.tf", "blobServices/default")
     require_contains("infrastructure/terraform/platform/outputs.tf", "techdocs_storage_account_name")
     require_contains("infrastructure/terraform/platform/outputs.tf", "backstage_flux_configuration_id")
+    require_contains("infrastructure/terraform/platform/outputs.tf", "platform_workload_identity_client_ids")
+    require_contains("infrastructure/terraform/platform/outputs.tf", "platform_workload_identity_principal_ids")
     require_contains("infrastructure/terraform/platform/backstage-public-ingress.tf", "azurerm_public_ip")
     require_contains("infrastructure/terraform/platform/backstage-public-ingress.tf", "Network Contributor")
     require_contains("infrastructure/terraform/platform/outputs.tf", "backstage_public_ingress_ip_address")
@@ -477,6 +479,16 @@ def validate_terraform() -> None:
     require_contains("platform-gitops/clusters/_base/addon-config/backstage/rbac-groups-configmap.yaml", "applicationTeamGroupMap: >-")
     require_contains("infrastructure/terraform/platform/gitops.tf", "backstage_microsoft_graph_group_filter")
     require_contains("backstage/deploy/templates/configmap.yaml", "BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER")
+    for needle in [
+        "platform_workload_identity_client_ids.backstage",
+        "platform_workload_identity_principal_ids.backstage",
+        "User.Read.All",
+        "Group.Read.All",
+        "GroupMember.Read.All",
+        "Backstage workload identity service principal",
+    ]:
+        require_contains("docs/runbooks/backstage-ops.md", needle)
+        require_contains("docs/adr/0041-backstage-rbac.md", needle)
     require_contains("backstage/app/packages/backend/src/plugins/platformCostShowback.ts", "rawTeamGroupMap.startsWith('json:')")
     require_contains("backstage/app/app-config.yaml", "userGroupMember:")
     require_contains("backstage/app/app-config.yaml", "BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER")
