@@ -141,6 +141,9 @@ catalog, Kubernetes view, GitHub workflows, TechDocs, and Cost Insights.
   (managed by platform).
 - **ADR-0052** Backstage Postgres auth = Entra AD passwordless via WI
   (preferred); KV-stored rotated password (fallback).
+- **ADR-0056** Dedicated Backstage GitHub App (separate from
+  `platform-vending-bot`); Terraform owns only the Key Vault role assignments,
+  not the secret values.
 
 ## Technologies
 
