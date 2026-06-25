@@ -262,6 +262,19 @@ def validate_backstage_config() -> None:
     for needle in ["lifecycle: production", "owner: group:default/pe-platform-admins", "backstage.io/source-location", "backstage.io/kubernetes-id"]:
         require_contains("backstage/app/catalog-info.yaml", needle)
 
+    # Finding 7: platform TechDocs source + publish wiring so the Docs page is
+    # populated instead of empty.
+    require_file("mkdocs.yml")
+    require_file("docs/index.md")
+    require_contains("mkdocs.yml", "techdocs-core")
+    require_contains("backstage/app/catalog-info.yaml", "backstage.io/techdocs-ref")
+    require_file(".github/workflows/techdocs-publish-platform.yml")
+    require_contains(".github/workflows/techdocs-publish-platform.yml", "./.github/workflows/techdocs-publish.yml")
+    require_contains(
+        ".github/workflows/techdocs-publish-platform.yml",
+        "entity_name: platform-engineering-landing-zone",
+    )
+
 
 def validate_permissions() -> None:
     policy = read("backstage/app/packages/backend/src/plugins/platformPermissionPolicy.ts")

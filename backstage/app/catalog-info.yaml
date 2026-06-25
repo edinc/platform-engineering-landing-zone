@@ -5,6 +5,7 @@ metadata:
   description: Azure Platform Engineering Landing Zone.
   annotations:
     backstage.io/source-location: url:https://github.com/your-github-org/platform-engineering-landing-zone
+    backstage.io/techdocs-ref: dir:.
 spec:
   owner: group:default/pe-platform-admins
   domain: platform-engineering
