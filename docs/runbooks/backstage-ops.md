@@ -212,6 +212,25 @@ private key, so the catalog cannot read the private-repo template URLs.
    from the runner to verify RBAC.
 5. Re-run the publishing workflow after RBAC or DNS propagation completes.
 
+### Platform System TechDocs
+
+The platform's own documentation (this `docs/` tree, built from the root
+`mkdocs.yml`) is published for the `platform-engineering-landing-zone` System
+entity by the **Publish platform TechDocs** workflow
+(`.github/workflows/techdocs-publish-platform.yml`), which runs on pushes to
+`main` that touch `mkdocs.yml`/`docs/**` and on manual dispatch (choose the
+target Environment). It uploads to `techdocs/default/system/platform-engineering-landing-zone`.
+
+The Docs page stays empty until **both** are true, so check both when it does
+not appear:
+
+1. The `backstage.io/techdocs-ref` annotation on the System entity is live in
+   the running catalog. It ships in `backstage/app/catalog-info.yaml`, which is
+   baked into the Backstage image, so a new annotation requires a Backstage
+   image rebuild and deploy (see **Upgrade**).
+2. The publish workflow has run for the target Environment so the generated site
+   exists in the TechDocs container at the path above.
+
 ## Kubernetes plugin troubleshooting
 
 1. Never add or upload kubeconfigs to Backstage.
