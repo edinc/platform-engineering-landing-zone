@@ -1,5 +1,49 @@
 # Azure E2E deployment remediation plan: Flux extension migration failure
 
+## Status: code remediation implemented (updated 2026-06-25)
+
+The IaC/code remediation described in this plan has been implemented and merged
+in PR #23 (`ef820a5`, "fix: add Flux extension recovery path"), which landed
+shortly after this plan was written. The implementation deliverables in
+section 5 are complete and pass repository validation
+(`python3 scripts/gitops/validate_stage07_gitops.py` → "Stage 07 GitOps
+contracts validated.").
+
+Implemented and verified in-repo:
+
+- [x] `recreate_flux_extension_epoch` variable
+  (`infrastructure/terraform/platform/variables.tf`).
+- [x] `terraform_data.flux_extension_recreate_epoch` trigger
+  (`infrastructure/terraform/platform/gitops.tf`).
+- [x] `replace_triggered_by` wired on the Flux extension and **both** Flux
+  configuration resources (`azurerm_kubernetes_cluster_extension.flux`,
+  `azurerm_kubernetes_flux_configuration.platform`,
+  `azurerm_kubernetes_flux_configuration.backstage`).
+- [x] No stale object-level keys remain in `gitops.tf`
+  (`source-controller.featureGates`, `sourceController.featureGates`,
+  `ObjectLevelWorkloadIdentity`).
+- [x] Regression guard in `scripts/gitops/validate_stage07_gitops.py`
+  (`require_not_contains` for each stale key plus the migration variable
+  assertion).
+- [x] Runbook `docs/runbooks/flux-extension-recovery.md`.
+- [x] ADR `docs/adr/0054-flux-controller-workload-identity-migration.md`
+  (Status: accepted).
+
+This satisfies acceptance criteria **7, 8, and 9** (runbook, ADR, and Stage 07
+regression guard).
+
+Still operator/deployment-dependent (cannot be confirmed from the repository):
+acceptance criteria **1–6 and 10** are live-Azure outcomes. They require running
+the platform Terraform apply once with the migration epoch set
+(`recreate_flux_extension_epoch = "2026-06-flux-controller-wi"` in the protected
+platform tfvars), then a second plan with the epoch unchanged showing no repeat
+replacement. Verify these against the live `aks-pe-demo-sec` cluster using the
+commands in section 7 (or confirm they were already run during the post-merge
+deployment).
+
+The remainder of this document is retained as the original failure analysis and
+implementation plan for historical context.
+
 ## Current outcome
 
 The post-merge deployment did not reach a working end-to-end state.

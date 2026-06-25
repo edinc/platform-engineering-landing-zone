@@ -93,6 +93,75 @@ a VNet-connected runner or operator session before enabling `enable_backstage`:
 | `backstage-catalog-reconciler-teams-webhook-url` | Optional Teams webhook for drift alerts. |
 | `backstage-postgres-password` | Required only when `backstage_postgres_auth_mode=password`. |
 
+### Backstage GitHub App
+
+The `backstage-github-app-*` secrets are the credentials of a dedicated GitHub
+App used by the Backstage catalog (template/location reads, org discovery) and
+scaffolder. It is a separate registration from the Terraform-managed
+`platform-vending-bot` (`infrastructure/terraform/github-app/`); Terraform only
+creates the Key Vault role assignments for these secrets, never their values.
+
+GitHub App registrations cannot be created purely through the API, so creation
+is a one-time, manifest-flow step:
+
+1. Create the app (one browser approval):
+
+   ```bash
+   HOMEPAGE_URL=https://<env>.backstage.<domain> \
+   APP_NAME=pe-backstage-<env> \
+   node scripts/backstage/create-backstage-github-app.mjs
+   # open the printed localhost URL, click "Create GitHub App"
+   ```
+
+   The script requests the permissions Backstage needs — repository
+   Administration, Contents, Pull requests, Issues, Webhooks, Workflows and
+   Pages (read & write) plus Metadata (read) — and writes the new credentials to
+   a local `backstage-github-app-creds.json` (git-ignored; delete after use).
+
+2. Install the app on the platform repositories (`platform-engineering-landing-zone`
+   and `platform-cluster-state`) via the install URL the script prints.
+
+3. Seed the five Key Vault secrets from a VNet-connected runner/operator session
+   (preferred, keeps the vault private) from the credentials file:
+
+   | Key Vault secret | Manifest field |
+   | --- | --- |
+   | `backstage-github-app-id` | `id` |
+   | `backstage-github-app-client-id` | `client_id` |
+   | `backstage-github-app-client-secret` | `client_secret` |
+   | `backstage-github-app-webhook-secret` | `webhook_secret` |
+   | `backstage-github-app-private-key` | `pem` |
+
+   If no VNet session is available, break-glass from an operator IP: add a scoped
+   `az keyvault network-rule add --ip-address <ip>`, set
+   `--public-network-access Enabled` (keep `default-action Deny`), set the
+   secrets, then immediately revert both. Never disable the default-deny rule.
+
+4. Force an External Secrets re-sync and restart Backstage so the pod reloads the
+   env from the updated secret:
+
+   ```bash
+   kubectl -n backstage annotate externalsecret backstage-runtime \
+     force-sync=$(date +%s) --overwrite
+   kubectl -n backstage rollout restart deploy/backstage
+   ```
+
+5. Verify the catalog ingested the templates (expect the five software
+   templates):
+
+   ```bash
+   SA=$(kubectl -n backstage get deploy backstage -o jsonpath='{.spec.template.spec.serviceAccountName}')
+   T=$(kubectl -n backstage create token "$SA" --audience backstage --duration 10m)
+   kubectl -n backstage exec deploy/backstage -- node -e \
+     "fetch('http://localhost:7007/api/catalog/entities/by-query?filter=kind=template',{headers:{Authorization:'Bearer $T'}}).then(r=>r.json()).then(j=>console.log('templates='+j.totalItems))"
+   ```
+
+6. To rotate credentials, generate a new private key (or client secret) in the
+   GitHub App settings, update the matching Key Vault secret(s) exactly as in
+   step 3, then repeat the External Secrets resync and restart from step 4.
+   Delete the superseded private key in GitHub once the new pod is healthy.
+
+
 ## Postgres restore
 
 1. Follow `docs/runbooks/dr-matrix.md` for the environment RTO/RPO target.
@@ -109,6 +178,28 @@ defaults to `password` and uses the Terraform Postgres administrator login unles
 `backstage_postgres_user` is set to a separately provisioned database role. Switch
 it to `entra` only after the mapped Backstage principal can connect with an Entra
 token.
+
+## Catalog templates not visible ("Integration not found")
+
+If the Create page shows no software templates and the backend logs repeat
+`Unable to read url, Integration not found` for the `templates/*/template.yaml`
+locations, the Backstage GitHub App credentials are missing or wrong — most often
+`backstage-github-app-id` left at a placeholder. `Integration not found` is
+GitHub's own 401 for an App JWT whose issuer (App ID) does not match the signing
+private key, so the catalog cannot read the private-repo template URLs.
+
+1. Confirm the running App ID is the real numeric ID, not a placeholder:
+
+   ```bash
+   kubectl -n backstage exec deploy/backstage -- printenv GITHUB_APP_ID
+   ```
+
+2. If it is a placeholder (e.g. `1`) or the client ID is `Iv1.placeholderclientid`,
+   (re)provision the app and seed the five secrets per **Backstage GitHub App**
+   above, then force an External Secrets re-sync and restart Backstage.
+3. Confirm the app is installed on `platform-engineering-landing-zone` with
+   Contents (read) so it can read the template files.
+4. Re-check with the catalog `kind=template` verification query above.
 
 ## TechDocs publish failures
 
