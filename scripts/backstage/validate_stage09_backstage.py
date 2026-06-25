@@ -85,6 +85,15 @@ def require_no_sign_in_page_auto_prop(path: str) -> None:
         fail(f"{path} SignInPage must not set the auto prop; users should click sign in explicitly")
 
 
+def require_app_feature(path: str, feature: str) -> None:
+    text = read(path)
+    match = re.search(r"(?ms)features:\s*\[(?P<block>.*?)^  \],", text)
+    if not match:
+        fail(f"{path} must define a createApp features array")
+    if not re.search(rf"(?m)^\s*{re.escape(feature)},\s*$", match.group("block")):
+        fail(f"{path} must register {feature!r} in the createApp features array")
+
+
 def require_backstage_image_amd64_platform(path: str) -> None:
     text = read(path)
     match = re.search(r"(?ms)^  publish-image:\n(?P<block>.*?)(?=^  [a-zA-Z0-9_-]+:|\Z)", text)
@@ -190,6 +199,8 @@ def validate_backstage_config() -> None:
         "convertLegacyPlugin",
         "@backstage/plugin-techdocs/alpha",
         "@backstage/plugin-scaffolder/alpha",
+        "@backstage/plugin-notifications/alpha",
+        "@backstage/plugin-signals/alpha",
         "@backstage-community/plugin-cost-insights",
         "Microsoft Entra ID",
         "microsoftAuthApiRef",
@@ -205,6 +216,11 @@ def validate_backstage_config() -> None:
     require_contains("backstage/app/packages/app/src/modules/nav/Sidebar.tsx", 'to="/cost-insights"')
     require_contains("backstage/app/packages/app/src/modules/nav/Sidebar.tsx", 'text="Cost Insights"')
     require_contains("backstage/app/packages/app/src/modules/nav/Sidebar.tsx", "MonetizationOn")
+    require_contains("backstage/app/packages/app/src/modules/nav/Sidebar.tsx", "NotificationsSidebarItem")
+    require_contains("backstage/app/packages/backend/src/index.ts", "@backstage/plugin-notifications-backend")
+    require_contains("backstage/app/packages/backend/src/index.ts", "@backstage/plugin-signals-backend")
+    require_app_feature("backstage/app/packages/app/src/App.tsx", "notificationsPlugin")
+    require_app_feature("backstage/app/packages/app/src/App.tsx", "signalsPlugin")
     require_no_sign_in_page_auto_prop("backstage/app/packages/app/src/App.tsx")
 
     catalog = read("backstage/app/catalog-info.yaml")
