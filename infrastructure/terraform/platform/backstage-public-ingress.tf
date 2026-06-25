@@ -27,7 +27,7 @@ resource "azurerm_role_assignment" "backstage_public_ingress_aks_network" {
 }
 
 resource "azurerm_network_security_rule" "backstage_public_ingress_lb" {
-  #checkov:skip=CKV_AZURE_160: HTTP-01 ACME validation requires public port 80; Backstage traffic is restricted by the nginx ingress allowlist.
+  #checkov:skip=CKV_AZURE_160: HTTP-01 ACME validation requires public port 80; Backstage access is gated by Entra ID and Backstage RBAC.
   for_each = local.backstage_public_ingress_enabled ? {
     aks-user = azurerm_network_security_group.platform["aks-user"].name
   } : {}

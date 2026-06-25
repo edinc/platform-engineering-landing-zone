@@ -103,11 +103,6 @@ resource "terraform_data" "input_guard" {
     }
 
     precondition {
-      condition     = !var.enable_backstage_public_ingress || trimspace(var.backstage_public_ingress_allowed_cidr) != ""
-      error_message = "enable_backstage_public_ingress requires backstage_public_ingress_allowed_cidr so public Backstage access is source-restricted."
-    }
-
-    precondition {
       condition = (
         !var.enable_backstage ||
         alltrue([
