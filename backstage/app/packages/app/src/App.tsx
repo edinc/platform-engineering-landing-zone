@@ -20,7 +20,9 @@ import {
   githubActionsPlugin,
 } from '@backstage/plugin-github-actions';
 import kubernetesPlugin from '@backstage/plugin-kubernetes/alpha';
+import notificationsPlugin from '@backstage/plugin-notifications/alpha';
 import scaffolderPlugin from '@backstage/plugin-scaffolder/alpha';
+import signalsPlugin from '@backstage/plugin-signals/alpha';
 import techdocsPlugin from '@backstage/plugin-techdocs/alpha';
 import {
   CostInsightsPage,
@@ -94,7 +96,9 @@ export default createApp({
     fluxFeature,
     githubActionsFeature,
     kubernetesPlugin,
+    notificationsPlugin,
     scaffolderPlugin,
+    signalsPlugin,
     techdocsPlugin,
     navModule,
   ],
