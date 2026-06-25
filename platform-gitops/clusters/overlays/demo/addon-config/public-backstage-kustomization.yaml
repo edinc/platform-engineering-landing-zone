@@ -15,7 +15,6 @@ spec:
   path: ./${cluster_state_root_path}/public-backstage
   postBuild:
     substitute:
-      backstage_public_ingress_allowed_cidr: ${backstage_public_ingress_allowed_cidr}
       backstage_public_ingress_host: ${backstage_public_ingress_host}
   prune: true
   retryInterval: 1m

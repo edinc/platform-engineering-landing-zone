@@ -668,28 +668,6 @@ variable "enable_backstage_public_ingress" {
   default     = false
 }
 
-variable "backstage_public_ingress_allowed_cidr" {
-  type        = string
-  description = "Required source CIDR list when public Backstage ingress is enabled. Use one or more comma-separated operator public IP /32 values or trusted network CIDRs; all-source ranges are rejected."
-  default     = ""
-
-  validation {
-    condition = (
-      var.backstage_public_ingress_allowed_cidr == "" ||
-      alltrue([
-        for cidr in split(",", var.backstage_public_ingress_allowed_cidr) :
-        trimspace(cidr) != "" &&
-        can(cidrhost(trimspace(cidr), 0)) &&
-        (
-          can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/(2[4-9]|3[0-2])$", trimspace(cidr))) ||
-          can(regex("^[0-9A-Fa-f:]+/(6[4-9]|[7-9][0-9]|1[0-1][0-9]|12[0-8])$", trimspace(cidr)))
-        )
-      ])
-    )
-    error_message = "backstage_public_ingress_allowed_cidr must be empty or one or more comma-separated source-restricted CIDR blocks. IPv4 ranges must be /24 or narrower, IPv6 ranges must be /64 or narrower, and all-source ranges are not allowed."
-  }
-}
-
 variable "backstage_public_ingress_dns_label" {
   type        = string
   description = "Optional Azure public IP DNS label for public Backstage. Defaults to a deterministic pe-<profile>-<location_short>-<suffix>-backstage label."

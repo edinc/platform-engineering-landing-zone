@@ -19,13 +19,6 @@ locals {
     var.backstage_catalog_reconciler_image_repository != "" ? var.backstage_catalog_reconciler_image_repository : try("${azurerm_container_registry.platform[0].login_server}/platform/backstage-catalog-reconciler", "")
   )
   backstage_public_ingress_enabled = local.backstage_enabled && var.enable_backstage_public_ingress
-  backstage_public_ingress_allowed_cidrs = [
-    for cidr in split(",", var.backstage_public_ingress_allowed_cidr) : trimspace(cidr)
-    if trimspace(cidr) != ""
-  ]
-  backstage_public_ingress_allowed_cidr = (
-    length(local.backstage_public_ingress_allowed_cidrs) > 0 ? join(",", local.backstage_public_ingress_allowed_cidrs) : "127.0.0.1/32"
-  )
   backstage_public_ingress_dns_label = (
     var.backstage_public_ingress_dns_label != "" ? var.backstage_public_ingress_dns_label : lower("pe-${var.profile}-${var.location_short}-${var.name_suffix}-backstage")
   )

@@ -162,10 +162,8 @@ def validate_terraform_and_workflows() -> None:
     require_contains("infrastructure/terraform/platform/gitops.tf", "ssh_known_hosts_base64")
     require_contains("infrastructure/terraform/platform/gitops.tf", "external_secrets_client_id")
     require_contains("infrastructure/terraform/platform/gitops.tf", "cluster_state_root_path")
-    require_contains("infrastructure/terraform/platform/gitops.tf", "jsonencode(local.backstage_public_ingress_allowed_cidr)")
-    require_contains("infrastructure/terraform/platform/locals.tf", "backstage_public_ingress_allowed_cidrs")
-    require_contains("infrastructure/terraform/platform/variables.tf", "comma-separated source-restricted CIDR blocks")
-    require_contains("infrastructure/terraform/platform/variables.tf", "IPv4 ranges must be /24 or narrower")
+    require_not_contains("infrastructure/terraform/platform/gitops.tf", "backstage_public_ingress_allowed_cidr")
+    require_not_contains("infrastructure/terraform/platform/variables.tf", "backstage_public_ingress_allowed_cidr")
     require_contains("infrastructure/terraform/platform/workload-identities.tf", "azurerm_user_assigned_identity")
     require_contains("infrastructure/terraform/platform/workload-identities.tf", "azurerm_federated_identity_credential")
     require_contains("infrastructure/terraform/platform/workload-identities.tf", "system:serviceaccount:")
@@ -224,7 +222,6 @@ def validate_terraform_and_workflows() -> None:
     require_contains("platform-gitops/clusters/_base/flux-system/platform-config-kustomization.yaml", "platform_repository_name: ${platform_repository_name}")
     require_contains("platform-gitops/clusters/_base/flux-system/platform-controllers-kustomization.yaml", "aks_kubelet_client_id: ${aks_kubelet_client_id}")
     for expected in [
-        'backstage_public_ingress_allowed_cidr: "${backstage_public_ingress_allowed_cidr}"',
         'backstage_public_ingress_controller_replicas: "${backstage_public_ingress_controller_replicas}"',
         'backstage_public_ingress_enabled: "${backstage_public_ingress_enabled}"',
         'backstage_public_ingress_host: "${backstage_public_ingress_host}"',
@@ -265,7 +262,7 @@ def validate_terraform_and_workflows() -> None:
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "service.beta.kubernetes.io/azure-pip-name")
     require_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "externalTrafficPolicy: Local")
     require_not_contains("platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml", "loadBalancerSourceRanges")
-    require_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "nginx.ingress.kubernetes.io/whitelist-source-range: ${backstage_public_ingress_allowed_cidr}")
+    require_not_contains("platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml", "nginx.ingress.kubernetes.io/whitelist-source-range")
     require_regex("infrastructure/terraform/platform/backstage-public-ingress.tf", r'name\s+=\s+"allow-backstage-public-lb"')
     require_regex("infrastructure/terraform/platform/backstage-public-ingress.tf", r'source_address_prefix\s+=\s+"Internet"')
     require_regex("infrastructure/terraform/platform/backstage-public-ingress.tf", r'destination_port_ranges\s+=\s+\["80", "443"\]')
