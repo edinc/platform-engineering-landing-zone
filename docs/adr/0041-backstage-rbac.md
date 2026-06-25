@@ -23,6 +23,20 @@ GitHub catalog discovery is intentionally limited to non-identity entity kinds.
 platform-owned configuration so repository writers cannot mint privileged
 Backstage identities.
 
+Microsoft Graph ingestion runs under the Backstage workload identity service
+principal. The platform Terraform stack exports that identity's client ID as
+`platform_workload_identity_client_ids.backstage` and principal ID as
+`platform_workload_identity_principal_ids.backstage`, but does not grant Microsoft Graph
+application permissions because doing so would require broad tenant-level Graph
+write privileges for the deploy identity. Operators must grant read-only Graph
+application roles
+(`User.Read.All`, `Group.Read.All`, and `GroupMember.Read.All`) to the Backstage
+workload identity service principal after the platform stack is applied. The
+Backstage workload identity service principal is the identity used by the catalog
+Microsoft Graph provider.
+
+In short: grant Microsoft Graph read permissions to the Backstage workload identity service principal.
+
 Admins receive all permissions. Operators can write catalog data, execute
 scaffolder actions, and view Kubernetes. Application teams can read catalog data,
 write their own catalog entities conditionally, and execute scaffolder actions.
@@ -35,6 +49,8 @@ generates namespace-scoped RoleBindings for onboarded teams.
 - Delete operations stay admin-only and auditable.
 - The policy file remains deterministic and testable without embedding
   tenant-specific group names.
+- Tenant setup must include the read-only Microsoft Graph app-role grants for
+  the Backstage workload identity before users can resolve during sign-in.
 - Application-team Kubernetes self-service requires Stage 10 namespace-scoped
   RBAC before it is enabled in the portal.
 
@@ -49,4 +65,5 @@ generates namespace-scoped RoleBindings for onboarded teams.
 ## References
 
 - [`policies/backstage/permissions.ts`](../../policies/backstage/permissions.ts)
+- [`docs/adr/0025-oidc-federation.md`](0025-oidc-federation.md)
 - [`plan/stages/stage-09-backstage-mvp.md`](../../plan/stages/stage-09-backstage-mvp.md)
