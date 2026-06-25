@@ -83,6 +83,19 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Pre-clean runner container state
+        run: |
+          set -euo pipefail
+          # These prunes are safe for the approved private runner pool, which is operated as a single build slot.
+          rm -rf /tmp/stereoscope-* /tmp/trivy-* /tmp/syft-* || true
+          docker buildx rm --all-inactive --force || true
+          docker buildx prune --all --force || true
+          docker builder prune --all --force || true
+          docker system prune --all --force || true
+          docker volume prune --force || true
+          df -h /
+          df -h /var/lib/docker || true
+
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:
@@ -212,6 +225,19 @@ jobs:
           echo "image_ref=$IMAGE_REF" >> "$GITHUB_OUTPUT"
           echo "digest_ref=$digest_ref" >> "$GITHUB_OUTPUT"
 
+      - name: Reclaim build space before scan
+        run: |
+          set -euo pipefail
+          # These prunes are safe for the approved private runner pool, which is operated as a single build slot.
+          rm -rf /tmp/stereoscope-* /tmp/trivy-* /tmp/syft-* || true
+          docker buildx rm --all-inactive --force || true
+          docker buildx prune --all --force || true
+          docker builder prune --all --force || true
+          docker system prune --all --force || true
+          docker volume prune --force || true
+          df -h /
+          df -h /var/lib/docker || true
+
       - name: Scan image with Trivy
         env:
           DIGEST_REF: ${{ steps.refs.outputs.digest_ref }}
@@ -241,3 +267,17 @@ jobs:
           IMAGE_REF: ${{ steps.refs.outputs.image_ref }}
           DIGEST_REF: ${{ steps.refs.outputs.digest_ref }}
         run: docker buildx imagetools create --tag "$IMAGE_REF" "$DIGEST_REF"
+
+      - name: Cleanup runner container state
+        if: ${{ always() }}
+        run: |
+          set -euo pipefail
+          # These prunes are safe for the approved private runner pool, which is operated as a single build slot.
+          rm -rf /tmp/stereoscope-* /tmp/trivy-* /tmp/syft-* || true
+          docker buildx rm --all-inactive --force || true
+          docker buildx prune --all --force || true
+          docker builder prune --all --force || true
+          docker system prune --all --force || true
+          docker volume prune --force || true
+          df -h /
+          df -h /var/lib/docker || true
