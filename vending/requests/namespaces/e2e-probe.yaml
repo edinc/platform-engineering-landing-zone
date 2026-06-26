@@ -1,0 +1,45 @@
+apiVersion: platform.example.io/v1alpha1
+kind: NamespaceVendingRequest
+metadata:
+  name: "e2e-probe"
+  labels:
+    platform.example.io/requester: backstage
+    platform.example.io/golden-path: aks-workload-namespace
+spec:
+  team: "e2e"
+  product: "probe"
+  costCenter: "cc-e2e-test"
+  onCallRotationId: "e2e-oncall"
+  dataClassification: "internal"
+  environment: "demo"
+  regions:
+    - "swedencentral"
+  tags:
+    owner: "e2e"
+    costCenter: "cc-e2e-test"
+    product: "probe"
+    dataClassification: "internal"
+    confidentiality: "medium"
+    managedBy: terraform
+    repo: edinc/platform-engineering-landing-zone
+  namespace:
+    name: "e2e-probe"
+    clusterEnvironment: "demo"
+    entraGroupObjectId: "00000000-0000-0000-0000-000000000001"
+    serviceAccountName: "app"
+    resourceQuota:
+
+      cpuRequests: "1000m"
+      memoryRequests: 2Gi
+      cpuLimits: "2000m"
+      memoryLimits: 4Gi
+      pods: 25
+
+    egressAllowlist:
+      cidrs:
+        - 10.30.0.0/16
+    azure:
+      aksClusterId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-demo-platform-sec/providers/Microsoft.ContainerService/managedClusters/aks-pe-demo-sec
+      acrId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-pe-demo-platform-sec/providers/Microsoft.ContainerRegistry/registries/acrpedemosec001
+      keyVaultSecretIds: []
+      resourceGroupName: rg-pe-demo-platform-sec
