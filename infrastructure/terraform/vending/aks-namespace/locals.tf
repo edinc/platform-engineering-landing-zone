@@ -4,6 +4,12 @@ locals {
   helm_service_account_name = "helm-${var.service_account_name}"
   helm_storage_namespace    = "helm-${var.namespace}"
 
+  # The platform stack registers the cluster-state Flux source as
+  # azurerm_kubernetes_flux_configuration "platform-<profile>" (profile == environment),
+  # so the tenant Kustomization must reference platform-<environment> rather than a
+  # static name. var.flux_source_name overrides this for non-standard clusters.
+  flux_source_name = var.flux_source_name != "" ? var.flux_source_name : "platform-${var.environment}"
+
   labels = merge(
     var.extra_labels,
     {
@@ -313,7 +319,7 @@ locals {
       path               = "./tenants/${var.team_name}/${var.environment}/${var.namespace}/workloads"
       sourceRef = {
         kind = "GitRepository"
-        name = "platform-cluster-state"
+        name = local.flux_source_name
       }
     }
   })

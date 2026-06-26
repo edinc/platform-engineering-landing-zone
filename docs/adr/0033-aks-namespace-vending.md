@@ -34,6 +34,19 @@ blast-radius or billing isolation is not required.**
   require hard billing, quota, compliance, or blast-radius isolation.
 - Flux reconciliation and policy enforcement are cross-stage gates completed in
   Stage 07.
+- The vended tenant Kustomization references the cluster-state Flux source by
+  name. Because the platform stack registers that source as
+  `azurerm_kubernetes_flux_configuration` named `platform-<profile>` (and
+  `profile == environment` is a pre-existing invariant — the workflow writes to
+  `clusters/overlays/<environment>` while the platform reconciles
+  `clusters/overlays/<profile>`), the vending Terraform resolves
+  `sourceRef.name` to `platform-<environment>` by default, overridable via the
+  `flux_source_name` variable (protected `PLATFORM_FLUX_SOURCE_NAME` vending
+  environment variable). An alternative is the
+  `clusterconfig.azure.com/use-managed-source: "true"` annotation used by the
+  platform's own Kustomizations, which lets the Flux extension rewrite the
+  `sourceRef` and removes the name dependency; it is recorded as a future
+  hardening option in [the vending runbook](../runbooks/vending.md).
 
 ## Alternatives considered
 

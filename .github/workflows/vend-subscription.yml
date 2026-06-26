@@ -366,6 +366,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          # Resolve the gh binary from the platform repo's mise toolset before cd'ing
+          # into the cloned repo (a mktemp dir without .tool-versions), where the bare
+          # gh shim cannot resolve its pinned version.
+          gh_bin="$(mise which gh)"
           subscription_id="$(jq -r '.spec.subscription.existingSubscriptionId' .tools/tmp/contracts/request.json)"
           team="$(jq -r '.spec.team' .tools/tmp/contracts/request.json)"
           environment="$(jq -r '.spec.environment' .tools/tmp/contracts/request.json)"
@@ -398,7 +402,7 @@ jobs:
             label="${label#"${label%%[![:space:]]*}"}"
             label="${label%"${label##*[![:space:]]}"}"
             if [ -n "$label" ]; then
-              gh label create "$label" --repo "${GITHUB_REPOSITORY}" --color "0E8A16" --force
+              "$gh_bin" label create "$label" --repo "${GITHUB_REPOSITORY}" --color "0E8A16" --force
             fi
           done
 
@@ -426,4 +430,4 @@ jobs:
               fi
             done
           fi
-          gh pr create "${pr_args[@]}"
+          "$gh_bin" pr create "${pr_args[@]}"

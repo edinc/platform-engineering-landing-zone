@@ -36,9 +36,12 @@ Use a dedicated GitHub App for the Backstage portal, separate from
 - The app is created via the App Manifest flow
   (`scripts/backstage/create-backstage-github-app.mjs`) with scaffolder-capable
   repository permissions (Administration, Contents, Pull requests, Issues,
-  Webhooks, Workflows, Pages read/write; Metadata read) and installed on the
-  platform repositories. Read-only Contents + Metadata is sufficient for Stage 09
-  template visibility; the write permissions enable Stage 10/11 scaffolding.
+  Webhooks, Workflows, Pages read/write; Metadata read; Commit statuses read) and
+  installed on the platform repositories. Read-only Contents + Metadata is
+  sufficient for Stage 09 template visibility; the write permissions enable
+  Stage 10/11 scaffolding, and read-only Commit statuses lets the
+  `fetch:template` action read golden-path skeletons (its `readTree` calls the
+  combined commit-status API).
 - Provisioning, rotation, and the `Integration not found` recovery path are
   documented in `docs/runbooks/backstage-ops.md`.
 

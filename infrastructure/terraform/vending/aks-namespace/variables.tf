@@ -59,6 +59,12 @@ variable "environment" {
   }
 }
 
+variable "flux_source_name" {
+  type        = string
+  description = "Name of the Flux GitRepository source in flux-system that reconciles the cluster-state repository. Defaults to platform-<environment> to match the platform Flux configuration, which the platform stack provisions as azurerm_kubernetes_flux_configuration named platform-<profile> (profile == environment). Override only when the target cluster registers the cluster-state source under a non-standard name."
+  default     = ""
+}
+
 variable "namespace" {
   type        = string
   description = "Kubernetes namespace to vend."

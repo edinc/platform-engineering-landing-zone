@@ -115,8 +115,9 @@ is a one-time, manifest-flow step:
 
    The script requests the permissions Backstage needs — repository
    Administration, Contents, Pull requests, Issues, Webhooks, Workflows and
-   Pages (read & write) plus Metadata (read) — and writes the new credentials to
-   a local `backstage-github-app-creds.json` (git-ignored; delete after use).
+   Pages (read & write) plus Metadata (read) and Commit statuses (read) — and
+   writes the new credentials to a local `backstage-github-app-creds.json`
+   (git-ignored; delete after use).
 
 2. Install the app on the platform repositories (`platform-engineering-landing-zone`
    and `platform-cluster-state`) via the install URL the script prints.
@@ -198,7 +199,10 @@ private key, so the catalog cannot read the private-repo template URLs.
    (re)provision the app and seed the five secrets per **Backstage GitHub App**
    above, then force an External Secrets re-sync and restart Backstage.
 3. Confirm the app is installed on `platform-engineering-landing-zone` with
-   Contents (read) so it can read the template files.
+   Contents (read) so it can read the template files, and Commit statuses (read)
+   so the `fetch:template` scaffolder action can read golden-path skeletons. A
+   missing Commit statuses permission surfaces as a 403 on
+   `/repos/<owner>/<repo>/commits/<ref>/status` when a golden path runs.
 4. Re-check with the catalog `kind=template` verification query above.
 
 ## TechDocs publish failures
