@@ -63,6 +63,7 @@ def test_allocates_tagged_and_untagged_costs() -> None:
 
 def test_function_package_is_deterministic_and_complete() -> None:
     import hashlib
+    import shutil
     import subprocess
     import tempfile
     import zipfile
@@ -70,18 +71,25 @@ def test_function_package_is_deterministic_and_complete() -> None:
     script = ROOT / "scripts/cost-allocator/package-function.sh"
     assert script.exists(), "package-function.sh must exist"
 
+    scratch_root = ROOT / ".tools" / "tmp"
+    scratch_root.mkdir(parents=True, exist_ok=True)
+    scratch = Path(tempfile.mkdtemp(prefix="cost-allocator-package.", dir=scratch_root))
+
     def build(target: Path) -> bytes:
         subprocess.run(["bash", str(script), str(target)], check=True, cwd=ROOT)
         return target.read_bytes()
 
-    with tempfile.TemporaryDirectory() as tmp:
-        first = build(Path(tmp) / "a.zip")
-        second = build(Path(tmp) / "b.zip")
+    try:
+        first = build(scratch / "a.zip")
+        second = build(scratch / "b.zip")
         assert hashlib.sha256(first).hexdigest() == hashlib.sha256(second).hexdigest(), (
             "Function package must be byte-reproducible so Terraform does not detect spurious changes"
         )
-        with zipfile.ZipFile(Path(tmp) / "a.zip") as archive:
+        with zipfile.ZipFile(scratch / "a.zip") as archive:
             names = set(archive.namelist())
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
     expected = {
         "function_app.py",
         "host.json",

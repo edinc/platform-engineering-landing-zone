@@ -46,6 +46,11 @@ on:
         required: false
         type: string
         default: ""
+      package_cost_allocator_function:
+        description: Build the cost allocator Function App ZIP before plan/apply. Set true only by the platform-stack caller.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -73,10 +78,6 @@ jobs:
         with:
           install: true
           cache: true
-
-      - name: Package cost allocator function
-        if: ${{ contains(inputs.stack_path, 'terraform/platform') }}
-        run: bash scripts/cost-allocator/package-function.sh
 
       - name: Validate untrusted PR inputs
         env:
@@ -128,6 +129,10 @@ jobs:
             exit 1
           fi
 
+      - name: Package cost allocator function
+        if: ${{ inputs.package_cost_allocator_function }}
+        run: bash scripts/cost-allocator/package-function.sh
+
       - name: Terraform init without backend
         env:
           STACK_PATH: ${{ inputs.stack_path }}
@@ -178,10 +183,6 @@ jobs:
         with:
           install: true
           cache: true
-
-      - name: Package cost allocator function
-        if: ${{ contains(inputs.stack_path, 'terraform/platform') }}
-        run: bash scripts/cost-allocator/package-function.sh
 
       - name: Validate trusted inputs and environment
         env:
@@ -278,6 +279,10 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Package cost allocator function
+        if: ${{ inputs.package_cost_allocator_function }}
+        run: bash scripts/cost-allocator/package-function.sh
 
       - name: Terraform init
         env:
