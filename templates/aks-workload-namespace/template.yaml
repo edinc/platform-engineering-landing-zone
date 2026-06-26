@@ -176,9 +176,6 @@ spec:
         teamReviewers:
           - pe-platform-admins
           - pe-security-reviewers
-        labels:
-          - golden-path
-          - namespace-vending
   output:
     links:
       - title: Namespace vending pull request

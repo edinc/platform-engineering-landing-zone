@@ -185,9 +185,6 @@ spec:
         teamReviewers:
           - pe-platform-admins
           - pe-security-reviewers
-        labels:
-          - golden-path
-          - aks
   output:
     links:
       - title: Golden-path repository request
