@@ -211,6 +211,24 @@ def validate_workflow_specific_contracts() -> None:
         if "step-security/harden-runner@" not in workflow_text:
             fail(f".github/workflows/{workflow_name} must include harden-runner on its self-hosted runner jobs")
 
+    # The vending workflows cd into a cloned cluster-state repo (a mktemp dir with no
+    # .tool-versions) before opening the PR, so a bare `gh` resolves a versionless mise
+    # shim and fails. They must resolve gh from the platform repo's toolset first
+    # (before the clone-dir cd) and invoke it through the resolved absolute path. The
+    # bare-gh pattern tolerates leading `VAR=value` env assignments but still rejects a
+    # versionless shim call.
+    bare_gh = re.compile(r"(?m)^\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*gh\s+(?:pr|label|api|issue|repo)\b")
+    resolver = 'gh_bin="$(mise which gh)"'
+    clone_cd = 'cd "$workdir/repo"'
+    for workflow_name in ["vend-namespace.yml", "vend-subscription.yml"]:
+        workflow_text = (ROOT / ".github/workflows" / workflow_name).read_text(encoding="utf-8")
+        if resolver not in workflow_text:
+            fail(f".github/workflows/{workflow_name} must resolve gh via 'gh_bin=\"$(mise which gh)\"' before cd-ing into the cloned cluster-state repo")
+        elif clone_cd in workflow_text and workflow_text.find(resolver) > workflow_text.find(clone_cd):
+            fail(f".github/workflows/{workflow_name} must resolve gh_bin before 'cd \"$workdir/repo\"' so gh is resolved while .tool-versions is in scope")
+        if bare_gh.search(workflow_text):
+            fail(f".github/workflows/{workflow_name} must invoke gh through \"$gh_bin\" (no bare gh command, which fails as a versionless mise shim after cd)")
+
 
 def main() -> None:
     for workflow in sorted(REQUIRED_WORKFLOWS):
