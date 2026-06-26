@@ -47,11 +47,36 @@ turn it on for a profile:
    `subnet_address_prefixes` and `private_dns_zone_ids` for the blob, queue,
    table, and azurewebsites private endpoints. A cost-conscious demo may instead
    set `cost_allocator_public_network_access_enabled = true`,
-   `cost_allocator_service_plan_sku_name = "Y1"`,
+   `cost_allocator_service_plan_sku_name = "B1"`,
    `cost_allocator_service_plan_worker_count = 1`, and
    `cost_allocator_service_plan_zone_balancing_enabled = false` as a documented
    cost exception, and may omit `function-integration` and the private DNS zones.
+   `B1` (Basic, Dedicated) is the cheapest plan that still supports the secure
+   AAD OneDeploy publish path; Linux Consumption (`Y1`) is not supported with a
+   package (see ADR-0057) and the module rejects it with a precondition.
 4. Apply the platform stack, then redeploy Backstage so
    `costInsights.azure.showbackContainerUrl` (sourced from the module output)
    reaches the running config. Backstage's workload identity receives Storage
    Blob Data Reader on the showback container automatically.
+
+## Function deploy fails with HTTP 401 / "API isn't available in this environment"
+
+The module publishes the package with AAD-authenticated OneDeploy
+(`az webapp deploy --type zip`) and keeps SCM/FTP basic publishing credentials
+disabled, matching the landing-zone posture.
+
+- **`401 Unauthorized` publishing the zip** means something reintroduced the
+  inline azurerm `zip_deploy_file` path (basic auth), which the landing zone
+  blocks. Confirm `terraform_data.function_deploy` owns the publish and that the
+  Function App has `ftp_publish_basic_authentication_enabled = false` and
+  `webdeploy_publish_basic_authentication_enabled = false`.
+- **`This API isn't available in this environment yet!`** means the plan is Linux
+  Consumption (`Y1`), which does not support OneDeploy. Use a Dedicated (`B1`) or
+  Elastic Premium (`EP1`) plan.
+- **OneDeploy 403** means the deploy principal lacks publish rights. The CI
+  runner must be signed in to Azure (OIDC) with at least Contributor on the
+  Function App's resource group.
+- **OneDeploy connection/timeout on the secure profile** (`public_network_access_enabled = false`)
+  means the runner cannot reach `<app>.scm.azurewebsites.net`. The runner needs
+  network and DNS reachability to the Function App SCM endpoint (via the platform
+  VNet / private endpoint). The public demo profile is unaffected.
