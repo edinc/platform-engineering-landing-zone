@@ -93,8 +93,13 @@ resource "azurerm_linux_function_app" "this" {
   functions_extension_version   = "~4"
   https_only                    = true
   public_network_access_enabled = var.public_network_access_enabled
-  zip_deploy_file               = var.function_package_path
   tags                          = var.tags
+
+  # Preserve the secure landing-zone posture: SCM (webdeploy) and FTP basic
+  # publishing credentials stay disabled. Code is published via AAD-authenticated
+  # OneDeploy (see terraform_data.function_deploy), so basic auth is never needed.
+  ftp_publish_basic_authentication_enabled       = false
+  webdeploy_publish_basic_authentication_enabled = false
 
   identity {
     type = "SystemAssigned"
@@ -125,6 +130,17 @@ resource "azurerm_linux_function_app" "this" {
     },
     var.app_settings,
   )
+
+  lifecycle {
+    precondition {
+      # OneDeploy (AAD) requires a Dedicated or Elastic Premium plan. Linux
+      # Consumption (Y1) only supports run-from-package publishing, which the
+      # secure landing zone blocks (its host storage disables shared-key SAS),
+      # so reject the unsupported Y1 + package combination with a clear message.
+      condition     = var.function_package_path == null || var.service_plan_sku_name != "Y1"
+      error_message = "Deploying the cost allocator package requires a Dedicated (e.g. B1) or Elastic Premium (e.g. EP1) plan. Linux Consumption (Y1) does not support AAD OneDeploy under the landing zone's disabled basic-auth posture."
+    }
+  }
 }
 
 resource "azurerm_private_endpoint" "storage" {
@@ -204,4 +220,53 @@ resource "azurerm_role_assignment" "host_table_contributor" {
   role_definition_name = "Storage Table Data Contributor"
   principal_id         = azurerm_linux_function_app.this.identity[0].principal_id
   principal_type       = "ServicePrincipal"
+}
+
+data "azurerm_client_config" "current" {}
+
+# Publish the Function package using AAD-authenticated OneDeploy.
+#
+# The inline azurerm zip_deploy_file argument is intentionally avoided: it runs
+# during Function App creation and only supports basic-auth (SCM) publishing,
+# which the secure landing zone disables. That ordering also races basic-auth
+# reconciliation and fails with HTTP 401 on every apply, tainting and recreating
+# the app in a loop. OneDeploy (`az webapp deploy`) authenticates with the
+# caller's Entra ID token, so it works with basic publishing credentials
+# disabled and keeps the secure posture intact. Remote build
+# (SCM_DO_BUILD_DURING_DEPLOYMENT) keeps the package source-only.
+#
+# OneDeploy requires a Dedicated or Elastic Premium plan; Linux Consumption (Y1)
+# is not supported under disabled basic auth (see ADR-0057 and the module README).
+resource "terraform_data" "function_deploy" {
+  count = var.function_package_path == null ? 0 : 1
+
+  triggers_replace = {
+    # The platform deploy workflow builds the package before terraform plan, so
+    # the artifact is present whenever the allocator is enabled. Hashing it ties
+    # re-publishes to content changes; a recreated app also re-publishes.
+    package_sha     = filesha256(var.function_package_path)
+    function_app_id = azurerm_linux_function_app.this.id
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      set -euo pipefail
+      az webapp deploy \
+        --subscription "${data.azurerm_client_config.current.subscription_id}" \
+        --resource-group "${var.resource_group_name}" \
+        --name "${azurerm_linux_function_app.this.name}" \
+        --src-path "${var.function_package_path}" \
+        --type zip \
+        --timeout 600000
+    EOT
+  }
+
+  depends_on = [
+    azurerm_linux_function_app.this,
+    azurerm_role_assignment.host_blob_owner,
+    azurerm_role_assignment.host_queue_contributor,
+    azurerm_role_assignment.host_table_contributor,
+    azurerm_role_assignment.showback_writer,
+  ]
 }

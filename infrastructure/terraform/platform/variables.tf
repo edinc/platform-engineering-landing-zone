@@ -888,7 +888,7 @@ variable "cost_allocator_public_network_access_enabled" {
 
 variable "cost_allocator_service_plan_sku_name" {
   type        = string
-  description = "Function App service plan SKU for the cost allocator. Defaults to the production EP1 Elastic Premium plan (VNet integration, zone balancing). Cost-conscious profiles may set 'Y1' (Consumption) together with cost_allocator_public_network_access_enabled = true as a documented cost exception."
+  description = "Function App service plan SKU for the cost allocator. Defaults to the production EP1 Elastic Premium plan (VNet integration, zone balancing). Cost-conscious profiles should set 'B1' (Basic, Dedicated) together with cost_allocator_public_network_access_enabled = true. Linux Consumption ('Y1') is not supported when a Function package is supplied because it cannot use the secure AAD OneDeploy publish path (see ADR-0057)."
   default     = "EP1"
 }
 
