@@ -28,3 +28,30 @@ showback CSV within the expected daily window.
 1. Confirm a new `showback/YYYY/MM/DD/team-showback.csv` exists.
 2. Confirm rows aggregate by `costCenter`, `team`, and `product`.
 3. Link any persistent tagging gaps to the owning team.
+
+## Enabling the allocator
+
+The cost allocator is disabled by default (`enable_cost_allocator = false`). To
+turn it on for a profile:
+
+1. Ensure a Cost Management export destination container exists and set
+   `cost_export_storage_container_id` to its full resource ID. Provision the
+   export with the `subscription-baseline` stack's
+   `azurerm_subscription_cost_management_export`, or point at an existing
+   ALZ-owned export. First export data appears up to ~24h after creation.
+2. Set `enable_cost_allocator = true`. The Function package is built
+   automatically by the platform deploy (`make cost-allocator-package` locally);
+   `cost_allocator_function_package_path` defaults to that artifact.
+3. Pick a service-plan profile. Production keeps the secure EP1 default, which
+   additionally requires a `function-integration` entry in
+   `subnet_address_prefixes` and `private_dns_zone_ids` for the blob, queue,
+   table, and azurewebsites private endpoints. A cost-conscious demo may instead
+   set `cost_allocator_public_network_access_enabled = true`,
+   `cost_allocator_service_plan_sku_name = "Y1"`,
+   `cost_allocator_service_plan_worker_count = 1`, and
+   `cost_allocator_service_plan_zone_balancing_enabled = false` as a documented
+   cost exception, and may omit `function-integration` and the private DNS zones.
+4. Apply the platform stack, then redeploy Backstage so
+   `costInsights.azure.showbackContainerUrl` (sourced from the module output)
+   reaches the running config. Backstage's workload identity receives Storage
+   Blob Data Reader on the showback container automatically.

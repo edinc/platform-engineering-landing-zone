@@ -175,7 +175,7 @@ locals {
       "aca-infra",
       "shared-ingress",
     ],
-    var.enable_cost_allocator && contains(keys(var.subnet_address_prefixes), "function-integration") ? ["function-integration"] : [],
+    var.enable_cost_allocator && !var.cost_allocator_public_network_access_enabled && contains(keys(var.subnet_address_prefixes), "function-integration") ? ["function-integration"] : [],
   )
 
   diagnostic_targets = var.log_analytics_workspace_id == "" ? {} : merge(
