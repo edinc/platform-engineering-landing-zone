@@ -202,10 +202,14 @@ def validate_workflow_specific_contracts() -> None:
         "promote-image.yml",
         "techdocs-publish.yml",
         "terraform-plan-apply.yml",
+        "vend-namespace.yml",
+        "vend-subscription.yml",
     ]:
         workflow_text = (ROOT / ".github/workflows" / workflow_name).read_text(encoding="utf-8")
         if "runs-on: [self-hosted, azure, private-acr, swedencentral]" not in workflow_text:
             fail(f".github/workflows/{workflow_name} must use the approved private Azure runner label set")
+        if "step-security/harden-runner@" not in workflow_text:
+            fail(f".github/workflows/{workflow_name} must include harden-runner on its self-hosted runner jobs")
 
 
 def main() -> None:
