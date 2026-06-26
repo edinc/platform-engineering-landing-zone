@@ -241,7 +241,10 @@ resource "terraform_data" "function_deploy" {
   count = var.function_package_path == null ? 0 : 1
 
   triggers_replace = {
-    package_sha     = fileexists(var.function_package_path) ? filesha256(var.function_package_path) : "pending"
+    # The platform deploy workflow builds the package before terraform plan, so
+    # the artifact is present whenever the allocator is enabled. Hashing it ties
+    # re-publishes to content changes; a recreated app also re-publishes.
+    package_sha     = filesha256(var.function_package_path)
     function_app_id = azurerm_linux_function_app.this.id
   }
 
