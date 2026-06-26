@@ -25,6 +25,26 @@ Terraform does not detect spurious changes between builds. For a local
 `make cost-allocator-package` first so the artifact exists (CI does this
 automatically).
 
+## Function deployment
+
+The package is published with AAD-authenticated OneDeploy (`az webapp deploy
+--type zip`), not the inline azurerm `zip_deploy_file` argument. The secure
+landing zone disables SCM (webdeploy) and FTP basic publishing credentials, and
+the module keeps them disabled (`ftp_publish_basic_authentication_enabled` and
+`webdeploy_publish_basic_authentication_enabled` are both `false`). The inline
+`zip_deploy_file` path only supports basic-auth publishing and runs during
+Function App creation, so under this posture it fails with HTTP 401 and taints
+the app on every apply. OneDeploy authenticates with the deploy principal's
+Entra ID token instead, so it works with basic auth disabled.
+
+OneDeploy requires a **Dedicated or Elastic Premium** plan. **Linux Consumption
+(`Y1`) is not supported** when a package is supplied: Consumption only publishes
+via run-from-package, and the secure host storage disables shared-key SAS. The
+module enforces this with a precondition that rejects `Y1` + a package path. The
+deploy step runs on the CI runner (or locally), which must be signed in to Azure
+(the platform workflow uses OIDC) with publish rights on the Function App
+(Contributor on the resource group is sufficient).
+
 ## Service plan profiles
 
 The default service plan is EP1 with three zone-balanced workers and private
@@ -34,11 +54,16 @@ plane by default. The platform stack exposes these as overridable inputs:
 | Profile | Inputs |
 | --- | --- |
 | Production (default) | `cost_allocator_public_network_access_enabled = false`, `cost_allocator_service_plan_sku_name = "EP1"`, `cost_allocator_service_plan_worker_count = 3`, `cost_allocator_service_plan_zone_balancing_enabled = true` |
-| Cost-conscious demo (explicit exception) | `cost_allocator_public_network_access_enabled = true`, `cost_allocator_service_plan_sku_name = "Y1"` (Consumption), `cost_allocator_service_plan_worker_count = 1`, `cost_allocator_service_plan_zone_balancing_enabled = false` |
+| Cost-conscious demo (explicit exception) | `cost_allocator_public_network_access_enabled = true`, `cost_allocator_service_plan_sku_name = "B1"` (Basic, Dedicated), `cost_allocator_service_plan_worker_count = 1`, `cost_allocator_service_plan_zone_balancing_enabled = false` |
 
-The module neutralizes the worker count and zone balancing automatically for the
-`Y1` Consumption plan, and Function VNet integration plus blob/queue/table
-private endpoints are only wired when `public_network_access_enabled = false`.
+`B1` is the cost-conscious floor that still supports the secure AAD OneDeploy
+publish path. Linux Consumption (`Y1`) is intentionally not offered for the demo
+profile because it cannot be deployed under the disabled-basic-auth posture (see
+[ADR-0057](../../../../docs/adr/0057-cost-allocator-aad-onedeploy.md)). The
+module still neutralizes worker count and zone balancing for `Y1` so a
+package-less `Y1` plan remains valid, and Function VNet integration plus
+blob/queue/table private endpoints are only wired when
+`public_network_access_enabled = false`.
 
 ## Inputs to supply
 

@@ -64,6 +64,7 @@ Next free number: **0057**
 | 0054 | Flux controller Workload Identity migration | Accepted | [`0054-flux-controller-workload-identity-migration.md`](0054-flux-controller-workload-identity-migration.md) |
 | 0055 | Dedicated public Backstage ingress for demo access | Accepted | [`0055-public-backstage-ingress.md`](0055-public-backstage-ingress.md) |
 | 0056 | Dedicated Backstage GitHub App | Accepted | [`0056-backstage-github-app.md`](0056-backstage-github-app.md) |
+| 0057 | Cost allocator Function publishes via AAD OneDeploy | Accepted | [`0057-cost-allocator-aad-onedeploy.md`](0057-cost-allocator-aad-onedeploy.md) |
 
 ADR seeds 0002-0020 are defined in [`plan/plan.md` section 9](../../plan/plan.md#9-key-architecture-decisions-adr-seeds).
 Later seeds are introduced by the stage files under [`plan/stages/`](../../plan/stages/).
