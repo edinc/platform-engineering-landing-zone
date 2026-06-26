@@ -55,3 +55,6 @@ backend.hcl
 # GitHub App manifest-flow credential output (never commit)
 *github-app-creds*.json
 backstage-github-app-creds.json
+
+# Cost allocator Function build artifact (built by scripts/cost-allocator/package-function.sh)
+infrastructure/terraform/_modules/cost-allocator/dist/

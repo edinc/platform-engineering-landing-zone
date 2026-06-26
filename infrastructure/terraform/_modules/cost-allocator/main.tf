@@ -68,13 +68,16 @@ resource "azurerm_storage_container" "showback" {
 }
 
 resource "azurerm_service_plan" "this" {
-  name                   = "asp-${var.name_prefix}-cost"
-  resource_group_name    = var.resource_group_name
-  location               = var.location
-  os_type                = "Linux"
-  sku_name               = var.service_plan_sku_name
-  worker_count           = var.service_plan_worker_count
-  zone_balancing_enabled = var.service_plan_zone_balancing_enabled
+  name                = "asp-${var.name_prefix}-cost"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  os_type             = "Linux"
+  sku_name            = var.service_plan_sku_name
+  # The Consumption (Y1) plan auto-scales and does not support a fixed worker
+  # count or zone balancing, so neutralize both when Y1 is selected. This keeps
+  # the module safe for cost-conscious profiles that opt into Consumption.
+  worker_count           = var.service_plan_sku_name == "Y1" ? null : var.service_plan_worker_count
+  zone_balancing_enabled = var.service_plan_sku_name == "Y1" ? false : var.service_plan_zone_balancing_enabled
   tags                   = var.tags
 }
 

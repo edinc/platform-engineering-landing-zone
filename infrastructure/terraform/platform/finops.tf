@@ -9,8 +9,11 @@ module "cost_allocator" {
   cost_export_storage_container_id       = var.cost_export_storage_container_id
   cost_export_root_folder                = var.cost_export_root_folder
   function_package_path                  = var.cost_allocator_function_package_path
+  service_plan_sku_name                  = var.cost_allocator_service_plan_sku_name
+  service_plan_worker_count              = var.cost_allocator_service_plan_worker_count
+  service_plan_zone_balancing_enabled    = var.cost_allocator_service_plan_zone_balancing_enabled
   public_network_access_enabled          = var.cost_allocator_public_network_access_enabled
-  virtual_network_subnet_id              = var.enable_cost_allocator ? azurerm_subnet.platform["function-integration"].id : ""
+  virtual_network_subnet_id              = var.enable_cost_allocator && !var.cost_allocator_public_network_access_enabled ? azurerm_subnet.platform["function-integration"].id : ""
   private_endpoint_subnet_id             = var.enable_private_endpoints && !var.cost_allocator_public_network_access_enabled ? local.private_endpoint_subnet_id : ""
   private_dns_zone_ids                   = var.private_dns_zone_ids
   application_insights_connection_string = var.cost_allocator_application_insights_connection_string
