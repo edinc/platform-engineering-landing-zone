@@ -102,7 +102,10 @@ jobs:
   vend-subscription:
     name: Validate and plan subscription request
     if: ${{ github.event_name != 'pull_request' }}
-    runs-on: ubuntu-latest
+    # Apply runs terraform init against the private Terraform state storage
+    # (stpetfsec*, public network access disabled), reachable only from the
+    # VNet-integrated self-hosted runner like the platform Terraform apply.
+    runs-on: [self-hosted, azure, private-acr, swedencentral]
     environment: vending
     permissions:
       contents: write
@@ -123,6 +126,11 @@ jobs:
       VENDING_PR_LABELS: ${{ vars.VENDING_PR_LABELS }}
       VENDING_PR_REVIEWERS: ${{ vars.VENDING_PR_REVIEWERS }}
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        with:
+          egress-policy: audit
+
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
