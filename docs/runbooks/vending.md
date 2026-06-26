@@ -90,6 +90,7 @@ Set these protected `vending` environment variables for workflows:
 | `PLATFORM_VENDING_BOT_PRIVATE_KEY_SECRET_NAME` | `github-app` output |
 | `CLUSTER_STATE_REPO_OWNER`, `CLUSTER_STATE_REPO_NAME` | Cluster-state repo output |
 | `AKS_OIDC_ISSUER_URL`, `PLATFORM_AKS_CLUSTER_ID`, `PLATFORM_ACR_ID`, `PLATFORM_KEY_VAULT_SECRET_IDS`, `PLATFORM_RESOURCE_GROUP_NAME` | Platform output and approved per-workload secret IDs |
+| `PLATFORM_FLUX_SOURCE_NAME` | Optional. Overrides the vended tenant Kustomization `sourceRef.name`. Leave unset to default to `platform-<environment>` (the platform Flux configuration name). |
 | `VENDING_PR_LABELS`, `VENDING_PR_REVIEWERS` | Optional PR routing controls |
 
 ## 3. Vend a workload subscription
@@ -170,3 +171,29 @@ Vending ships standalone workflows. When reusable workflows land:
 - Namespace rollback removes the tenant manifests from `platform-cluster-state`
   and then destroys the matching `vending/aks-namespace` Terraform state after
   Flux has pruned the namespace.
+
+## Troubleshooting
+
+- **Flux source name mismatch.** The tenant Kustomization rendered by
+  `infrastructure/terraform/vending/aks-namespace` references the cluster-state
+  Flux source by name. The platform stack registers that source as
+  `azurerm_kubernetes_flux_configuration` named `platform-<profile>` (for example
+  `platform-demo`), so the vending Terraform defaults the tenant `sourceRef.name`
+  to `platform-<environment>` (profile == environment). Set the protected
+  `PLATFORM_FLUX_SOURCE_NAME` `vending` environment variable (threaded into the
+  `flux_source_name` Terraform variable) to override it when a cluster registers
+  the cluster-state source under a non-standard name. A wrong value surfaces as
+  `GitRepository "<name>" not found` on the `tenant-<team>-<env>-<namespace>`
+  Kustomization while the namespace bootstrap itself still reconciles. A future
+  alternative is to stamp the tenant Kustomization with
+  `clusterconfig.azure.com/use-managed-source: "true"` (as the platform's own
+  Kustomizations do) so the Flux extension rewrites `sourceRef` to the managed
+  source and the name becomes irrelevant.
+- **`gh` shim has no version on the self-hosted runner.** The cluster-state PR
+  step `cd`s into a cloned repo under `mktemp` that has no `.tool-versions`, so a
+  bare `gh` invocation fails with `No version is set for shim: gh`. The workflows
+  resolve `gh_bin="$(mise which gh)"` from the platform repo root before the `cd`
+  and call `"$gh_bin"`; keep this pattern when editing the cluster-state PR steps.
+  The Terraform apply and branch push complete before PR creation, so a failure
+  here leaves Azure resources and the pushed branch intact — re-open the PR
+  manually from the pushed `vending/...` branch if needed.

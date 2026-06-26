@@ -118,6 +118,7 @@ jobs:
       PLATFORM_ACR_ID: ${{ vars.PLATFORM_ACR_ID }}
       PLATFORM_KEY_VAULT_SECRET_IDS: ${{ vars.PLATFORM_KEY_VAULT_SECRET_IDS }}
       PLATFORM_RESOURCE_GROUP_NAME: ${{ vars.PLATFORM_RESOURCE_GROUP_NAME }}
+      PLATFORM_FLUX_SOURCE_NAME: ${{ vars.PLATFORM_FLUX_SOURCE_NAME }}
       SEED_KEY_VAULT_NAME: ${{ vars.SEED_KEY_VAULT_NAME }}
       PLATFORM_VENDING_BOT_APP_ID: ${{ vars.PLATFORM_VENDING_BOT_APP_ID }}
       PLATFORM_VENDING_BOT_INSTALLATION_ID: ${{ vars.PLATFORM_VENDING_BOT_INSTALLATION_ID }}
@@ -298,6 +299,7 @@ jobs:
             --arg aksClusterId "$PLATFORM_AKS_CLUSTER_ID" \
             --arg acrId "$PLATFORM_ACR_ID" \
             --arg resourceGroupName "$PLATFORM_RESOURCE_GROUP_NAME" \
+            --arg fluxSourceName "${PLATFORM_FLUX_SOURCE_NAME:-}" \
             '{
               tenant_id: $tenantId,
               subscription_id: $subscriptionId,
@@ -312,6 +314,7 @@ jobs:
               aks_oidc_issuer_url: $oidcIssuer,
               aks_cluster_id: $aksClusterId,
               acr_id: $acrId,
+              flux_source_name: $fluxSourceName,
               key_vault_secret_ids: .spec.namespace.azure.keyVaultSecretIds,
               resource_quota: {
                 cpu_requests: .spec.namespace.resourceQuota.cpuRequests,
@@ -362,6 +365,12 @@ jobs:
         if: ${{ steps.request.outputs.action == 'apply' }}
         run: |
           set -euo pipefail
+          # Resolve the gh binary from the platform repo's mise toolset now, while the
+          # working directory still contains .tool-versions. Later steps cd into the
+          # cloned cluster-state repo (a mktemp dir with no .tool-versions), where the
+          # bare `gh` shim cannot resolve its pinned version ("No version is set for
+          # shim: gh"). Using the absolute path keeps gh working after the cd.
+          gh_bin="$(mise which gh)"
           owner="${CLUSTER_STATE_REPO_OWNER:-${GITHUB_REPOSITORY_OWNER}}"
           repo="${CLUSTER_STATE_REPO_NAME:-platform-cluster-state}"
           base_branch="${CLUSTER_STATE_DEFAULT_BRANCH:-main}"
@@ -448,7 +457,7 @@ jobs:
             label="${label#"${label%%[![:space:]]*}"}"
             label="${label%"${label##*[![:space:]]}"}"
             if [ -n "$label" ]; then
-              gh label create "$label" --repo "${owner}/${repo}" --color "0E8A16" --force
+              "$gh_bin" label create "$label" --repo "${owner}/${repo}" --color "0E8A16" --force
             fi
           done
 
@@ -476,4 +485,4 @@ jobs:
               fi
             done
           fi
-          gh pr create "${pr_args[@]}"
+          "$gh_bin" pr create "${pr_args[@]}"
