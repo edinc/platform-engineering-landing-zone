@@ -171,9 +171,6 @@ spec:
         teamReviewers:
           - pe-platform-admins
           - pe-security-reviewers
-        labels:
-          - golden-path
-          - aca
   output:
     links:
       - title: Golden-path repository request
