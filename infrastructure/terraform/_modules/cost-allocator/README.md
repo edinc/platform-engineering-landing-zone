@@ -20,7 +20,10 @@ output (`../_modules/cost-allocator/dist/function_app.zip`) and consumers do not
 need to package by hand. Because Azure Functions remote build
 (`SCM_DO_BUILD_DURING_DEPLOYMENT=true`) installs `requirements.txt` during
 deployment, the ZIP only needs the Function source; it is byte-reproducible so
-Terraform does not detect spurious changes between builds.
+Terraform does not detect spurious changes between builds. For a local
+`terraform plan`/`apply` with `enable_cost_allocator = true`, run
+`make cost-allocator-package` first so the artifact exists (CI does this
+automatically).
 
 ## Service plan profiles
 
@@ -45,3 +48,13 @@ existing ALZ-owned export, or provision one with the
 `subscription-baseline` stack's `azurerm_subscription_cost_management_export`
 (see [the FinOps cost-showback runbook](../../../../docs/runbooks/sre/cost-showback-failure.md)).
 Cost Management exports produce their first file up to ~24h after creation.
+
+The secure default profile (`cost_allocator_public_network_access_enabled =
+false`) additionally requires the platform networking inputs it shares with the
+rest of the stack: a `function-integration` entry in `subnet_address_prefixes`
+for Function VNet integration, and `private_dns_zone_ids` covering
+`privatelink.blob`, `privatelink.queue`, `privatelink.table`, and
+`privatelink.azurewebsites` for the storage and Function private endpoints. The
+cost-conscious public profile needs none of these — set
+`cost_allocator_public_network_access_enabled = true` and omit
+`function-integration`.

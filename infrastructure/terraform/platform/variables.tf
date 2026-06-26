@@ -93,9 +93,9 @@ variable "subnet_address_prefixes" {
         for name in ["aks-system", "aks-user", "private-endpoints", "postgres-delegated", "aca-infra", "shared-ingress"] :
         contains(keys(var.subnet_address_prefixes), name)
       ],
-      var.enable_cost_allocator ? [contains(keys(var.subnet_address_prefixes), "function-integration")] : [],
+      var.enable_cost_allocator && !var.cost_allocator_public_network_access_enabled ? [contains(keys(var.subnet_address_prefixes), "function-integration")] : [],
     ))
-    error_message = "subnet_address_prefixes must include aks-system, aks-user, private-endpoints, postgres-delegated, aca-infra, and shared-ingress. enable_cost_allocator also requires function-integration."
+    error_message = "subnet_address_prefixes must include aks-system, aks-user, private-endpoints, postgres-delegated, aca-infra, and shared-ingress. The cost allocator also requires function-integration when enable_cost_allocator = true and cost_allocator_public_network_access_enabled = false (the private profile)."
   }
 }
 

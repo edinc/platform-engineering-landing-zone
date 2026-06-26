@@ -122,6 +122,7 @@ jobs:
       tfvars_json_variable: TERRAFORM_TFVARS_PLATFORM_JSON
       tfvars_json_secret: TERRAFORM_TFVARS_PLATFORM_SECRET_JSON
       replace_addresses: ${{ inputs.replace_addresses }}
+      package_cost_allocator_function: true
     permissions:
       contents: read
       id-token: write
