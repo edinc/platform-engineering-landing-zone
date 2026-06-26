@@ -16,7 +16,7 @@ STAGE08_ALERT_RULES := $(shell { find platform-gitops/clusters/_base/addon-confi
 CONTRACT_REQUESTS := $(shell find docs/contracts -type f \( -path '*/examples/*.yaml' -o -name 'vending-request.yaml' \) ! -name 'team-onboarding-request.yaml' 2>/dev/null | sort)
 CONTRACT_NEGATIVE_REQUESTS := $(shell find docs/contracts/tests -type f -name '*.yaml' 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts gitops-contracts observability-contracts backstage-contracts onboarding-contracts golden-path-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts stage11-contracts alert-runbook-lint finops-cost-test azure-test-stage08 azure-test-stage09 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts gitops-contracts observability-contracts backstage-contracts onboarding-contracts golden-path-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts stage11-contracts alert-runbook-lint finops-cost-test cost-allocator-package azure-test-stage08 azure-test-stage09 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -159,8 +159,11 @@ stage11-contracts: golden-path-contracts ## Compatibility alias for golden-path 
 alert-runbook-lint: ## Ensure Prometheus alert rules carry runbook_url annotations.
 	$(PYTHON) scripts/observability/lint_alert_runbooks.py $(STAGE08_ALERT_RULES)
 
-finops-cost-test: ## Test cost showback allocation logic.
+finops-cost-test: ## Test cost showback allocation logic and Function packaging.
 	$(PYTHON) scripts/finops/test_cost_showback.py
+
+cost-allocator-package: ## Build the deterministic cost allocator Function App ZIP.
+	bash scripts/cost-allocator/package-function.sh
 
 azure-test-stage08: ## Run Azure CLI read-only validation for deployed observability resources.
 	bash scripts/azure/validate_stage08_azure.sh

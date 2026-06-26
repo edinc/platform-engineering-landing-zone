@@ -61,6 +61,47 @@ def test_allocates_tagged_and_untagged_costs() -> None:
     assert "platform-overhead,missing-cost-center,shared-platform,4.0000" in csv_output
 
 
+def test_function_package_is_deterministic_and_complete() -> None:
+    import hashlib
+    import shutil
+    import subprocess
+    import tempfile
+    import zipfile
+
+    script = ROOT / "scripts/cost-allocator/package-function.sh"
+    assert script.exists(), "package-function.sh must exist"
+
+    scratch_root = ROOT / ".tools" / "tmp"
+    scratch_root.mkdir(parents=True, exist_ok=True)
+    scratch = Path(tempfile.mkdtemp(prefix="cost-allocator-package.", dir=scratch_root))
+
+    def build(target: Path) -> bytes:
+        subprocess.run(["bash", str(script), str(target)], check=True, cwd=ROOT)
+        return target.read_bytes()
+
+    try:
+        first = build(scratch / "a.zip")
+        second = build(scratch / "b.zip")
+        assert hashlib.sha256(first).hexdigest() == hashlib.sha256(second).hexdigest(), (
+            "Function package must be byte-reproducible so Terraform does not detect spurious changes"
+        )
+        with zipfile.ZipFile(scratch / "a.zip") as archive:
+            names = set(archive.namelist())
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+    expected = {
+        "function_app.py",
+        "host.json",
+        "requirements.txt",
+        "shared_code/cost_showback.py",
+    }
+    missing = expected - names
+    assert not missing, f"Function package is missing required files: {sorted(missing)}"
+    assert not any(name.endswith((".pyc", ".pyo")) for name in names), "Function package must not include compiled artifacts"
+
+
 if __name__ == "__main__":
     test_allocates_tagged_and_untagged_costs()
-    print("Cost showback allocation tests passed.")
+    test_function_package_is_deterministic_and_complete()
+    print("Cost showback allocation and packaging tests passed.")
