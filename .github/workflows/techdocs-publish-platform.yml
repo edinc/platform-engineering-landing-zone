@@ -1,0 +1,39 @@
+name: Publish platform TechDocs
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub Environment that owns Azure OIDC and TechDocs variables.
+        required: false
+        type: choice
+        default: dev
+        options:
+          - dev
+          - nonprod
+          - prod
+  push:
+    branches:
+      - main
+    paths:
+      - mkdocs.yml
+      - docs/**
+      - .github/workflows/techdocs-publish-platform.yml
+
+permissions:
+  contents: read
+
+jobs:
+  publish-platform-docs:
+    name: Publish platform System TechDocs
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/techdocs-publish.yml
+    with:
+      source_dir: .
+      entity_namespace: default
+      entity_kind: System
+      entity_name: platform-engineering-landing-zone
+      environment: ${{ inputs.environment || 'dev' }}

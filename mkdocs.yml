@@ -1,0 +1,12 @@
+site_name: Azure Platform Engineering Landing Zone
+site_description: >-
+  Architecture, decision records, and operational runbooks for the Azure
+  Platform Engineering Landing Zone internal developer platform.
+docs_dir: docs
+nav:
+  - Overview: index.md
+  - Architecture: architecture/README.md
+  - Architecture decision records: adr/README.md
+  - Runbooks: runbooks/README.md
+plugins:
+  - techdocs-core
