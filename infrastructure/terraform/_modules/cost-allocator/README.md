@@ -51,10 +51,10 @@ For the secure profile (`public_network_access_enabled = false`) the runner must
 additionally have network and DNS reachability to the Function App's SCM endpoint
 (`<app>.scm.azurewebsites.net`) — typically via the platform VNet / private
 endpoint — because OneDeploy connects to that endpoint. The cost-conscious public
-profile needs no special runner networking. The deploy trigger tolerates a
-missing artifact at `terraform plan` time (it defers the publish to apply), but
-the package must exist by apply; the platform workflow builds it beforehand, and
-for a local apply run `make cost-allocator-package` first.
+profile needs no special runner networking. The deploy trigger hashes the
+package, so the artifact must exist at `terraform plan` time when
+`enable_cost_allocator = true`. The platform workflow builds it before
+plan/apply; for a local run, `make cost-allocator-package` first.
 
 ## Service plan profiles
 
