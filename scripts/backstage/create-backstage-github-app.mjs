@@ -21,7 +21,8 @@
 //   OUT           Output path for credentials JSON. Default: ./backstage-github-app-creds.json.
 //
 // The permission set matches the scaffolder actions Backstage enables
-// (repo create/push, PRs, issues, pages, workflows, webhooks) plus catalog reads.
+// (repo create/push, PRs, issues, pages, workflows, webhooks) plus catalog reads
+// and Commit statuses (read) for fetch:template skeleton reads.
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -58,6 +59,11 @@ const manifest = {
     repository_hooks: 'write',
     workflows: 'write',
     pages: 'write',
+    // Read-only Commit statuses are required by Backstage's GithubUrlReader.readTree
+    // (getRepoDetails calls the combined commit-status API), which the
+    // fetch:template scaffolder action uses to read golden-path skeletons. Without
+    // it, template execution fails with a 403 on /commits/<ref>/status.
+    statuses: 'read',
   },
   default_events: [],
 };
