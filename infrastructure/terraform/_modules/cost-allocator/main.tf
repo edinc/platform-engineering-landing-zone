@@ -241,7 +241,7 @@ resource "terraform_data" "function_deploy" {
   count = var.function_package_path == null ? 0 : 1
 
   triggers_replace = {
-    package_sha     = filesha256(var.function_package_path)
+    package_sha     = fileexists(var.function_package_path) ? filesha256(var.function_package_path) : "pending"
     function_app_id = azurerm_linux_function_app.this.id
   }
 

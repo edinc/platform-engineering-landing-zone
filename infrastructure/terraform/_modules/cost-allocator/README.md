@@ -45,6 +45,17 @@ deploy step runs on the CI runner (or locally), which must be signed in to Azure
 (the platform workflow uses OIDC) with publish rights on the Function App
 (Contributor on the resource group is sufficient).
 
+The publish step runs a Bash (`/bin/bash`) `local-exec` that shells out to `az`,
+so it requires a **Linux runner with the Azure CLI** available and authenticated.
+For the secure profile (`public_network_access_enabled = false`) the runner must
+additionally have network and DNS reachability to the Function App's SCM endpoint
+(`<app>.scm.azurewebsites.net`) — typically via the platform VNet / private
+endpoint — because OneDeploy connects to that endpoint. The cost-conscious public
+profile needs no special runner networking. The deploy trigger tolerates a
+missing artifact at `terraform plan` time (it defers the publish to apply), but
+the package must exist by apply; the platform workflow builds it beforehand, and
+for a local apply run `make cost-allocator-package` first.
+
 ## Service plan profiles
 
 The default service plan is EP1 with three zone-balanced workers and private
