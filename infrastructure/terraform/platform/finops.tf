@@ -21,7 +21,11 @@ module "cost_allocator" {
 }
 
 resource "azurerm_role_assignment" "backstage_cost_showback_reader" {
-  count = local.backstage_enabled && local.backstage_cost_showback_container_id != "" ? 1 : 0
+  # Base the count on plan-time-known inputs, not local.backstage_cost_showback_container_id:
+  # when enable_cost_allocator is true and no explicit container override is set, that
+  # local resolves to module.cost_allocator[0].showback_container_id, which is unknown
+  # until apply and makes "count" un-plannable on the first apply that creates the module.
+  count = local.backstage_enabled && (var.backstage_cost_showback_container_id != "" || var.enable_cost_allocator) ? 1 : 0
 
   scope                = local.backstage_cost_showback_container_id
   role_definition_name = "Storage Blob Data Reader"
