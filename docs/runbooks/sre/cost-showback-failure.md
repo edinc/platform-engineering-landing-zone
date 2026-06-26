@@ -76,3 +76,7 @@ disabled, matching the landing-zone posture.
 - **OneDeploy 403** means the deploy principal lacks publish rights. The CI
   runner must be signed in to Azure (OIDC) with at least Contributor on the
   Function App's resource group.
+- **OneDeploy connection/timeout on the secure profile** (`public_network_access_enabled = false`)
+  means the runner cannot reach `<app>.scm.azurewebsites.net`. The runner needs
+  network and DNS reachability to the Function App SCM endpoint (via the platform
+  VNet / private endpoint). The public demo profile is unaffected.

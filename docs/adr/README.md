@@ -4,7 +4,7 @@ This directory contains accepted and proposed architecture decision records
 for the platform landing zone. Use [`0000-template.md`](0000-template.md) for
 new ADRs.
 
-Next free number: **0057**
+Next free number: **0058**
 
 | ADR | Title | Status | File |
 |-----|-------|--------|------|
