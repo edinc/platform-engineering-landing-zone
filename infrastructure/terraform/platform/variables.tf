@@ -871,14 +871,37 @@ variable "cost_export_root_folder" {
 
 variable "cost_allocator_function_package_path" {
   type        = string
-  description = "Optional local ZIP package path for the cost allocator Function App deployment."
-  default     = null
+  description = "ZIP package path for the cost allocator Function App, relative to the platform stack. Defaults to the artifact produced by scripts/cost-allocator/package-function.sh (run automatically by the platform deploy workflow and available via 'make cost-allocator-package')."
+  default     = "../_modules/cost-allocator/dist/function_app.zip"
+
+  validation {
+    condition     = var.cost_allocator_function_package_path == null || trimspace(var.cost_allocator_function_package_path) != ""
+    error_message = "cost_allocator_function_package_path must be null or a non-empty path."
+  }
 }
 
 variable "cost_allocator_public_network_access_enabled" {
   type        = bool
   description = "Whether the cost allocator Function App and storage allow public network access. Set false only after private endpoints and Function VNet integration are wired."
   default     = false
+}
+
+variable "cost_allocator_service_plan_sku_name" {
+  type        = string
+  description = "Function App service plan SKU for the cost allocator. Defaults to the production EP1 Elastic Premium plan (VNet integration, zone balancing). Cost-conscious profiles may set 'Y1' (Consumption) together with cost_allocator_public_network_access_enabled = true as a documented cost exception."
+  default     = "EP1"
+}
+
+variable "cost_allocator_service_plan_worker_count" {
+  type        = number
+  description = "Worker count for the cost allocator Function App plan. Ignored for the Y1 Consumption plan. Use at least 3 when zone balancing is enabled."
+  default     = 3
+}
+
+variable "cost_allocator_service_plan_zone_balancing_enabled" {
+  type        = bool
+  description = "Whether the cost allocator Function App plan balances workers across availability zones. Not supported on the Y1 Consumption plan."
+  default     = true
 }
 
 variable "cost_allocator_application_insights_connection_string" {

@@ -74,6 +74,10 @@ jobs:
           install: true
           cache: true
 
+      - name: Package cost allocator function
+        if: ${{ contains(inputs.stack_path, 'terraform/platform') }}
+        run: bash scripts/cost-allocator/package-function.sh
+
       - name: Validate untrusted PR inputs
         env:
           STACK_PATH: ${{ inputs.stack_path }}
@@ -174,6 +178,10 @@ jobs:
         with:
           install: true
           cache: true
+
+      - name: Package cost allocator function
+        if: ${{ contains(inputs.stack_path, 'terraform/platform') }}
+        run: bash scripts/cost-allocator/package-function.sh
 
       - name: Validate trusted inputs and environment
         env:
