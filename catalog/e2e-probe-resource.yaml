@@ -1,0 +1,21 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: "e2e-probe"
+  title: "e2e-probe AKS namespace"
+  description: "Vended AKS namespace for e2e / probe in demo."
+  annotations:
+    platform.example.io/team: "e2e"
+    platform.example.io/product: "probe"
+    platform.example.io/environment: "demo"
+    platform.example.io/on-call: "e2e-oncall"
+    platform.example.io/quota-tier: "S"
+  tags:
+    - aks
+    - namespace
+    - "demo"
+    - "internal"
+spec:
+  type: kubernetes-namespace
+  owner: "group:default/pe-app-team-e2e"
+  system: "probe"
