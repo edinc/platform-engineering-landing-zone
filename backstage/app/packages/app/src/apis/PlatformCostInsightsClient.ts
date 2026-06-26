@@ -120,11 +120,12 @@ export class PlatformCostInsightsClient implements CostInsightsApi {
         .filter(Boolean)
         .sort()
         .at(-1) ?? new Date().toISOString().slice(0, 10);
-    // The showback CSV is a single period snapshot per team/product. Spread the
-    // period total evenly across a daily window so the Cost Insights overview
-    // renders a time series that still sums to the real total, and always
-    // provide a trendline (the plugin's chart dereferences it unconditionally).
-    const aggregation = buildDailySeries(endDate, total);
+    // The showback CSV is a single period snapshot per team/product, not real
+    // daily data. Synthesize a daily series by spreading the period total evenly
+    // across a fixed window so the Cost Insights overview renders a time series
+    // that still sums to the real total, and always provide a trendline (the
+    // plugin's chart dereferences trendline.slope without a guard).
+    const aggregation = buildSyntheticDailySeries(endDate, total);
     return {
       id,
       aggregation,
@@ -136,7 +137,11 @@ export class PlatformCostInsightsClient implements CostInsightsApi {
 
 const SHOWBACK_WINDOW_DAYS = 30;
 
-function buildDailySeries(
+// The showback pipeline emits one cost figure per team/product per period, so
+// there is no real daily granularity. This synthesizes a flat daily series from
+// the period total purely so the Cost Insights overview chart has a time axis to
+// render; the series sums back to the real total and carries no invented trend.
+function buildSyntheticDailySeries(
   endDate: string,
   total: number,
 ): Array<{ date: string; amount: number }> {
