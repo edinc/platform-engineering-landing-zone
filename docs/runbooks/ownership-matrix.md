@@ -1,6 +1,6 @@
 # Ownership matrix
 
-Stage: 10 - multi-tenancy, onboarding, and ownership
+Capability: multi-tenancy & onboarding
 
 This matrix is the canonical responsibility document for controlled platform and
 workload artifacts. If ownership changes, update this runbook and

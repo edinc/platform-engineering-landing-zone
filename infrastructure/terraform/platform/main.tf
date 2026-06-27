@@ -47,7 +47,7 @@ resource "terraform_data" "input_guard" {
 
     precondition {
       condition     = !var.enable_aks || var.profile == "demo" || var.firewall_private_ip_address != ""
-      error_message = "enable_aks requires firewall_private_ip_address for non-demo profiles so AKS egress uses Stage 03 user-defined routing."
+      error_message = "enable_aks requires firewall_private_ip_address for non-demo profiles so AKS egress uses the connectivity stack's user-defined routing."
     }
 
     precondition {
@@ -57,7 +57,7 @@ resource "terraform_data" "input_guard" {
 
     precondition {
       condition     = !var.enable_gitops || var.enable_key_vault
-      error_message = "enable_gitops requires enable_key_vault because Stage 07 cert-manager and CSI integrations use the platform Key Vault."
+      error_message = "enable_gitops requires enable_key_vault because the GitOps cert-manager and CSI integrations use the platform Key Vault."
     }
 
     precondition {

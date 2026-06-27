@@ -1,4 +1,4 @@
-# Example inputs for the Stage 03 connectivity stack. Copy to terraform.tfvars
+# Example inputs for the connectivity & egress stack. Copy to terraform.tfvars
 # (gitignored) and fill tenant-specific values. Never commit real tenant IDs.
 
 tenant_id       = "00000000-0000-0000-0000-000000000000"
@@ -34,7 +34,7 @@ monitor_linked_resource_ids = [
 #   app1-nonprod = "/subscriptions/55555555-5555-5555-5555-555555555555/resourceGroups/rg-app1-net/providers/Microsoft.Network/virtualNetworks/vnet-app1-nonprod-sec"
 # }
 
-# Stage 01 Phase-2 retrofit examples: move remote state and seed Key Vault behind
+# Azure foundation Phase 2 retrofit examples: move remote state and seed Key Vault behind
 # Private Endpoints after this hub exists, then disable public network access in
 # the _bootstrap stack.
 # private_endpoints = {

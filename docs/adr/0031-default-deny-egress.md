@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-10
-- Stage: Stage 03 - connectivity, identity, and egress
+- Capability: connectivity & egress
 
 ## Context
 
@@ -21,9 +21,9 @@ FQDN-aware policies inside AKS.**
 1. `nonprod` and `prod` create Azure Firewall Premium and a Firewall Policy.
    Unmatched traffic is denied by default; allowed destinations come from
    `policies/azure/firewall/allowlist.json`.
-   Stage 04 appends AKS node/control-plane dependencies when AKS lifecycle is
+   The platform shared services capability appends AKS node/control-plane dependencies when AKS lifecycle is
    introduced.
-2. Workload subnets route `0.0.0.0/0` to the firewall. The Stage 03 stack outputs
+2. Workload subnets route `0.0.0.0/0` to the firewall. The connectivity & egress stack outputs
    the route table for later vending/subscription integration.
 3. The allowlist JSON is static-validated in CI so required platform FQDNs cannot
    be removed accidentally.
@@ -35,7 +35,7 @@ FQDN-aware policies inside AKS.**
    implemented as time-bound firewall and NetworkPolicy changes, and audited.
 5. `demo` creates NAT Gateway only. Its lack of Azure-layer FQDN filtering is
    explicit and accepted for cost; Cilium FQDN policy becomes the enforcement
-   point after Stage 04/07.
+   point after platform shared services and the GitOps platform.
 
 ## Consequences
 
@@ -56,6 +56,6 @@ FQDN-aware policies inside AKS.**
 
 ## References
 
-- [`policies/azure/firewall/allowlist.json`](../../policies/azure/firewall/allowlist.json)
+- [`policies/azure/firewall/allowlist.json`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/policies/azure/firewall/allowlist.json)
 - [`docs/runbooks/egress-exception.md`](../runbooks/egress-exception.md)
-- [`plan/stages/stage-03-connectivity-identity-egress.md`](../../plan/stages/stage-03-connectivity-identity-egress.md)
+- [Connectivity & egress](../how-it-works/connectivity-egress.md)

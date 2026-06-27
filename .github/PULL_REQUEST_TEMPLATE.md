@@ -1,11 +1,11 @@
-## Stage
+## Capability
 
-- Stage: <!-- e.g., Stage 05 - Environment and subscription vending -->
-- Stage plan: <!-- e.g., `plan/stages/stage-05-vending.md` -->
+- Capability: <!-- e.g., tenancy vending -->
+- Reference: <!-- e.g., `docs/how-it-works/tenancy-vending-onboarding.md` -->
 
 ## Summary
 
-Describe the meaningful change and the stage acceptance criteria it supports.
+Describe the meaningful change and the acceptance criteria it supports.
 
 ## Validation
 

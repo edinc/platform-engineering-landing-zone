@@ -8,13 +8,35 @@ If instructions conflict, prefer the stricter rule that best prevents regression
 
 ## Development workflow
 
-- Start by understanding the relevant stage in `plan/stages/` and the source-of-truth roadmap in `plan/plan.md`.
-- Create or switch to a task-specific feature branch before starting implementation work. Do not implement directly on `main` unless the user explicitly instructs otherwise.
-- Keep changes small, focused, and aligned to the current stage boundaries.
+- Start by understanding the relevant capability in the [how-it-works guides](docs/how-it-works/README.md) and the roadmap in [`docs/roadmap/README.md`](docs/roadmap/README.md).
+- Work on a task-specific feature branch that is created once by the human or the orchestrating session (see "Working tree safety"). Do not implement directly on `main` unless the user explicitly instructs otherwise.
+- Keep changes small, focused, and aligned to one capability boundary.
 - Reuse existing patterns before adding new abstractions, workflows, modules, or conventions.
 - Preserve public contracts, Terraform outputs, policy behavior, workflow interfaces, and documented acceptance criteria unless the requested change explicitly updates them.
 - Avoid broad fallbacks, silent failures, or catch-all error handling. Surface errors through existing repository patterns.
 - Treat regression prevention as a primary requirement, not an optional cleanup step.
+
+## Working tree safety
+
+These instructions are followed by many agents that may share a single working
+tree (delegated sub-agents, parallel sessions, and in-place local checkouts).
+Destructive git in a shared tree silently destroys other agents' uncommitted
+work. Therefore:
+
+- **Never run destructive or state-mutating git commands as an agent**: no
+  `git checkout`/`switch` between branches, `git checkout -- <path>` /
+  `git restore`, `git reset`, `git stash`, `git clean`, `git rebase`, or
+  `git branch -D`. In particular, never run `git checkout -- .`,
+  `git restore .`, `git clean -fd`, or `git reset --hard` — they erase
+  uncommitted work, including work you did not create.
+- **Feature branches are created once** by the human or the orchestrating
+  session, not by each agent. If you are a delegated/sub-agent, or are working in
+  a shared or in-place checkout, assume the branch is already correct and do not
+  create or switch branches yourself.
+- Make only file edits within your assigned scope. If a branch or git-state
+  change appears necessary, stop and ask the orchestrator instead of acting.
+- Read-only git inspection (`git status`, `git diff`, `git log`, `git show`) is
+  fine. Do not commit unless the human explicitly asks.
 
 ## Test and validation requirements
 
@@ -28,7 +50,7 @@ If instructions conflict, prefer the stricter rule that best prevents regression
   - Kyverno policy: test with `kyverno test`.
 - Kubernetes, Helm, and Flux changes require manifest rendering and validation using existing repository commands such as `helm lint`, `kubeconform`, or Flux/Kustomize validation when available.
 - Backstage or Node.js changes require the existing Node.js 20 and pnpm test, lint, type-check, and build commands when present.
-- Documentation-only changes do not require automated tests, but agents must check stage alignment, links, numbering, terminology, and consistency with `plan/plan.md`.
+- Documentation-only changes do not require automated tests, but agents must check capability alignment, links, numbering, terminology, and consistency with the [architecture reference](docs/architecture/README.md) and [how-it-works guides](docs/how-it-works/README.md).
 - If no relevant test harness exists yet for implementation work, add the smallest appropriate test harness before completion. Do not hand off implementation work without tests. For documentation-only or planning-only work where automated tests are not applicable, document the validation performed.
 
 ## Required independent review passes
@@ -37,7 +59,7 @@ Before final handoff for any change set, run three independent review agents:
 
 1. A correctness and regression review focused on behavior, edge cases, tests, and backwards compatibility.
 2. A security and compliance review focused on secrets, identity, policy, supply chain, least privilege, and Azure security defaults.
-3. An architecture and maintainability review focused on stage alignment, ownership boundaries, operational impact, and long-term simplicity.
+3. An architecture and maintainability review focused on capability alignment, ownership boundaries, operational impact, and long-term simplicity.
 
 Review passes must be independent:
 
@@ -54,7 +76,7 @@ Review passes must be independent:
 - Confirm the change addresses the root cause or requested outcome, not only a narrow symptom.
 - Add or update tests for changed behavior before considering the implementation complete.
 - Run the smallest reliable validation set that covers the changed surfaces.
-- Check adjacent docs, ADRs, runbooks, workflows, and stage files for consistency.
+- Check adjacent docs, ADRs, runbooks, workflows, and how-it-works guides for consistency.
 - Keep generated files, secrets, tenant-specific values, kubeconfigs, and private keys out of the repository.
 - Prefer explicit failure over success-shaped defaults when required inputs, configuration, or dependencies are missing.
 

@@ -12,6 +12,6 @@ terraform {
     }
   }
 
-  # Stage 10 team onboarding state.
+  # Team onboarding state for multi-tenancy & onboarding.
   backend "azurerm" {}
 }

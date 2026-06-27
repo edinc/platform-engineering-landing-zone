@@ -28,14 +28,14 @@ required_env=(
 )
 for name in "${required_env[@]}"; do
   if [ -z "${!name:-}" ]; then
-    echo "ERROR: $name is required for Stage 08 Azure validation." >&2
+    echo "ERROR: $name is required for observability Azure validation." >&2
     exit 1
   fi
 done
 
 cost_scope="${STAGE08_COST_EXPORT_SCOPE:-/subscriptions/${subscription_id}}"
 
-echo "Validating Stage 08 resources in subscription ${subscription_id}"
+echo "Validating observability resources in subscription ${subscription_id}"
 
 aks_state="$(az aks show \
   --resource-group "$STAGE08_PLATFORM_RESOURCE_GROUP" \

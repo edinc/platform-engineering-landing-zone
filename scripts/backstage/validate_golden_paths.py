@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Stage 11 golden-path template repository contracts."""
+"""Validate golden-path template repository contracts."""
 
 from __future__ import annotations
 
@@ -71,7 +71,7 @@ def fail(message: str) -> None:
 
 def require_file(path: str) -> None:
     if not (ROOT / path).is_file():
-        fail(f"Required Stage 11 file missing: {path}")
+        fail(f"Required file missing: {path}")
 
 
 def require_contains(path: str, needle: str) -> None:
@@ -634,7 +634,7 @@ def main() -> None:
     validate_namespace_template()
     validate_gitops_workflow()
     validate_docs()
-    print("Stage 11 golden-path contracts validated.")
+    print("Golden-path contracts validated.")
 
 
 if __name__ == "__main__":

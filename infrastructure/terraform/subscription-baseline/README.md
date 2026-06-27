@@ -1,4 +1,4 @@
-# Subscription baseline (Stage 02)
+# Subscription baseline
 
 Subscription-scoped baseline for environments where an Azure Landing Zone
 already exists. This stack does **not** create management groups, move
@@ -35,7 +35,7 @@ validated in CI, but this Terraform stack no longer deploys it.
 
 ## Prerequisites
 
-- Stage 01 complete: Terraform state account, `subscription-baseline` container,
+- Azure foundation complete: Terraform state account, `subscription-baseline` container,
   and OIDC deploy identity.
 - The target subscription already exists and is placed in the appropriate ALZ
   management group by the tenant/platform team.
@@ -53,7 +53,7 @@ validated in CI, but this Terraform stack no longer deploys it.
 
 ## State backend
 
-State lives in the Stage 01 account, container `subscription-baseline`, with a
+State lives in the Azure foundation account, container `subscription-baseline`, with a
 unique key per onboarded subscription/environment, for example
 `subscriptions/<subscription-id>/subscription-baseline.tfstate`. Copy
 `backend.hcl.example` to `backend.hcl`, fill `resource_group_name` and

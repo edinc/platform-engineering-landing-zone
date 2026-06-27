@@ -1,0 +1,73 @@
+name: Documentation gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  capability-vocabulary:
+    name: No internal phase-number vocabulary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Fail on internal phase-number vocabulary in public docs
+        run: |
+          set -euo pipefail
+          # Public-facing docs must use durable capability names, not internal
+          # delivery phase numbers. Match the word stage + optional separators +
+          # a digit, case-insensitive (spaced, hyphenated, colon, or no separator).
+          matches="$(grep -rIInE '[Ss]tage[: _-]*[0-9]' README.md docs templates .github policies 2>/dev/null || true)"
+          if [ -n "$matches" ]; then
+            printf '%s\n' "$matches"
+            echo "::error::Found internal phase-number vocabulary in public-facing docs. Replace it with a capability name (see docs/how-it-works/)."
+            exit 1
+          fi
+          echo "OK: no internal phase-number vocabulary found."
+
+  docs-build:
+    name: MkDocs strict build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install TechDocs MkDocs toolchain
+        run: |
+          set -euo pipefail
+          python3 -m pip install --user mkdocs-techdocs-core==1.7.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build documentation (strict)
+        run: mkdocs build --strict --site-dir .tools/tmp/site
+
+  link-check:
+    name: Markdown link check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Check links (offline, local targets)
+        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
+        with:
+          args: >-
+            --offline
+            --no-progress
+            README.md
+            CONTRIBUTING.md
+            SECURITY.md
+            'docs/**/*.md'
+          fail: true

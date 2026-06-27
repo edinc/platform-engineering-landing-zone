@@ -2,13 +2,13 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 05 - environment and subscription vending
+- Capability: tenancy vending
 
 ## Context
 
 Not every team or workload needs a dedicated Azure subscription. The shared
-platform AKS cluster from Stage 04 can host smaller workloads when isolation,
-quota, identity, and cost labels are enforced consistently. Stage 07 will later
+platform AKS cluster from platform shared services can host smaller workloads when isolation,
+quota, identity, and cost labels are enforced consistently. GitOps platform will later
 reconcile the manifests with Flux and Kyverno.
 
 ## Decision
@@ -32,8 +32,8 @@ blast-radius or billing isolation is not required.**
   quota, network-default-deny, and cost-label boundaries.
 - Namespace vending does not replace subscription vending for workloads that
   require hard billing, quota, compliance, or blast-radius isolation.
-- Flux reconciliation and policy enforcement are cross-stage gates completed in
-  Stage 07.
+- Flux reconciliation and policy enforcement are cross-capability gates completed in
+  GitOps platform.
 - The vended tenant Kustomization references the cluster-state Flux source by
   name. Because the platform stack registers that source as
   `azurerm_kubernetes_flux_configuration` named `platform-<profile>` (and
@@ -58,6 +58,6 @@ blast-radius or billing isolation is not required.**
 
 ## References
 
-- [`plan/stages/stage-05-vending.md`](../../plan/stages/stage-05-vending.md)
-- [`infrastructure/terraform/vending/aks-namespace/`](../../infrastructure/terraform/vending/aks-namespace/)
+- [Tenancy vending](../how-it-works/tenancy-vending-onboarding.md)
+- [`infrastructure/terraform/vending/aks-namespace/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/vending/aks-namespace/)
 - [ADR-0036: Kyverno as single in-cluster policy engine (seeded)](README.md)

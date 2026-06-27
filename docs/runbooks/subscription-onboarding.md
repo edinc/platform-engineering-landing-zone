@@ -220,8 +220,8 @@ assignments; those remain with the external ALZ owner.
 
 ## References
 
-- [`scripts/subscription/readiness-discovery.sh`](../../scripts/subscription/readiness-discovery.sh)
-- [`infrastructure/terraform/subscription-baseline/`](../../infrastructure/terraform/subscription-baseline/)
+- [`scripts/subscription/readiness-discovery.sh`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/scripts/subscription/readiness-discovery.sh)
+- [`infrastructure/terraform/subscription-baseline/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/subscription-baseline/)
 - [ADR-0011: Compliance baseline](../adr/0011-compliance-baseline.md)
 - [ADR-0027: Policy exception workflow](../adr/0027-policy-exception.md)
 - [ADR-0028: Subscription topology](../adr/0028-subscription-topology.md)

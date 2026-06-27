@@ -1,6 +1,6 @@
 # AKS baseline operations
 
-Stage: 04 - platform shared services
+Capability: platform shared services
 
 This runbook captures the day-2 AKS baseline that the platform Terraform stack
 establishes and later GitOps stages extend.

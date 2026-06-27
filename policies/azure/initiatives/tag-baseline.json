@@ -1,7 +1,7 @@
 {
   "name": "pe-tag-baseline",
   "displayName": "Platform Engineering - mandatory tag baseline",
-  "description": "Reference/optional Deny initiative for ALZ administrators: denies creation of resources and resource groups that are missing any of the mandatory platform tags (plan.md section 10). The Stage 02 subscription-baseline stack does not assign this initiative; assignment and effect rollout belong to the external ALZ owner (Stage 02 acceptance criteria 2 and 3, ADR-0011). Built-in policy GUIDs are pinned and verified against the Azure/azure-policy repository.",
+  "description": "Reference/optional Deny initiative for ALZ administrators: denies creation of resources and resource groups that are missing any of the mandatory platform tags (see the platform tag taxonomy). The subscription-baseline stack does not assign this initiative; assignment and effect rollout belong to the external ALZ owner (subscription-baseline acceptance criteria, ADR-0011). Built-in policy GUIDs are pinned and verified against the Azure/azure-policy repository.",
   "policyType": "Custom",
   "metadata": {
     "version": "1.0.0",

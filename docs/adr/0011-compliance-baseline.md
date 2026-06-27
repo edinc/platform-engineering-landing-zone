@@ -2,14 +2,14 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 02 - subscription baseline and compliance alignment
+- Capability: subscription baseline
 
 ## Context
 
 The platform must align every onboarded subscription with the organization's
 Azure compliance baseline, but this repository no longer creates the Azure
 Landing Zone itself. Management groups, tenant/MG-scoped policy assignments, and
-central shared services are assumed to exist before Stage 02 runs.
+central shared services are assumed to exist before subscription baseline runs.
 
 The repo still needs clear, testable guarantees:
 
@@ -27,10 +27,10 @@ subscription-scoped hardening by this repo.**
 1. **Inherited controls.** The existing ALZ is responsible for tenant and
    management-group policy assignments such as CIS Microsoft Azure Foundations
    Benchmark v2, regulated initiatives, tag enforcement, private-link posture,
-   and other broad governance effects. Stage 02 verifies and documents those
+   and other broad governance effects. The subscription baseline verifies and documents those
    assumptions; it does not create or mutate them.
 
-2. **Subscription-scoped hardening.** The Stage 02 Terraform stack configures
+2. **Subscription-scoped hardening.** The subscription baseline Terraform stack configures
    controls that are naturally scoped to a subscription:
    - Microsoft Defender for Cloud plan pricing;
    - subscription Activity Log diagnostics to an existing central Log Analytics
@@ -61,12 +61,12 @@ subscription-scoped hardening by this repo.**
 
 ## Consequences
 
-- Stage 02 becomes much simpler: it can onboard one existing subscription at a
+- The subscription baseline becomes much simpler: it can onboard one existing subscription at a
   time without requiring tenant root or management-group permissions.
 - The ALZ owner remains accountable for broad policy posture; this repo remains
   accountable for subscription readiness and hardening.
 - The policy JSON remains useful and testable, but it is no longer coupled to
-  the Stage 02 Terraform apply.
+  the subscription baseline Terraform apply.
 - Compliance drift must be detected through readiness discovery and inherited
   policy/compliance reports, not through this stack creating assignments.
 
@@ -81,10 +81,10 @@ subscription-scoped hardening by this repo.**
 
 ## References
 
-- [`plan/stages/stage-02-subscription-baseline.md`](../../plan/stages/stage-02-subscription-baseline.md)
-- [`infrastructure/terraform/subscription-baseline/`](../../infrastructure/terraform/subscription-baseline/)
-- [`policies/azure/initiatives/`](../../policies/azure/initiatives/)
-- [`scripts/policy/validate_azure_initiatives.py`](../../scripts/policy/validate_azure_initiatives.py)
+- [Subscription baseline](../how-it-works/foundation.md)
+- [`infrastructure/terraform/subscription-baseline/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/subscription-baseline/)
+- [`policies/azure/initiatives/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/policies/azure/initiatives/)
+- [`scripts/policy/validate_azure_initiatives.py`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/scripts/policy/validate_azure_initiatives.py)
 - [ADR-0026: AVM module pinning and the subscription-baseline composition choice](0026-avm-modules.md)
 - [ADR-0027: Policy exception workflow and approver matrix](0027-policy-exception.md)
 - [ADR-0036: Kyverno as single in-cluster policy engine](README.md)

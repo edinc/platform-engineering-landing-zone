@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 07 - GitOps and in-cluster platform
+- Capability: GitOps platform
 
 ## Context
 
@@ -20,9 +20,9 @@ Install Azure Service Operator v2 cluster-wide through Flux with a curated
 servicebus.azure.com/*;keyvault.azure.com/*;dbforpostgresql.azure.com/*;storage.azure.com/*
 ```
 
-ASO-created resources must carry `managedBy: aso`. Stage 07 installs ASO and
+ASO-created resources must carry `managedBy: aso`. GitOps platform installs ASO and
 its curated CRDs, but tenant Flux RBAC does not grant ASO write access until a
-later stage adds admission policies that constrain Azure parent ownership. The
+later capability adds admission policies that constrain Azure parent ownership. The
 vended team RoleBinding is read-only and direct Entra access is namespace-scoped
 AKS RBAC Reader. Tenant users therefore cannot write ASO CRDs directly. Tenant
 GitOps cannot write Key Vault secrets through ASO; secret consumption stays
@@ -50,6 +50,6 @@ Bus namespace, and other platform shared services.
 
 ## References
 
-- [`platform-gitops/clusters/_base/platform/aso.yaml`](../../platform-gitops/clusters/_base/platform/aso.yaml)
-- [`plan/stages/stage-07-gitops-incluster.md`](../../plan/stages/stage-07-gitops-incluster.md)
+- [`platform-gitops/clusters/_base/controllers/platform/aso.yaml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/platform-gitops/clusters/_base/controllers/platform/aso.yaml)
+- [GitOps platform](../how-it-works/gitops.md)
 - [ADR-0032: Platform-internal eventing uses Azure Service Bus](0032-platform-eventing.md)

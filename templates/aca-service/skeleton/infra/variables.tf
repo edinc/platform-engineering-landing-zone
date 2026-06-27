@@ -42,7 +42,7 @@ variable "environment" {
 
 variable "container_app_environment_id" {
   type        = string
-  description = "Existing Stage 04 ACA managed environment ID supplied by protected GitHub Environment variables. This template never creates a managed environment."
+  description = "Existing ACA managed environment ID (a platform shared service) supplied by protected GitHub Environment variables. This template never creates a managed environment."
 
   validation {
     condition     = can(regex("^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.App/managedEnvironments/[^/]+$", var.container_app_environment_id))

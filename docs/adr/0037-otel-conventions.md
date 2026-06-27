@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-12
-- Stage: Stage 08 - Observability, SRE, FinOps
+- Capability: observability, SRE & FinOps
 
 ## Context
 
@@ -28,7 +28,7 @@ sampling for production-like profiles.
 - Dashboard, SLO, alert, and cost views can aggregate by team and product.
 - Workloads must set the standard Kubernetes labels that feed OTel enrichment.
 - Production trace volume is bounded while errors remain preferentially retained.
-- Stage 11 templates must not introduce service-specific telemetry field names.
+- Golden path templates must not introduce service-specific telemetry field names.
 
 ## Alternatives considered
 
@@ -40,6 +40,6 @@ sampling for production-like profiles.
 
 ## References
 
-- [`platform-gitops/clusters/_base/addon-config/observability/otel-conventions-configmap.yaml`](../../platform-gitops/clusters/_base/addon-config/observability/otel-conventions-configmap.yaml)
-- [`platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml`](../../platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml)
-- [`plan/stages/stage-08-observability-sre-finops.md`](../../plan/stages/stage-08-observability-sre-finops.md)
+- [`platform-gitops/clusters/_base/addon-config/observability/otel-conventions-configmap.yaml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/platform-gitops/clusters/_base/addon-config/observability/otel-conventions-configmap.yaml)
+- [`platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/platform-gitops/clusters/_base/controllers/platform/opentelemetry-collector.yaml)
+- [observability, SRE & FinOps](../how-it-works/observability-sre-finops.md)

@@ -1,6 +1,6 @@
 variable "seed_key_vault_id" {
   type        = string
-  description = "Stage 01 seed Key Vault resource ID where the GitHub App private key is stored."
+  description = "Azure foundation seed Key Vault resource ID where the GitHub App private key is stored."
 
   validation {
     condition     = can(regex("^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft\\.KeyVault/vaults/[^/]+$", var.seed_key_vault_id))

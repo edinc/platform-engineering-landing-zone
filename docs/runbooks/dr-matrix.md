@@ -1,6 +1,6 @@
 # DR matrix
 
-Stage: 04 - platform shared services
+Capability: reliability operations
 
 The platform designs the DR posture up front. Restore drills validate these objectives
 with restore drills and incident workflow exercises.

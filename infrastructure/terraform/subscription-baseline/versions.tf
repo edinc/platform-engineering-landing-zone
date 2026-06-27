@@ -8,7 +8,7 @@ terraform {
     }
   }
 
-  # Stage 02 subscription-baseline state. Backend settings are supplied at init
+  # Subscription baseline state. Backend settings are supplied at init
   # time via -backend-config (see backend.hcl.example) so no tenant-specific
   # values are committed. State access uses Entra ID (use_azuread_auth = true).
   backend "azurerm" {}

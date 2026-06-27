@@ -2,14 +2,14 @@
 
 - Status: accepted
 - Date: 2026-06-10
-- Stage: Stage 03 - connectivity, identity, and egress
+- Capability: connectivity & egress
 
 ## Context
 
 Azure DDoS Network Protection is valuable for public, tier-0 workloads but adds
-cost that is disproportionate for the MVP and especially the demo profile. Stage
-03 still creates public IPs for Azure Firewall and demo NAT Gateway, so the
-baseline posture must be explicit.
+cost that is disproportionate for the MVP and especially the demo profile.
+Connectivity & egress still creates public IPs for Azure Firewall and demo NAT
+Gateway, so the baseline posture must be explicit.
 
 ## Decision
 
@@ -42,6 +42,6 @@ Network Protection must be revisited when any of these triggers appear:
 
 ## References
 
-- [`infrastructure/terraform/connectivity/`](../../infrastructure/terraform/connectivity/)
-- [`plan/stages/stage-03-connectivity-identity-egress.md`](../../plan/stages/stage-03-connectivity-identity-egress.md)
+- [`infrastructure/terraform/connectivity/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/connectivity/)
+- [connectivity & egress](../how-it-works/connectivity-egress.md)
 - [Azure DDoS Protection overview](https://learn.microsoft.com/azure/ddos-protection/ddos-protection-overview)

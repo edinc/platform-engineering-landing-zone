@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 00 - Foundation and repo bootstrap
+- Capability: repository foundation
 
 ## Context
 
@@ -15,14 +15,14 @@ different input formats and semantics.
 
 Keep policy concerns separate:
 
-| Policy area | Location | Engine | Stage 00 test command |
+| Policy area | Location | Engine | repository foundation test command |
 |-------------|----------|--------|-----------------------|
-| Azure control plane | `policies/azure/` | Azure Policy | Structure placeholder only in Stage 00. |
+| Azure control plane | `policies/azure/` | Azure Policy | Structure placeholder only in repository foundation. |
 | Terraform plan-time assertions | `policies/rego/` | `conftest` / OPA Rego | `make policy-test-rego` |
 | Kubernetes admission | `policies/kyverno/` | Kyverno CLI and in-cluster Kyverno | `make policy-test-kyverno` |
 
 The initial Rego fixture enforces the mandatory Azure tag taxonomy from
-`plan/plan.md` section 10. The initial Kyverno fixture uses standard
+the roadmap tag taxonomy. The initial Kyverno fixture uses standard
 `app.kubernetes.io/*` labels for Kubernetes ownership and inventory metadata.
 
 ## Consequences
@@ -42,5 +42,5 @@ The initial Rego fixture enforces the mandatory Azure tag taxonomy from
 
 ## References
 
-- [`plan/plan.md` section 10](../../plan/plan.md#10-tagging-taxonomy-enforced-via-azure-policy)
-- [`plan/stages/stage-00-foundation.md`](../../plan/stages/stage-00-foundation.md)
+- [roadmap](../roadmap/README.md)
+- [repository foundation](../how-it-works/foundation.md)

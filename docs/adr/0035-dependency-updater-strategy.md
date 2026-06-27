@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 06 - CI/CD and software supply chain
+- Capability: supply chain & CI/CD
 
 ## Context
 
@@ -18,7 +18,7 @@ GitHub security alerts.
 
 1. `renovate.json` is the source of truth for scheduled dependency update PRs.
 2. Major updates require dependency-dashboard approval.
-3. Platform automerge is disabled; maintainers review and merge after Stage 00/06
+3. Platform automerge is disabled; maintainers review and merge after the repository foundation and supply chain & CI/CD
    quality gates pass.
 4. Dependabot security alerts remain enabled in repository settings. Dependabot
    version-update PRs are not configured unless a later ADR changes this split.
@@ -31,7 +31,7 @@ GitHub security alerts.
   reporting.
 - Renovate must be installed as a GitHub App and granted repository access by an
   owner.
-- Auto-merge can be revisited after Stage 11 golden-path consumers prove the
+- Auto-merge can be revisited after golden path consumers prove the
   update cadence and rollback path.
 
 ## Alternatives considered
@@ -44,6 +44,6 @@ GitHub security alerts.
 
 ## References
 
-- [`renovate.json`](../../renovate.json)
+- [`renovate.json`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/renovate.json)
 - [`docs/runbooks/renovate.md`](../runbooks/renovate.md)
-- [`plan/stages/stage-06-cicd-supply-chain.md`](../../plan/stages/stage-06-cicd-supply-chain.md)
+- [supply chain & CI/CD](../how-it-works/supply-chain-cicd.md)

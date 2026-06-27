@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Stage 10 multi-tenancy and onboarding repository contracts."""
+"""Validate multi-tenancy and onboarding repository contracts."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ def fail(message: str) -> None:
 
 def require_file(path: str) -> None:
     if not (ROOT / path).is_file():
-        fail(f"Required Stage 10 file missing: {path}")
+        fail(f"Required file missing: {path}")
 
 
 def require_contains(path: str, needle: str) -> None:
@@ -131,7 +131,7 @@ def validate_templates() -> None:
         if "githubDiscovery:" in text and "allow: [Component, System, API, Resource, Domain, Template]" in text:
             fail(f"{path} must not import Template entities through org-wide GitHub discovery")
     if "Telepresence" in onboard or "Telepresence" in egress:
-        fail("Stage 10 templates must not make Telepresence a supported dependency")
+        fail("Templates must not make Telepresence a supported dependency")
 
 
 def validate_policy() -> None:
@@ -291,7 +291,7 @@ def validate_docs() -> None:
         "docs/runbooks/team-onboarding.md": ["Idempotency contract", "Partial failures", "scripts/test/onboarding-smoke.sh"],
         "docs/runbooks/team-decommissioning.md": ["Dry run", "Backstage Components", "Azure role assignments"],
         "docs/adr/0018-inner-loop.md": ["Tilt", "Bridge to Kubernetes", "Telepresence"],
-        "docs/adr/0043-ownership-matrix.md": ["ownership-matrix.md", "spec.owner", "Stage 10"],
+        "docs/adr/0043-ownership-matrix.md": ["ownership-matrix.md", "spec.owner", "multi-tenancy & onboarding"],
     }.items():
         for needle in needles:
             require_contains(path, needle)
@@ -309,7 +309,7 @@ def main() -> None:
     validate_contracts_and_workflows()
     validate_terraform()
     validate_docs()
-    print("Stage 10 multi-tenancy contracts validated.")
+    print("Multi-tenancy and onboarding contracts validated.")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-23
-- Stage: Stage 09 - Backstage MVP
+- Capability: developer portal
 
 ## Context
 
@@ -79,6 +79,6 @@ traffic after Azure Load Balancer forwards it to the nodes.
 
 ## References
 
-- [`platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml`](../../platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml)
-- [`platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml`](../../platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml)
-- [`infrastructure/terraform/platform/backstage-public-ingress.tf`](../../infrastructure/terraform/platform/backstage-public-ingress.tf)
+- [`platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/platform-gitops/clusters/overlays/demo/addon-config/ingress-nginx-public.yaml)
+- [`platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/platform-gitops/clusters/overlays/demo/public-backstage/public-ingress.yaml)
+- [`infrastructure/terraform/platform/backstage-public-ingress.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/backstage-public-ingress.tf)

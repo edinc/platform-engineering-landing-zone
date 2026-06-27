@@ -22,7 +22,7 @@ github_repo  = "platform-engineering-landing-zone"
 # Break-glass operator egress ranges allowed through the state account and Key
 # Vault firewalls. The GitHub-hosted runner egress IP is added just-in-time by
 # the bootstrap workflow, so it does NOT need to be listed here. Private
-# Endpoints replace this allowlist in Stage 03 (ADR-0048).
+# Endpoints replace this allowlist in connectivity & egress (ADR-0048).
 # NOTE: use a BARE IP for a single host (e.g. "203.0.113.10"), never "/32" — the
 # storage firewall normalizes /32 to a bare IP and Terraform would then show a
 # permanent diff. Use CIDR notation only for real ranges (/0–/30).

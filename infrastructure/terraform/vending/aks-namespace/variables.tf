@@ -97,7 +97,7 @@ variable "entra_group_object_id" {
 
 variable "aks_oidc_issuer_url" {
   type        = string
-  description = "AKS OIDC issuer URL from the Stage 04 platform stack."
+  description = "AKS OIDC issuer URL from the platform shared services stack."
 
   validation {
     condition     = startswith(var.aks_oidc_issuer_url, "https://")

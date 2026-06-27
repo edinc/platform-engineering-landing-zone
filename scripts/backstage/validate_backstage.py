@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Stage 09 Backstage MVP repository contracts."""
+"""Validate Backstage (developer portal) repository contracts."""
 
 from pathlib import Path
 import re
@@ -48,7 +48,7 @@ EXPECTED_FILES = [
     "docs/adr/0041-backstage-rbac.md",
     "docs/adr/0042-techdocs-storage.md",
     "docs/adr/0052-backstage-postgres-auth.md",
-    "scripts/azure/validate_stage09_azure.sh",
+    "scripts/azure/validate_backstage_azure.sh",
 ]
 
 
@@ -63,7 +63,7 @@ def fail(message: str) -> None:
 
 def require_file(path: str) -> None:
     if not (ROOT / path).is_file():
-        fail(f"Required Stage 09 file missing: {path}")
+        fail(f"Required file missing: {path}")
 
 
 def require_contains(path: str, needle: str) -> None:
@@ -185,7 +185,7 @@ def validate_backstage_config() -> None:
     require_contains("backstage/app/app-config.yaml", "credentials:\n        accountName:")
     require_contains("backstage/deploy/templates/configmap.yaml", "credentials:\n            accountName:")
     if "runtime-health-server" in package_json or (ROOT / "backstage/app/src/runtime-health-server.mjs").exists():
-        fail("Backstage app must not use the Stage 09 placeholder health server")
+        fail("Backstage app must not use the placeholder health server")
     if "packages/*/src" in read("backstage/app/.dockerignore"):
         fail("Backstage Docker build needs package source files in the Docker context")
     require_contains("backstage/app/Dockerfile", "node .yarn/releases/yarn-4.4.1.cjs install --immutable")
@@ -238,7 +238,7 @@ def validate_backstage_config() -> None:
     require_app_feature("backstage/app/packages/app/src/App.tsx", "signalsPlugin")
     require_no_sign_in_page_auto_prop("backstage/app/packages/app/src/App.tsx")
 
-    # Stage 09 E2E frontend remediation guardrails: keep the index route, search,
+    # E2E frontend remediation guardrails: keep the index route, search,
     # settings, single Notifications entry, and entity-scoped Kubernetes wired.
     require_contains("backstage/app/packages/app/src/App.tsx", "@backstage/plugin-search/alpha")
     require_contains("backstage/app/packages/app/src/App.tsx", "@backstage/plugin-user-settings/alpha")
@@ -296,7 +296,7 @@ def validate_permissions() -> None:
     require_contains("policies/backstage/permissions.ts", "platformPermissionPolicy")
     require_contains("backstage/app/packages/backend/src/index.ts", "platformPermissionPolicy")
     if "isApplicationTeam && permissionName === 'kubernetes.resources.read'" in policy:
-        fail("Application-team Kubernetes access must remain disabled until Stage 10 namespace RBAC")
+        fail("Application-team Kubernetes access must remain disabled until multi-tenancy namespace RBAC")
     require_contains("backstage/deploy/templates/configmap.yaml", "BACKSTAGE_MICROSOFT_GRAPH_GROUP_FILTER")
     require_contains("backstage/deploy/templates/deployment.yaml", "BACKSTAGE_APPLICATION_TEAM_GROUP_REFS")
     require_contains("backstage/deploy/values.yaml", "standardLabels:")
@@ -320,7 +320,7 @@ def validate_permissions() -> None:
         "Backstage platform Terraform inputs",
         "run_azure_smoke:",
         "Deployed Backstage smoke",
-        "scripts/azure/validate_stage09_azure.sh",
+        "scripts/azure/validate_backstage_azure.sh",
         "runs-on: [self-hosted, azure, private-acr, swedencentral]",
         "github.ref == 'refs/heads/main'",
         "BACKSTAGE_TRUST_PRIVATE_CA",
@@ -345,13 +345,13 @@ def validate_permissions() -> None:
         'TechDocs container exists.',
         'Approved TechDocs private endpoints:',
     ]:
-        require_contains("scripts/azure/validate_stage09_azure.sh", needle)
+        require_contains("scripts/azure/validate_backstage_azure.sh", needle)
 
 
 def validate_gitops() -> None:
     base_kustomization = read("platform-gitops/clusters/_base/addon-config/kustomization.yaml")
     if "backstage/kustomization.yaml" in base_kustomization:
-        fail("Backstage must not be part of the Stage 07/08 base addon-config; enable_backstage uses a dedicated Flux configuration")
+        fail("Backstage must not be part of the the base addon-config; enable_backstage uses a dedicated Flux configuration")
     for overlay in ["demo", "nonprod", "prod"]:
         require_contains(f"platform-gitops/clusters/overlays/{overlay}/backstage/kustomization.yaml", "../../../_base/addon-config/backstage")
     require_contains("platform-gitops/clusters/overlays/demo/backstage/kustomization.yaml", "platform-private-ca")
@@ -567,7 +567,7 @@ def validate_terraform() -> None:
     require_contains("backstage/app/packages/backend/src/plugins/platformCostShowback.ts", "userInfoService.getUserInfo")
     require_contains("backstage/app/packages/backend/src/plugins/platformCostShowback.ts", "blob.name.endsWith('.csv')")
     if "plugin-mcp-actions-backend" in read("backstage/app/packages/backend/src/index.ts"):
-        fail("MCP actions backend must not be enabled for the Stage 09 MVP")
+        fail("MCP actions backend must not be enabled for the the developer portal MVP")
     require_contains(".github/workflows/ci-backstage.yml", "platform/backstage-catalog-reconciler")
     require_contains(".github/rulesets/main-branch-protection.json", "Backstage app contract (22.x)")
     require_contains("infrastructure/terraform/platform/gitops.tf", "backstage_cost_showback_url")
@@ -582,10 +582,10 @@ def validate_workflows_and_docs() -> None:
     require_contains("docs/runbooks/README.md", "backstage-ops.md")
     for adr in ["0020-build-vs-buy.md", "0041-backstage-rbac.md", "0042-techdocs-storage.md", "0052-backstage-postgres-auth.md"]:
         require_contains(f"docs/adr/{adr}", "Status: accepted")
-        require_contains(f"docs/adr/{adr}", "Stage 09")
+        require_contains(f"docs/adr/{adr}", "developer portal")
     require_contains("docs/adr/README.md", "0041 | Backstage RBAC | Accepted")
-    require_contains("scripts/azure/validate_stage09_azure.sh", "az storage account show")
-    require_contains("scripts/azure/validate_stage09_azure.sh", "az aks show")
+    require_contains("scripts/azure/validate_backstage_azure.sh", "az storage account show")
+    require_contains("scripts/azure/validate_backstage_azure.sh", "az aks show")
 
 
 def main() -> None:
@@ -596,7 +596,7 @@ def main() -> None:
     validate_gitops()
     validate_terraform()
     validate_workflows_and_docs()
-    print("Stage 09 Backstage MVP contracts validated.")
+    print("Backstage (developer portal) contracts validated.")
 
 
 if __name__ == "__main__":

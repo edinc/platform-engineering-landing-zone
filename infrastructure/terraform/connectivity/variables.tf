@@ -48,7 +48,7 @@ variable "location_short" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Connectivity resource group name. Leave empty to use the standard Stage 03 name."
+  description = "Connectivity resource group name. Leave empty to use the standard connectivity & egress name."
   default     = ""
 }
 
@@ -65,7 +65,7 @@ variable "hub_vnet_address_space" {
 
 variable "subnet_address_prefixes" {
   type        = map(string)
-  description = "Address prefixes for required Stage 03 hub subnets. AzureFirewallManagementSubnet is added separately when forced tunneling is enabled."
+  description = "Address prefixes for required connectivity & egress hub subnets. AzureFirewallManagementSubnet is added separately when forced tunneling is enabled."
   default = {
     GatewaySubnet       = "10.20.0.0/27"
     AzureFirewallSubnet = "10.20.1.0/26"
@@ -90,7 +90,7 @@ variable "firewall_forced_tunneling_enabled" {
 
 variable "firewall_base_policy_id" {
   type        = string
-  description = "Optional existing ALZ parent Firewall Policy resource ID inherited by the Stage 03 child egress policy."
+  description = "Optional existing ALZ parent Firewall Policy resource ID inherited by the connectivity & egress child Firewall Policy."
   default     = ""
 
   validation {
@@ -121,7 +121,7 @@ variable "availability_zones" {
 
 variable "spoke_virtual_network_ids" {
   type        = map(string)
-  description = "Existing spoke virtual network IDs to hub-peer and link to every Stage 03 Private DNS zone. Reverse peering is created only for spokes in the connectivity subscription; cross-subscription reverse peering is owned by vending/workload stacks."
+  description = "Existing spoke virtual network IDs to hub-peer and link to every connectivity & egress Private DNS zone. Reverse peering is created only for spokes in the connectivity subscription; cross-subscription reverse peering is owned by vending/workload stacks."
   default     = {}
 
   validation {
@@ -135,7 +135,7 @@ variable "spoke_virtual_network_ids" {
 
 variable "workload_subnet_ids" {
   type        = map(string)
-  description = "Existing workload subnet IDs in this connectivity subscription that should receive the default route to Azure Firewall. Stage 05 vending consumes route_table_id for workload subscriptions."
+  description = "Existing workload subnet IDs in this connectivity subscription that should receive the default route to Azure Firewall. Tenancy vending consumes the exported firewall_route_table_id for workload subscriptions."
   default     = {}
 
   validation {
@@ -168,7 +168,7 @@ variable "workload_subnet_source_prefixes" {
 
 variable "firewall_allowlist_source_addresses" {
   type        = list(string)
-  description = "Source CIDRs allowed to use the curated egress allowlist. Defaults to the shared-services subnet; add approved workload prefixes as Stage 05 vending onboards spokes."
+  description = "Source CIDRs allowed to use the curated egress allowlist. Defaults to the shared-services subnet; add approved workload prefixes as the tenancy vending capability onboards spokes."
   default     = []
 
   validation {
@@ -247,7 +247,7 @@ variable "private_endpoints" {
     manual_approval        = optional(bool, false)
     request_message        = optional(string, "")
   }))
-  description = "Private Endpoints created in the hub private-endpoints subnet, including Stage 01 state account and seed Key Vault retrofit entries."
+  description = "Private Endpoints created in the hub private-endpoints subnet, including Azure foundation state account and seed Key Vault retrofit entries."
   default     = {}
 }
 

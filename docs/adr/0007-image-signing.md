@@ -2,12 +2,12 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 06 - CI/CD and software supply chain
+- Capability: supply chain & CI/CD
 
 ## Context
 
 The platform must prove artifact integrity without introducing long-lived signing
-keys. Stage 06 builds containers and Helm charts before Stage 07 enforces
+keys. The supply chain & CI/CD capability builds containers and Helm charts before the GitOps platform enforces
 admission policy, so signatures must be available in ACR as OCI artifacts and
 verifiable later by Kyverno.
 
@@ -23,7 +23,7 @@ Helm chart OCI artifacts.
    GitHub, or placed in Key Vault for normal builds.
 3. Promotion workflows re-run `cosign verify` before opening any non-dev or prod
    cluster-state pull request.
-4. Stage 07 Kyverno policies verify these cosign signatures before scheduling
+4. GitOps platform Kyverno policies verify these cosign signatures before scheduling
    signed-image-required workloads.
 
 ## Consequences
@@ -31,7 +31,7 @@ Helm chart OCI artifacts.
 - The signing identity is auditable as the GitHub workflow identity and branch
   or environment protections govern who can mint a signature.
 - Sigstore services (`rekor`, `fulcio`, `tuf`, and `oauth2`) remain mandatory
-  egress dependencies in the Stage 03 allowlist.
+  egress dependencies in the connectivity & egress allowlist.
 - Verifiers must use certificate identity constraints rather than shared public
   keys.
 - Offline verification is weaker than key-based signing unless Rekor and Fulcio
@@ -42,11 +42,11 @@ Helm chart OCI artifacts.
 | Alternative | Reason not chosen |
 |-------------|-------------------|
 | Long-lived cosign key in Key Vault | Adds key custody, rotation, and blast-radius risks that OIDC avoids. |
-| Notation / Notary v2 only | Promising ACR alignment, but the roadmap defers this comparison to Stage 13. |
-| Unsigned images with registry scanning only | Does not prove provenance and cannot support Stage 07 admission enforcement. |
+| Notation / Notary v2 only | Promising ACR alignment, but the roadmap defers this comparison to future-option planning. |
+| Unsigned images with registry scanning only | Does not prove provenance and cannot support GitOps platform admission enforcement. |
 
 ## References
 
-- [`plan/stages/stage-06-cicd-supply-chain.md`](../../plan/stages/stage-06-cicd-supply-chain.md)
+- [Supply chain & CI/CD](../how-it-works/supply-chain-cicd.md)
 - [ADR-0016: PR-based image promotion](0016-image-promotion.md)
 - [ADR-0031: Default-deny egress and FQDN allowlist](0031-default-deny-egress.md)
