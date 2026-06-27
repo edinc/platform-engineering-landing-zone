@@ -20,7 +20,7 @@ delivery pipelines, GitOps, and developer portal on top.
 flowchart TB
   subgraph tenant["Azure tenant / Entra ID"]
     subgraph alz["Existing enterprise ALZ (external owner)"]
-      mg["Management groups, tenant policy, PIM, break-glass"]
+      mg["Management groups, tenant policy, Conditional Access, enterprise break-glass"]
     end
 
     subgraph hub["Connectivity (hub)"]

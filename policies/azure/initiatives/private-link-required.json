@@ -1,7 +1,7 @@
 {
   "name": "pe-private-link-required",
   "displayName": "Platform Engineering - Private Link / no public network access",
-  "description": "Audits data services that expose public network access so they are reachable only through Private Link / Private Endpoints (retrofitted in the Stage 03 connectivity stage). The Storage and PostgreSQL members honor the initiative effect (configurable to Deny once the grace period is over); the Key Vault and Container Registry members are audit-only built-ins with no Deny effect and stay audit-only regardless of the effect parameter. Effects default to Audit at Stage 02 (acceptance criterion 2). Built-in policy GUIDs are pinned and verified against the Azure/azure-policy repository.",
+  "description": "Audits data services that expose public network access so they are reachable only through Private Link / Private Endpoints (retrofitted by the connectivity & egress capability). The Storage and PostgreSQL members honor the initiative effect (configurable to Deny once the grace period is over); the Key Vault and Container Registry members are audit-only built-ins with no Deny effect and stay audit-only regardless of the effect parameter. Effects default to Audit in the subscription baseline. Built-in policy GUIDs are pinned and verified against the Azure/azure-policy repository.",
   "policyType": "Custom",
   "metadata": {
     "version": "1.0.0",
@@ -16,7 +16,7 @@
       "allowedValues": ["Audit", "Deny", "Disabled"],
       "metadata": {
         "displayName": "Effect",
-        "description": "Effect for the Storage and PostgreSQL public-network-access controls. Stays at Audit during the Stage 02 grace period; flip to Deny after the exemption inventory is drained (ADR-0011, ADR-0027). The Key Vault and Container Registry members are audit-only built-ins and ignore this parameter."
+        "description": "Effect for the Storage and PostgreSQL public-network-access controls. Stays at Audit during the subscription-baseline grace period; flip to Deny after the exemption inventory is drained (ADR-0011, ADR-0027). The Key Vault and Container Registry members are audit-only built-ins and ignore this parameter."
       }
     }
   },

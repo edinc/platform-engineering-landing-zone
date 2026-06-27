@@ -27,8 +27,8 @@ jobs:
           # a digit, case-insensitive (spaced, hyphenated, colon, or no separator).
           # Allowlist load-bearing code identifiers (real script/env-var/Make-target
           # interfaces that are out of scope to rename).
-          matches="$(grep -rIInE '[Ss]tage[: _-]*[0-9]' README.md docs templates .github 2>/dev/null \
-            | grep -vE 'validate_stage[0-9]+_|STAGE[0-9]+_SMOKE|azure-test-stage[0-9]+|stage[0-9]+-contracts' \
+          matches="$(grep -rIInE '[Ss]tage[: _-]*[0-9]' README.md docs templates .github policies 2>/dev/null \
+            | grep -vE 'validate_stage[0-9]+_|STAGE[0-9]+_SMOKE|azure-test-stage[0-9]+|stage[0-9]+-contracts|stage[0-9]+Backstage' \
             || true)"
           if [ -n "$matches" ]; then
             printf '%s\n' "$matches"
