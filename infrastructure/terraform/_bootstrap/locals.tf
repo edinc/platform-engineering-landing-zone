@@ -20,7 +20,7 @@ locals {
     var.local_recovery_mode_acknowledgement == local.local_recovery_ack_phrase
   )
 
-  # Mandatory tag taxonomy (plan.md section 10). State holds platform secrets,
+  # Mandatory tag taxonomy (see docs/architecture/README.md). State holds platform secrets,
   # so it is classified confidential / high confidentiality.
   tags = merge(
     {

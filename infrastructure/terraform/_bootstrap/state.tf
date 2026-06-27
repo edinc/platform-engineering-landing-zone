@@ -79,7 +79,7 @@ resource "azurerm_storage_account" "tfstate" {
   tags = local.tags
 }
 
-# One container per stage plus per-profile env state (plan.md section 8).
+# One container per capability stack plus per-profile env state.
 # The "bootstrap" container is adopted; the rest are created here.
 resource "azurerm_storage_container" "stage" {
   #checkov:skip=CKV2_AZURE_21:Blob read/write/delete is logged via azurerm_monitor_diagnostic_setting.tfstate_blob; checkov cannot statically trace the interpolated blobServices target_resource_id.

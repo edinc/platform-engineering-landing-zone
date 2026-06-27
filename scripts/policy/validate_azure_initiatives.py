@@ -30,7 +30,7 @@ from pathlib import Path
 # AKS Policy (Gatekeeper) add-on DeployIfNotExists - must never appear.
 GATEKEEPER_ADDON_GUID = "a8eff44f-8c92-45c3-a3fb-9880802d67a7"
 
-# Mandatory tag taxonomy (plan.md section 10).
+# Mandatory tag taxonomy (see docs/architecture/README.md).
 MANDATORY_TAGS = {
     "env",
     "owner",

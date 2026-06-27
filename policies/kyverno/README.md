@@ -1,11 +1,11 @@
 # Kyverno policies
 
 Kubernetes admission policies live here and are tested with `kyverno test`.
-Stage 07 makes this the in-cluster admission source of truth; Azure Policy for
+The GitOps platform makes this the in-cluster admission source of truth; Azure Policy for
 AKS/Gatekeeper remains disabled so Kyverno is the only Kubernetes admission
 engine.
 
-The Stage 07 baseline includes:
+The GitOps platform baseline includes:
 
 | Policy | Control |
 |--------|---------|
