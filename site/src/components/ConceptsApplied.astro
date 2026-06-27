@@ -1,0 +1,159 @@
+---
+import { concepts } from "../lib/data/concepts";
+import Icon from "./Icon.astro";
+import ProofChip from "./ProofChip.astro";
+---
+
+<section class="section concepts" id="concepts">
+  <div class="container">
+    <header class="concepts__head">
+      <h2>Core concepts, applied</h2>
+      <p class="section-lead">
+        Eight ideas at the heart of platform engineering, each paired with how
+        this project realises it and a link to the exact place in the repository
+        that proves it.
+      </p>
+    </header>
+
+    <div class="concepts__list" data-concepts>
+      {
+        concepts.map((c) => (
+          <article class="concept" id={`concept-${c.id}`} data-concept={c.id}>
+            <div class="concept__idea">
+              <div class="concept__term">
+                <span class="concept__icon" aria-hidden="true">
+                  <Icon name={c.icon} size={20} />
+                </span>
+                <h3>{c.term}</h3>
+                <span class="concept__match" data-match-badge hidden>for you</span>
+              </div>
+              <p class="concept__tag mono">{c.tag}</p>
+              <p class="concept__text">{c.idea}</p>
+            </div>
+            <div class="concept__applied">
+              <p class="concept__label">How this platform does it</p>
+              <p class="concept__text">{c.applied}</p>
+              <div class="concept__proofs">
+                {c.proofs.map((p) => (
+                  <ProofChip label={p.label} path={p.path} kind={p.kind} />
+                ))}
+              </div>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .concepts {
+    padding-block: var(--section-y);
+    background: linear-gradient(to bottom, var(--bg), var(--surface) 60%, var(--bg));
+  }
+  .concepts__head {
+    max-width: 58rem;
+  }
+  .concepts__head h2 {
+    font-size: var(--text-h2);
+  }
+  .concepts__head .section-lead {
+    margin-top: var(--s-md);
+  }
+
+  .concepts__list {
+    margin-top: var(--s-xl);
+    border-top: var(--hair) solid var(--hairline);
+  }
+  .concept {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: clamp(1.5rem, 1rem + 3vw, 4rem);
+    padding-block: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
+    border-bottom: var(--hair) solid var(--hairline);
+    transition:
+      opacity var(--dur-3) var(--ease-out-quart),
+      filter var(--dur-3) var(--ease-out-quart);
+  }
+  .concept__term {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .concept__match {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-deep);
+    background: var(--accent-wash);
+    border: var(--hair) solid color-mix(in oklab, var(--accent) 22%, transparent);
+    padding: 0.12rem 0.4rem;
+    border-radius: var(--radius-pill);
+  }
+  .concept__match[hidden] {
+    display: none;
+  }
+  .concept__icon {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius);
+    color: var(--accent-deep);
+    background: var(--accent-wash);
+    border: var(--hair) solid color-mix(in oklab, var(--accent) 18%, transparent);
+    flex: 0 0 auto;
+  }
+  .concept__term h3 {
+    font-size: 1.3rem;
+  }
+  .concept__tag {
+    margin-top: 0.6rem;
+    color: var(--faint);
+    font-size: 0.8rem;
+  }
+  .concept__text {
+    margin-top: 0.75rem;
+    color: var(--muted);
+    line-height: 1.58;
+    max-width: 54ch;
+  }
+  .concept__idea .concept__text {
+    color: var(--ink);
+  }
+  .concept__label {
+    font-size: 0.78rem;
+    font-weight: var(--w-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--accent-deep);
+  }
+  .concept__proofs {
+    margin-top: var(--s-md);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* persona-filter highlight (set by the personas island via [data-concept]/[data-match]) */
+  .concept[data-match] .concept__icon {
+    box-shadow: 0 0 0 3px var(--accent-wash);
+  }
+
+  @media (max-width: 760px) {
+    .concept {
+      grid-template-columns: 1fr;
+      gap: var(--s-md);
+    }
+    .concept__applied {
+      padding-top: var(--s-sm);
+      border-top: var(--hair) dashed var(--hairline);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .concept {
+      transition: none;
+    }
+  }
+</style>

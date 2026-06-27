@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://edinc.github.io/platform-engineering-landing-zone/sitemap-index.xml

@@ -1,0 +1,202 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { terms } from "../lib/data/glossary";
+import { withBase } from "../lib/base";
+import Icon from "../components/Icon.astro";
+
+const sorted = [...terms].sort((a, b) => a.term.localeCompare(b.term));
+---
+
+<Layout title="Concepts glossary" path="/glossary">
+  <section class="gl">
+    <div class="container">
+      <header class="gl__head">
+        <p class="gl__back">
+          <a href={withBase("/")}><span aria-hidden="true">←</span> Back to the guide</a>
+        </p>
+        <h1>Concepts glossary</h1>
+        <p class="section-lead">
+          Short, linkable definitions of the platform-engineering terms used
+          across this site. Every entry has its own anchor, so you can deep-link
+          straight to a definition.
+        </p>
+
+        <div class="gl__search">
+          <Icon name="compass" size={18} />
+          <input
+            type="search"
+            id="gl-filter"
+            placeholder="Filter terms…"
+            aria-label="Filter glossary terms"
+            autocomplete="off"
+          />
+        </div>
+      </header>
+
+      <dl class="gl__list" id="gl-list">
+        {
+          sorted.map((t) => (
+            <div
+              class="gl__entry"
+              id={t.id}
+              data-term
+              data-search={`${t.term} ${t.def}`.toLowerCase()}
+            >
+              <dt class="gl__term">
+                <a class="gl__anchor" href={`#${t.id}`} aria-label={`Link to ${t.term}`}>
+                  #
+                </a>
+                {t.term}
+              </dt>
+              <dd class="gl__def">
+                {t.def}
+                {t.see && (
+                  <a class="gl__see" href={withBase(`/#concept-${t.see}`)}>
+                    See it applied <span aria-hidden="true">↑</span>
+                  </a>
+                )}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+      <p class="gl__empty" id="gl-empty" hidden>No terms match that filter.</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .gl {
+    padding-top: clamp(2rem, 1rem + 4vw, 4rem);
+    padding-bottom: var(--section-y);
+  }
+  .gl__head {
+    max-width: 52rem;
+  }
+  .gl__back {
+    margin-bottom: var(--s-md);
+  }
+  .gl__back a {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: var(--w-medium);
+  }
+  .gl__back a:hover {
+    color: var(--accent-deep);
+    text-decoration: none;
+  }
+  .gl__head h1 {
+    font-size: var(--text-h1);
+  }
+  .gl__head .section-lead {
+    margin-top: var(--s-md);
+  }
+  .gl__search {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: var(--s-lg);
+    max-width: 26rem;
+    padding: 0.7rem 1rem;
+    border: var(--hair) solid var(--hairline-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--faint);
+    transition: border-color var(--dur-1) var(--ease-out-quart);
+  }
+  .gl__search:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-wash);
+  }
+  .gl__search input {
+    border: none;
+    background: none;
+    outline: none;
+    width: 100%;
+    color: var(--ink);
+    font-size: 1rem;
+  }
+
+  .gl__list {
+    margin-top: var(--s-xl);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+    gap: 0;
+    border-top: var(--hair) solid var(--hairline);
+  }
+  .gl__entry {
+    padding: var(--s-md) 0;
+    border-bottom: var(--hair) solid var(--hairline);
+    scroll-margin-top: 6rem;
+  }
+  /* vertical hairline between the two columns on wide screens */
+  @media (min-width: 53rem) {
+    .gl__entry:nth-child(odd) {
+      padding-right: var(--s-xl);
+      border-right: var(--hair) solid var(--hairline);
+    }
+    .gl__entry:nth-child(even) {
+      padding-left: var(--s-xl);
+    }
+  }
+  .gl__entry:target {
+    background: var(--accent-wash);
+    box-shadow: -1rem 0 0 var(--accent-wash), 1rem 0 0 var(--accent-wash);
+  }
+  .gl__term {
+    position: relative;
+    font-weight: var(--w-semibold);
+    font-size: 1.16rem;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .gl__anchor {
+    position: absolute;
+    left: -1.1rem;
+    color: var(--hairline-strong);
+    font-weight: var(--w-regular);
+    opacity: 0;
+    transition: opacity var(--dur-1) var(--ease-out-quart);
+  }
+  .gl__entry:hover .gl__anchor,
+  .gl__anchor:focus-visible {
+    opacity: 1;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .gl__def {
+    margin-top: 0.45rem;
+    color: var(--muted);
+    line-height: 1.55;
+    max-width: 60ch;
+  }
+  .gl__see {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: var(--w-medium);
+    white-space: nowrap;
+  }
+  .gl__empty {
+    margin-top: var(--s-xl);
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  const input = document.getElementById("gl-filter") as HTMLInputElement | null;
+  const entries = Array.from(document.querySelectorAll<HTMLElement>("[data-term]"));
+  const empty = document.getElementById("gl-empty");
+  input?.addEventListener("input", () => {
+    const q = input.value.trim().toLowerCase();
+    let shown = 0;
+    for (const el of entries) {
+      const match = !q || (el.dataset.search ?? "").includes(q);
+      el.hidden = !match;
+      if (match) shown++;
+    }
+    if (empty) empty.hidden = shown !== 0;
+  });
+</script>

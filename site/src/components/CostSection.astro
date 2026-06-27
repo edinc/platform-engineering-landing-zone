@@ -1,0 +1,32 @@
+---
+import CostShowback from "../islands/CostShowback.svelte";
+---
+
+<section class="section cost-section" id="cost">
+  <div class="container">
+    <header class="cost-section__head">
+      <h2>Cost is a first-class signal</h2>
+      <p class="section-lead">
+        Mandatory tags travel with every resource, so spend is allocated to the
+        team and product that incurred it, then surfaced where engineers already
+        work. Group the showback to see where the money goes.
+      </p>
+    </header>
+    <CostShowback client:visible />
+  </div>
+</section>
+
+<style>
+  .cost-section {
+    padding-block: var(--section-y);
+  }
+  .cost-section__head {
+    max-width: 56rem;
+  }
+  .cost-section__head h2 {
+    font-size: var(--text-h2);
+  }
+  .cost-section__head .section-lead {
+    margin-top: var(--s-md);
+  }
+</style>

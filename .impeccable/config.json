@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "mona sans",
+        "reason": "Brief-mandated brand font (Engineered-light lane); deliberate, not a reflex-reject face",
+        "createdAt": "2026-06-27T22:05:47.443Z"
+      }
+    ]
+  }
+}
