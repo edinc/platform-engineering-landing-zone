@@ -1,6 +1,6 @@
 # Team decommissioning runbook
 
-Stage: 10 - multi-tenancy, onboarding, and ownership
+Capability: multi-tenancy & onboarding
 
 Use this runbook to sunset an application team without orphaning access,
 catalog ownership, cost data, or vended infrastructure.

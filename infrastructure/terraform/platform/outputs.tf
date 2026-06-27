@@ -20,7 +20,7 @@ output "aks_cluster_id" {
 
 output "aks_oidc_issuer_url" {
   value       = try(azurerm_kubernetes_cluster.platform[0].oidc_issuer_url, null)
-  description = "AKS OIDC issuer URL for Stage 07 workload identity federated credentials."
+  description = "AKS OIDC issuer URL for GitOps platform workload identity federated credentials."
 }
 
 output "gitops_flux_extension_id" {
@@ -35,7 +35,7 @@ output "gitops_flux_configuration_id" {
 
 output "backstage_flux_configuration_id" {
   value       = try(azurerm_kubernetes_flux_configuration.backstage[0].id, null)
-  description = "Stage 09 Backstage Flux configuration ID, or null when Backstage is disabled."
+  description = "Backstage Flux configuration ID for the developer portal, or null when Backstage is disabled."
 }
 
 output "platform_workload_identity_client_ids" {
@@ -117,37 +117,37 @@ output "backstage_microsoft_auth_redirect_uri" {
 
 output "aks_node_auto_provisioning_enabled" {
   value       = var.enable_aks && var.enable_aks_node_auto_provisioning
-  description = "Whether Stage 08 AKS Node Auto-Provisioning is enabled for the platform cluster."
+  description = "Whether observability, SRE & FinOps AKS Node Auto-Provisioning is enabled for the platform cluster."
 }
 
 output "stage08_action_group_ids" {
   value       = { for severity, action_group in azurerm_monitor_action_group.stage08 : severity => action_group.id }
-  description = "Azure Monitor Action Group IDs keyed by severity for Stage 08 alert routing."
+  description = "Azure Monitor Action Group IDs keyed by severity for observability, SRE & FinOps alert routing."
 }
 
 output "stage08_prometheus_rule_group_id" {
   value       = try(azurerm_monitor_alert_prometheus_rule_group.platform_slos[0].id, null)
-  description = "Managed Prometheus alert rule group ID for Stage 08 platform SLO alerts, or null when alerting is disabled."
+  description = "Managed Prometheus alert rule group ID for observability, SRE & FinOps platform SLO alerts, or null when alerting is disabled."
 }
 
 output "cost_allocator_function_app_id" {
   value       = try(module.cost_allocator[0].function_app_id, null)
-  description = "Stage 08 cost allocator Function App ID, or null when disabled."
+  description = "observability, SRE & FinOps cost allocator Function App ID, or null when disabled."
 }
 
 output "cost_allocator_showback_container_id" {
   value       = try(module.cost_allocator[0].showback_container_id, null)
-  description = "Stage 08 cost showback output container ID, or null when disabled."
+  description = "observability, SRE & FinOps cost showback output container ID, or null when disabled."
 }
 
 output "techdocs_storage_account_name" {
   value       = try(azurerm_storage_account.techdocs[0].name, null)
-  description = "Stage 09 TechDocs storage account name, or null when disabled."
+  description = "developer portal TechDocs storage account name, or null when disabled."
 }
 
 output "techdocs_storage_container_id" {
   value       = try(azurerm_storage_container.techdocs[0].id, null)
-  description = "Stage 09 TechDocs Blob container resource ID, or null when disabled."
+  description = "developer portal TechDocs Blob container resource ID, or null when disabled."
 }
 
 output "private_endpoint_ids" {

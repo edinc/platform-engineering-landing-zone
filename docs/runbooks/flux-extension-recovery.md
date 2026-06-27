@@ -272,7 +272,7 @@ Expected:
 - Certificate is ready.
 - ExternalSecrets are synced.
 
-Run the Stage 09 Azure smoke check from the self-hosted runner network:
+Run the developer-portal Azure smoke check from the self-hosted runner network:
 
 ```bash
 bash scripts/azure/validate_stage09_azure.sh

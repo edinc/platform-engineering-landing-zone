@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-25
-- Stage: Stage 09 - Backstage MVP
+- Capability: developer portal
 
 ## Context
 
@@ -38,8 +38,8 @@ Use a dedicated GitHub App for the Backstage portal, separate from
   repository permissions (Administration, Contents, Pull requests, Issues,
   Webhooks, Workflows, Pages read/write; Metadata read; Commit statuses read) and
   installed on the platform repositories. Read-only Contents + Metadata is
-  sufficient for Stage 09 template visibility; the write permissions enable
-  Stage 10/11 scaffolding, and read-only Commit statuses lets the
+  sufficient for the developer portal capability's template visibility; the write permissions enable
+  scaffolding for multi-tenancy & onboarding and golden paths, and read-only Commit statuses lets the
   `fetch:template` action read golden-path skeletons (its `readTree` calls the
   combined commit-status API).
 - Provisioning, rotation, and the `Integration not found` recovery path are
@@ -55,5 +55,5 @@ Use a dedicated GitHub App for the Backstage portal, separate from
 - App creation and secret seeding remain documented manual operator steps,
   consistent with the runbook guidance to seed Backstage runtime secrets from a
   VNet-connected session before enabling `enable_backstage`.
-- A Stage 09 validation guardrail and a runbook troubleshooting entry guard
+- A developer portal capability validation guardrail and a runbook troubleshooting entry guard
   against silently reintroducing placeholder credentials.

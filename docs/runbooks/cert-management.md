@@ -1,6 +1,6 @@
 # Certificate management
 
-Stage: 07 - GitOps and in-cluster platform
+Capability: GitOps platform
 
 cert-manager is installed through Flux with two issuer paths: Let's Encrypt
 DNS-01 for public hostnames and a Key Vault-backed private CA for internal

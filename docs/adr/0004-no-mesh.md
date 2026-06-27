@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 07 - GitOps and in-cluster platform
+- Capability: GitOps platform
 
 ## Context
 
@@ -10,11 +10,11 @@ The MVP platform needs secure workload delivery, ingress TLS, policy
 enforcement, observability, and default-deny networking without adding another
 control plane that teams must operate during the first production rollout.
 Azure CNI Overlay with Cilium, Kubernetes NetworkPolicy, ingress-nginx, and
-OpenTelemetry cover the current Stage 07 requirements.
+OpenTelemetry cover the current GitOps platform requirements.
 
 ## Decision
 
-Do not introduce a service mesh in the MVP. Stage 07 uses NetworkPolicy,
+Do not introduce a service mesh in the MVP. GitOps platform uses NetworkPolicy,
 Workload Identity, cert-manager, ExternalDNS, Kyverno, ingress-nginx, and
 OpenTelemetry collectors as the default in-cluster platform layer.
 
@@ -26,7 +26,7 @@ OpenTelemetry collectors as the default in-cluster platform layer.
   reopens the mesh decision.
 - Egress controls stay split between Azure Firewall for non-demo profiles and
   Cilium/Kubernetes NetworkPolicy in cluster.
-- Stage 13 can re-evaluate Istio, Cilium service mesh, or another mesh once the
+- Future-option planning can re-evaluate Istio, Cilium service mesh, or another mesh once the
   MVP golden paths and SLOs are proven.
 
 ## Alternatives considered
@@ -39,5 +39,5 @@ OpenTelemetry collectors as the default in-cluster platform layer.
 
 ## References
 
-- [`plan/stages/stage-07-gitops-incluster.md`](../../plan/stages/stage-07-gitops-incluster.md)
+- [GitOps platform](../how-it-works/gitops.md)
 - [ADR-0031: Default-deny egress and FQDN allowlist](0031-default-deny-egress.md)

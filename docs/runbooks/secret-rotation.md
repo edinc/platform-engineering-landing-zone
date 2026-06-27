@@ -1,6 +1,6 @@
 # Secret rotation
 
-Stage: 07 - GitOps and in-cluster platform
+Capability: GitOps platform
 
 This runbook defines the rotation contract for Key Vault-backed secrets consumed
 through Secrets Store CSI or External Secrets Operator.

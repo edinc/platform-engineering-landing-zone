@@ -2,7 +2,7 @@
 
 - Status: proposed
 - Date: YYYY-MM-DD
-- Stage: Stage NN - Name
+- Capability: <capability name>
 
 ## Context
 
@@ -25,4 +25,4 @@ security, cost, and maintainability impacts.
 
 ## References
 
-- Link to related stage, plan section, runbook, or external reference.
+- Link to related capability, roadmap section, runbook, or external reference.

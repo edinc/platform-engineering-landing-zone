@@ -1,10 +1,10 @@
 # Egress exception workflow
 
-Stage: 03 - connectivity, identity, and egress
+Capability: connectivity & egress
 
 Use this runbook when a workload or platform component needs outbound access
 that is not already covered by
-[`policies/azure/firewall/allowlist.json`](../../policies/azure/firewall/allowlist.json)
+[`policies/azure/firewall/allowlist.json`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/policies/azure/firewall/allowlist.json)
 or by the relevant in-cluster NetworkPolicy/CiliumNetworkPolicy.
 
 ## Policy

@@ -2,18 +2,18 @@
 
 - Status: accepted
 - Date: 2026-06-10
-- Stage: Stage 04 - platform shared services
+- Capability: platform shared services
 
 ## Context
 
-Stage 11 includes an Azure Container Apps golden path. That path needs a secure,
+The golden paths capability includes an Azure Container Apps golden path. That path needs a secure,
 repeatable substrate before templates can safely deploy apps, networking, and
 observability.
 
 ## Decision
 
-**The Azure Container Apps managed environment is a Stage 04 platform shared
-service; ACA apps remain workload/golden-path resources created later.**
+**The Azure Container Apps managed environment is a platform shared services capability; ACA apps remain workload/golden-path
+resources created later.**
 
 1. The managed environment is VNet-injected and internal.
 2. Logs are sent to Log Analytics when a workspace is supplied; otherwise Azure
@@ -23,7 +23,7 @@ service; ACA apps remain workload/golden-path resources created later.**
 
 ## Consequences
 
-- Stage 11 can target a known environment rather than creating per-template
+- The golden paths capability can target a known environment rather than creating per-template
   substrates.
 - Platform networking and Private Link posture is owned by Terraform before apps
   are introduced.
@@ -35,10 +35,10 @@ service; ACA apps remain workload/golden-path resources created later.**
 | Alternative | Reason not chosen |
 |-------------|-------------------|
 | Create ACA managed environments per app | Higher cost and fragmented ingress/observability controls. |
-| Defer ACA environment to Stage 11 | Golden paths would need to create shared platform substrate, blurring ownership boundaries. |
-| Use only AKS for MVP | Stage 11 explicitly includes an ACA service golden path. |
+| Defer ACA environment to golden paths | Golden paths would need to create shared platform substrate, blurring ownership boundaries. |
+| Use only AKS for MVP | The golden paths capability explicitly includes an ACA service golden path. |
 
 ## References
 
-- [`plan/stages/stage-04-platform-shared-services.md`](../../plan/stages/stage-04-platform-shared-services.md)
-- [`infrastructure/terraform/platform/aca-environment.tf`](../../infrastructure/terraform/platform/aca-environment.tf)
+- [platform shared services](../how-it-works/platform-services.md)
+- [`infrastructure/terraform/platform/aca-environment.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/aca-environment.tf)

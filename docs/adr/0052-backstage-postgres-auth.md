@@ -2,12 +2,12 @@
 
 - Status: accepted
 - Date: 2026-06-15
-- Stage: Stage 09 - Backstage MVP
+- Capability: developer portal
 
 ## Context
 
-Stage 04 creates the `backstage` database on PostgreSQL Flexible Server with
-private networking. Stage 09 needs Backstage to connect without committing or
+The platform shared services capability creates the `backstage` database on PostgreSQL Flexible Server with
+private networking. The developer portal capability needs Backstage to connect without committing or
 storing long-lived database credentials where possible.
 
 ## Decision
@@ -39,9 +39,9 @@ platform secret rotation process.
 |-------------|-------------------|
 | Always use a Postgres password | Simpler but conflicts with managed identity defaults. |
 | Store password in Backstage app config | Secret material would enter git or image layers. |
-| Run an in-cluster Postgres | Conflicts with Stage 04 managed PaaS ownership. |
+| Run an in-cluster Postgres | Conflicts with the platform shared services capability's managed PaaS ownership. |
 
 ## References
 
-- [`infrastructure/terraform/platform/postgres.tf`](../../infrastructure/terraform/platform/postgres.tf)
-- [`platform-gitops/clusters/_base/addon-config/backstage/secretproviderclass.yaml`](../../platform-gitops/clusters/_base/addon-config/backstage/secretproviderclass.yaml)
+- [`infrastructure/terraform/platform/postgres.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/postgres.tf)
+- [`platform-gitops/clusters/_base/addon-config/backstage/secretproviderclass.yaml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/platform-gitops/clusters/_base/addon-config/backstage/secretproviderclass.yaml)

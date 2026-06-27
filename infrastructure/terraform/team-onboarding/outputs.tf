@@ -27,5 +27,5 @@ output "cost_allocation" {
     dataClassification = var.data_classification
     backstageOwner     = "group:default/${azuread_group.app_team.display_name}"
   }
-  description = "Cost allocation metadata consumed by Stage 08 showback and Backstage Cost Insights."
+  description = "Cost allocation metadata consumed by observability, SRE & FinOps showback and Backstage Cost Insights."
 }

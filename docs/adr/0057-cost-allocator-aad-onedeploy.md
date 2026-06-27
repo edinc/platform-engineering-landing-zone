@@ -2,11 +2,11 @@
 
 - Status: accepted
 - Date: 2026-06-26
-- Stage: Stage 08 - FinOps and cost showback
+- Capability: observability, SRE & FinOps
 
 ## Context
 
-The Stage 08 cost allocator runs a Python Azure Function (see the
+The cost allocator for observability, SRE & FinOps runs a Python Azure Function (see the
 `cost-allocator` module). The secure landing zone disables SCM (webdeploy) and
 FTP basic publishing credentials on App Service / Functions
 (`basicPublishingCredentialsPolicies` `allow = false`).
@@ -68,7 +68,7 @@ the cheapest plan that keeps the secure publish path.
 
 ## References
 
-- [`infrastructure/terraform/_modules/cost-allocator/`](../../infrastructure/terraform/_modules/cost-allocator/)
+- [`infrastructure/terraform/_modules/cost-allocator/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/_modules/cost-allocator/)
 - [`docs/runbooks/sre/cost-showback-failure.md`](../runbooks/sre/cost-showback-failure.md)
 - [`docs/adr/0053-aca-gitops-exception.md`](0053-aca-gitops-exception.md)
-- [`plan/stages/stage-08-observability-sre-finops.md`](../../plan/stages/stage-08-observability-sre-finops.md)
+- [observability, SRE & FinOps](../how-it-works/observability-sre-finops.md)

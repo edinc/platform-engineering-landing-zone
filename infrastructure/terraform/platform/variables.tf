@@ -64,7 +64,7 @@ variable "name_suffix" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Platform resource group name. Leave empty to use the standard Stage 04 name."
+  description = "Platform resource group name. Leave empty to use the standard platform shared services name."
   default     = ""
 }
 
@@ -76,7 +76,7 @@ variable "platform_vnet_address_space" {
 
 variable "subnet_address_prefixes" {
   type        = map(string)
-  description = "Address prefixes for Stage 04 platform subnets."
+  description = "Address prefixes for platform shared services subnets."
   default = {
     aks-system           = "10.30.0.0/22"
     aks-user             = "10.30.4.0/22"
@@ -101,7 +101,7 @@ variable "subnet_address_prefixes" {
 
 variable "firewall_private_ip_address" {
   type        = string
-  description = "Stage 03 Azure Firewall private IP used as the default route next hop. Leave empty to skip UDR creation."
+  description = "connectivity & egress Azure Firewall private IP used as the default route next hop. Leave empty to skip UDR creation."
   default     = ""
 
   validation {
@@ -123,13 +123,13 @@ variable "availability_zones" {
 
 variable "private_dns_zone_ids" {
   type        = map(string)
-  description = "Private DNS zone IDs from Stage 03, keyed by zone name."
+  description = "Private DNS zone IDs from connectivity & egress, keyed by zone name."
   default     = {}
 }
 
 variable "private_dns_zone_subscription_id" {
   type        = string
-  description = "Subscription ID that owns private_dns_zone_ids. Defaults to the platform subscription; set to the connectivity subscription when Stage 03 owns central zones."
+  description = "Subscription ID that owns private_dns_zone_ids. Defaults to the platform subscription; set to the connectivity subscription when connectivity & egress owns central zones."
   default     = ""
 
   validation {
@@ -146,7 +146,7 @@ variable "link_private_dns_zones" {
 
 variable "private_endpoint_subnet_id" {
   type        = string
-  description = "Optional Stage 03 hub private-endpoints subnet ID. Defaults to this stack's platform private-endpoints subnet when empty."
+  description = "Optional connectivity & egress hub private-endpoints subnet ID. Defaults to this stack's platform private-endpoints subnet when empty."
   default     = ""
 }
 
@@ -550,7 +550,7 @@ variable "backstage_chart_version" {
 
 variable "backstage_chart_digest" {
   type        = string
-  description = "Digest of the signed Backstage Helm chart promoted by the Stage 06 supply chain."
+  description = "Digest of the signed Backstage Helm chart promoted by the supply chain & CI/CD."
   default     = ""
 
   validation {
@@ -572,7 +572,7 @@ variable "backstage_image_repository" {
 
 variable "backstage_image_digest" {
   type        = string
-  description = "Digest of the signed Backstage image promoted by the Stage 06 supply chain."
+  description = "Digest of the signed Backstage image promoted by the supply chain & CI/CD."
   default     = ""
 
   validation {
@@ -594,7 +594,7 @@ variable "backstage_catalog_reconciler_image_repository" {
 
 variable "backstage_catalog_reconciler_image_digest" {
   type        = string
-  description = "Digest of the signed catalog reconciler image promoted by the Stage 06 supply chain."
+  description = "Digest of the signed catalog reconciler image promoted by the supply chain & CI/CD."
   default     = ""
 
   validation {
@@ -639,7 +639,7 @@ variable "backstage_aks_apiserver_url" {
 
 variable "backstage_cost_showback_container_url" {
   type        = string
-  description = "Stage 08 cost showback container URL consumed by the Backstage Cost Insights configuration."
+  description = "observability, SRE & FinOps cost showback container URL consumed by the Backstage Cost Insights configuration."
   default     = ""
 
   validation {
@@ -650,7 +650,7 @@ variable "backstage_cost_showback_container_url" {
 
 variable "backstage_cost_showback_container_id" {
   type        = string
-  description = "Stage 08 cost showback container resource ID used to grant Backstage read access. Defaults to the cost allocator module output when enabled."
+  description = "observability, SRE & FinOps cost showback container resource ID used to grant Backstage read access. Defaults to the cost allocator module output when enabled."
   default     = ""
 
   validation {
@@ -805,25 +805,25 @@ variable "enable_aca_environment" {
 
 variable "enable_alerting_action_groups" {
   type        = bool
-  description = "Whether to create Stage 08 Azure Monitor Action Groups for SEV1/SEV2/SEV3 routing."
+  description = "Whether to create observability, SRE & FinOps Azure Monitor Action Groups for SEV1/SEV2/SEV3 routing."
   default     = false
 }
 
 variable "enable_cost_allocator" {
   type        = bool
-  description = "Whether to deploy the Stage 08 cost allocator Function App that consumes the existing Cost Management export container."
+  description = "Whether to deploy the observability, SRE & FinOps cost allocator Function App that consumes the existing Cost Management export container."
   default     = false
 }
 
 variable "enable_backstage" {
   type        = bool
-  description = "Whether to deploy the Stage 09 Backstage MVP through a dedicated Flux configuration."
+  description = "Whether to deploy the Backstage MVP for the developer portal through a dedicated Flux configuration."
   default     = false
 }
 
 variable "enable_techdocs_storage" {
   type        = bool
-  description = "Whether to create the Stage 09 Azure Blob storage account and private container for Backstage TechDocs."
+  description = "Whether to create the developer portal Azure Blob storage account and private container for Backstage TechDocs."
   default     = false
 }
 
@@ -840,7 +840,7 @@ variable "techdocs_storage_container_name" {
 
 variable "techdocs_publisher_principal_ids" {
   type        = set(string)
-  description = "Principal object IDs for Stage 06 TechDocs publisher workflows that can write to the TechDocs container."
+  description = "Principal object IDs for supply chain & CI/CD TechDocs publisher workflows that can write to the TechDocs container."
   default     = []
 
   validation {
@@ -928,7 +928,7 @@ variable "alerting_email_receivers" {
     name          = string
     email_address = string
   }))
-  description = "Optional email receivers added to every Stage 08 Action Group."
+  description = "Optional email receivers added to every observability, SRE & FinOps Action Group."
   default     = []
 }
 

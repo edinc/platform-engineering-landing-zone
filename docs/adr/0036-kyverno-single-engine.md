@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 07 - GitOps and in-cluster platform
+- Capability: GitOps platform
 
 ## Context
 
@@ -14,7 +14,7 @@ conflicting constraints, and extra resource pressure.
 ## Decision
 
 Use Kyverno as the only in-cluster admission engine. The AKS Terraform stack
-keeps `azure_policy_enabled = false`, and Stage 07 installs Kyverno and the
+keeps `azure_policy_enabled = false`, and the GitOps platform capability installs Kyverno and the
 `policies/kyverno/` bundle through Flux.
 
 Azure Policy continues to govern Azure control-plane requirements. OPA/Rego via
@@ -27,8 +27,8 @@ Kubernetes admission and mutation.
 - CI must run `make policy-test-kyverno` for Kubernetes admission changes.
 - The optional/reference AKS baseline policy pack must not enable the AKS Policy
   add-on unless a future ADR replaces this decision.
-- Kyverno performance, webhook timeouts, and policy exceptions become Stage 07
-  operational responsibilities.
+- Kyverno performance, webhook timeouts, and policy exceptions become operational responsibilities for the GitOps platform
+  capability.
 - Kyverno verifies signed images from the private platform ACR by running its
   Azure registry credential helper with the AKS kubelet managed identity client
   ID. The kubelet identity already has `AcrPull`, which avoids introducing a
@@ -52,6 +52,6 @@ Kubernetes admission and mutation.
 
 ## References
 
-- [`infrastructure/terraform/platform/aks.tf`](../../infrastructure/terraform/platform/aks.tf)
-- [`policies/kyverno/`](../../policies/kyverno/)
-- [`plan/stages/stage-07-gitops-incluster.md`](../../plan/stages/stage-07-gitops-incluster.md)
+- [`infrastructure/terraform/platform/aks.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/aks.tf)
+- [`policies/kyverno/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/policies/kyverno/)
+- [GitOps platform](../how-it-works/gitops.md)

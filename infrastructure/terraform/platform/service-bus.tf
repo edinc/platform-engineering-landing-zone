@@ -1,6 +1,6 @@
 resource "azurerm_servicebus_namespace" "platform" {
-  #checkov:skip=CKV_AZURE_199:Double encryption requires CMK and Premium-only rollout; tracked as Stage 04 CMK hardening follow-up.
-  #checkov:skip=CKV_AZURE_201:CMK requires platform Key Vault key lifecycle and identity grants; tracked as Stage 04 CMK hardening follow-up.
+  #checkov:skip=CKV_AZURE_199:Double encryption requires CMK and Premium-only rollout; tracked as platform shared services CMK hardening follow-up.
+  #checkov:skip=CKV_AZURE_201:CMK requires platform Key Vault key lifecycle and identity grants; tracked as platform shared services CMK hardening follow-up.
   count = var.enable_service_bus ? 1 : 0
 
   name                          = local.service_bus_name

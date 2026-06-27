@@ -11,7 +11,7 @@ locals {
   # any ephemeral CI runner IP the bootstrap workflow injects for the duration of
   # a run (TF_VAR_runner_ip_cidrs). Terraform owns and drift-detects the full set
   # so allowed_ip_cidrs is actually enforced; the runner entry is removed again by
-  # the workflow's always() cleanup. Replaced by Private Endpoints in Stage 03.
+  # the workflow's always() cleanup. Replaced by Private Endpoints in connectivity & egress.
   firewall_ip_rules         = distinct(concat(var.allowed_ip_cidrs, var.runner_ip_cidrs))
   local_recovery_ack_phrase = "I understand this temporarily opens bootstrap data planes for local integration or recovery only"
   firewall_allow_permitted = (

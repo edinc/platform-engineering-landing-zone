@@ -8,7 +8,7 @@ terraform {
     }
   }
 
-  # Stage 03 connectivity state. Backend settings are supplied at init time via
+  # Connectivity & egress state. Backend settings are supplied at init time via
   # -backend-config (see backend.hcl.example) so tenant-specific values are not
   # committed. State access uses Entra ID.
   backend "azurerm" {}

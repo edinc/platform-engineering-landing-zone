@@ -10,12 +10,12 @@ resource "azurerm_resource_group" "tfstate" {
 # Seed Key Vault for bootstrap-time secrets and the state customer-managed key.
 # Phase 1 posture: public endpoint with default-deny firewall + IP allowlist +
 # trusted Azure services bypass (required for Storage CMK access). Phase 2
-# (Stage 03) retrofits Private Endpoints and disables public access
+# (connectivity & egress) retrofits Private Endpoints and disables public access
 # (ADR-0048 / ADR-0031). RBAC authorization only; no access policies.
 resource "azurerm_key_vault" "bootstrap" {
   #checkov:skip=CKV_AZURE_109:Default firewall action is Deny by default and guarded by lifecycle precondition; Checkov does not resolve the variable/precondition pair.
-  #checkov:skip=CKV_AZURE_189:Phase 1 public endpoint with default-deny IP allowlist; public access is disabled when the Private Endpoint lands in Stage 03 (ADR-0048 / ADR-0031).
-  #checkov:skip=CKV2_AZURE_32:No VNet exists in Phase 1; the Key Vault Private Endpoint is added in Stage 03 (ADR-0048).
+  #checkov:skip=CKV_AZURE_189:Phase 1 public endpoint with default-deny IP allowlist; public access is disabled when the Private Endpoint lands in connectivity & egress (ADR-0048 / ADR-0031).
+  #checkov:skip=CKV2_AZURE_32:No VNet exists in Phase 1; the Key Vault Private Endpoint is added in connectivity & egress (ADR-0048).
   name                       = local.key_vault_name
   resource_group_name        = azurerm_resource_group.tfstate.name
   location                   = azurerm_resource_group.tfstate.location
@@ -63,7 +63,7 @@ resource "azurerm_role_assignment" "cmk_kv" {
 
 # Customer-managed key for Terraform state encryption.
 resource "azurerm_key_vault_key" "state_cmk" {
-  #checkov:skip=CKV_AZURE_112:HSM-backed keys are optional in Stage 01; opt in by setting key_vault_sku = premium and key_type = RSA-HSM (var.key_type).
+  #checkov:skip=CKV_AZURE_112:HSM-backed keys are optional in Azure foundation; opt in by setting key_vault_sku = premium and key_type = RSA-HSM (var.key_type).
   #checkov:skip=CKV_AZURE_40:The CMK uses rotation_policy (auto-rotate + expire_after) instead of a static expiration_date; a hard expiry on the state-encryption key risks locking out all remote state.
   name         = local.cmk_key_name
   key_vault_id = azurerm_key_vault.bootstrap.id

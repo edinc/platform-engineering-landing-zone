@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 05 - environment and subscription vending
+- Capability: tenancy vending
 
 ## Context
 
@@ -16,7 +16,7 @@ would weaken auditability and rotation.
 **Cross-repository writes use a dedicated GitHub App named
 `platform-vending-bot`, not PATs or the Terraform GitHub provider.**
 
-1. Operators store the App private key only in the Stage 01 seed Key Vault with
+1. Operators store the App private key only in the Azure foundation seed Key Vault with
    `az keyvault secret set`; Terraform records only non-secret metadata so the
    PEM never enters Terraform state.
 2. Workflows fetch the private key via Azure OIDC and mint a short-lived
@@ -43,6 +43,6 @@ would weaken auditability and rotation.
 
 ## References
 
-- [`infrastructure/terraform/github-app/`](../../infrastructure/terraform/github-app/)
+- [`infrastructure/terraform/github-app/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/github-app/)
 - [GitHub App token action](https://github.com/actions/create-github-app-token)
-- [`plan/stages/stage-05-vending.md`](../../plan/stages/stage-05-vending.md)
+- [tenancy vending](../how-it-works/tenancy-vending-onboarding.md)

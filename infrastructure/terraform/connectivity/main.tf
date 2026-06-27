@@ -40,7 +40,7 @@ resource "terraform_data" "input_guard" {
         for subnet_id in values(var.workload_subnet_ids) :
         lower(regex("^/subscriptions/([^/]+)/", subnet_id)[0]) == lower(var.subscription_id)
       ])
-      error_message = "workload_subnet_ids must be in the connectivity subscription. Cross-subscription UDR association is handled by Stage 05 vending/workload stacks."
+      error_message = "workload_subnet_ids must be in the connectivity subscription. Cross-subscription UDR association is handled by the tenancy-vending and workload stacks."
     }
 
     precondition {

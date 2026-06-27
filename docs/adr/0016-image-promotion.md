@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 06 - CI/CD and software supply chain
+- Capability: supply chain & CI/CD
 
 ## Context
 
@@ -23,7 +23,7 @@ Use **PR-based promotion with digest-pinned image references**.
 3. Cluster-state changes pin the image by digest through Kustomize image edits.
    A tag may be created for human readability, but the deployable reference is
    digest-pinned.
-4. Cross-repository writes use the Stage 05 `platform-vending-bot` GitHub App.
+4. Cross-repository writes use the tenancy vending `platform-vending-bot` GitHub App.
 5. Workflow jobs never call the Kubernetes API. Flux reconciles the reviewed
    cluster-state merge.
 
@@ -50,4 +50,4 @@ Use **PR-based promotion with digest-pinned image references**.
 - [ADR-0007: Cosign keyless signing](0007-image-signing.md)
 - [ADR-0051: Cross-repo GitHub writes](0051-cross-repo-github-writes.md)
 - [`docs/runbooks/release.md`](../runbooks/release.md)
-- [`plan/stages/stage-06-cicd-supply-chain.md`](../../plan/stages/stage-06-cicd-supply-chain.md)
+- [Supply chain & CI/CD](../how-it-works/supply-chain-cicd.md)

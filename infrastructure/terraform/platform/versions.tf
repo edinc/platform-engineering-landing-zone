@@ -12,7 +12,7 @@ terraform {
     }
   }
 
-  # Stage 04 platform shared-services state. Backend settings are supplied at
+  # Platform shared services state. Backend settings are supplied at
   # init time via -backend-config (see backend.hcl.example). State access uses
   # Entra ID.
   backend "azurerm" {}

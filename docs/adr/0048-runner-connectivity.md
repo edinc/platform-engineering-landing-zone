@@ -2,14 +2,14 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 01 - Bootstrap and secret zero
+- Capability: Azure foundation
 
 ## Context
 
 The Terraform state account and seed Key Vault hold the most sensitive platform
-data, so they run with a default-deny firewall. But Stage 01 has no virtual
+data, so they run with a default-deny firewall. But the Azure foundation capability has no virtual
 network, no private DNS, and no self-hosted runners yet — those are built in
-Stage 03 (connectivity). GitHub-hosted runners have dynamic, unpredictable
+connectivity & egress. GitHub-hosted runners have dynamic, unpredictable
 egress IPs, which creates a chicken-and-egg problem: a default-deny state account
 cannot be reached by the runner that needs to initialize Terraform against it.
 
@@ -19,7 +19,7 @@ bootstrap, with a clear path to private networking once it exists.
 ## Decision
 
 **Phase 1: public endpoint with a default-deny firewall plus just-in-time runner
-allowlisting. Phase 2 (Stage 03): Private Endpoints and disabled public access.**
+allowlisting. Phase 2 (connectivity & egress): Private Endpoints and disabled public access.**
 
 Phase 1:
 
@@ -39,7 +39,7 @@ Phase 1:
   again; the next run re-adds and reconciles it, so only the ephemeral runner
   entry — never the operator baseline — varies between runs.
 
-Phase 2 (Stage 03):
+Phase 2 (connectivity & egress):
 
 - Private Endpoints for the state account and Key Vault, private DNS, and
   VNet-integrated (self-hosted) runners replace the public endpoint and the IP
@@ -59,9 +59,9 @@ silent suppression.
   accumulate on the firewalls; the cleanup is fail-loud (it fails the run if a
   removal errors) because GitHub-hosted runner egress IPs are shared Azure ranges
   and a stale allowlist entry is a real exposure.
-- Stage 03 must remove the just-in-time step and flip public access off as part
-  of the private-networking retrofit; this ADR is the cross-reference from Stage
-  03 back to the Phase 1 decision.
+- The connectivity & egress capability must remove the just-in-time step and
+  flip public access off as part of the private-networking retrofit; this ADR
+  cross-references the Phase 1 decision.
 - `AzureServices` bypass remains required for the storage customer-managed key
   integration even after Private Endpoints land.
 
@@ -69,14 +69,14 @@ silent suppression.
 
 | Alternative | Reason not chosen |
 |-------------|-------------------|
-| Private Endpoints in Stage 01 | No VNet, DNS, or private runners exist yet; would block the bootstrap. |
+| Private Endpoints in Azure foundation | No VNet, DNS, or private runners exist yet; would block the bootstrap. |
 | Allowlist GitHub's published meta IP ranges | Very large, frequently changing range; effectively public and high-churn. |
 | Leave the state account fully public | Unacceptable exposure for the most sensitive platform data. |
-| Self-hosted runners in Stage 01 | Pulls Stage 03 connectivity work forward; out of scope for secret zero. |
+| Self-hosted runners in Azure foundation | Pulls connectivity & egress work forward; out of scope for secret zero. |
 
 ## References
 
-- [`plan/stages/stage-01-bootstrap-secret-zero.md`](../../plan/stages/stage-01-bootstrap-secret-zero.md)
-- [`.github/workflows/bootstrap.yml`](../../.github/workflows/bootstrap.yml)
-- [`infrastructure/terraform/_bootstrap/state.tf`](../../infrastructure/terraform/_bootstrap/state.tf)
-- [ADR-0031: Default-deny egress and FQDN allowlist](../adr/README.md) (Stage 03)
+- [Azure foundation](../how-it-works/foundation.md)
+- [`.github/workflows/bootstrap.yml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/.github/workflows/bootstrap.yml)
+- [`infrastructure/terraform/_bootstrap/state.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/_bootstrap/state.tf)
+- [ADR-0031: Default-deny egress and FQDN allowlist](../adr/README.md) (connectivity & egress)

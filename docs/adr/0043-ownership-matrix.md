@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-16
-- Stage: Stage 10 - Multi-tenancy, onboarding, and ownership
+- Capability: multi-tenancy & onboarding
 
 ## Context
 
@@ -21,7 +21,7 @@ catalog change.
 
 Backstage `Component` entities must set `spec.owner`, and CI validates the
 owner-required contract through `policies/backstage/ownership-required.ts` and
-the Stage 10 validator.
+the multi-tenancy & onboarding validator.
 
 ## Consequences
 
@@ -37,9 +37,9 @@ the Stage 10 validator.
 | --- | --- |
 | Backstage catalog only | Does not cover external ALZ, Terraform state, GitOps, or cost artifacts. |
 | CODEOWNERS only | Repository-centric and insufficient for Azure, Entra, and runtime ownership. |
-| Per-runbook ownership notes | Easy to drift and hard to audit across stages. |
+| Per-runbook ownership notes | Easy to drift and hard to audit across capabilities. |
 
 ## References
 
 - [Ownership matrix](../runbooks/ownership-matrix.md)
-- [Stage 10 roadmap](../../plan/stages/stage-10-multitenancy-onboarding.md)
+- [multi-tenancy & onboarding](../how-it-works/tenancy-vending-onboarding.md)

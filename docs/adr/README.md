@@ -52,8 +52,8 @@ Next free number: **0058**
 | 0042 | TechDocs storage | Accepted | [`0042-techdocs-storage.md`](0042-techdocs-storage.md) |
 | 0043 | Ownership matrix | Accepted | [`0043-ownership-matrix.md`](0043-ownership-matrix.md) |
 | 0044 | Template versioning | Accepted | [`0044-template-versioning.md`](0044-template-versioning.md) |
-| 0045 | Game-day cadence and scope | Seeded in Stage 12 | Pending |
-| 0046 | Post-mortem retention and PII handling | Seeded in Stage 12 | Pending |
+| 0045 | Game-day cadence and scope | Seeded in roadmap | Pending |
+| 0046 | Post-mortem retention and PII handling | Seeded in roadmap | Pending |
 | 0047 | Policy testing split | Accepted | [`0047-policy-testing-split.md`](0047-policy-testing-split.md) |
 | 0048 | Runner connectivity model | Accepted | [`0048-runner-connectivity.md`](0048-runner-connectivity.md) |
 | 0049 | DDoS protection posture | Accepted | [`0049-ddos-protection.md`](0049-ddos-protection.md) |
@@ -66,6 +66,5 @@ Next free number: **0058**
 | 0056 | Dedicated Backstage GitHub App | Accepted | [`0056-backstage-github-app.md`](0056-backstage-github-app.md) |
 | 0057 | Cost allocator Function publishes via AAD OneDeploy | Accepted | [`0057-cost-allocator-aad-onedeploy.md`](0057-cost-allocator-aad-onedeploy.md) |
 
-ADR seeds 0002-0020 are defined in [`plan/plan.md` section 9](../../plan/plan.md#9-key-architecture-decisions-adr-seeds).
-Later seeds are introduced by the stage files under [`plan/stages/`](../../plan/stages/).
-Promote seeded ADRs to full ADR files as their owning stages are implemented.
+ADR seeds and the capability roadmap are described in the [roadmap](../roadmap/README.md).
+Promote seeded ADRs to full ADR files as their owning capabilities are implemented.
