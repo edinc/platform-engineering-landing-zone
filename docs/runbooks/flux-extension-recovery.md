@@ -275,7 +275,7 @@ Expected:
 Run the developer-portal Azure smoke check from the self-hosted runner network:
 
 ```bash
-bash scripts/azure/validate_stage09_azure.sh
+bash scripts/azure/validate_backstage_azure.sh
 ```
 
 ## Rollback

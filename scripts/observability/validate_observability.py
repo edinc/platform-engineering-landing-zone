@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Stage 08 observability, SRE, and FinOps repository contracts."""
+"""Validate observability, SRE, and FinOps repository contracts."""
 
 from pathlib import Path
 import sys
@@ -27,7 +27,7 @@ EXPECTED_FILES = [
     "infrastructure/terraform/_modules/cost-allocator/main.tf",
     ".github/workflows/ttl-sweep.yml",
     "workflows/ttl-sweep.yml",
-    "scripts/azure/validate_stage08_azure.sh",
+    "scripts/azure/validate_observability_azure.sh",
     "docs/runbooks/platform-slos.md",
     "docs/runbooks/sre/platform-slo-burn.md",
     "docs/runbooks/sre/flux-reconciliation-latency.md",
@@ -51,7 +51,7 @@ def fail(message: str) -> None:
 
 def require_file(path: str) -> None:
     if not (ROOT / path).is_file():
-        fail(f"Required Stage 08 file missing: {path}")
+        fail(f"Required file missing: {path}")
 
 
 def require_contains(path: str, needle: str) -> None:
@@ -113,11 +113,11 @@ def main() -> None:
     require_contains(".github/workflows/ttl-sweep.yml", "az resource list")
     require_contains(".github/workflows/ttl-sweep.yml", "expiresOn")
     require_contains(".github/workflows/ttl-sweep.yml", "gh pr create")
-    require_contains("scripts/azure/validate_stage08_azure.sh", "az aks show")
-    require_contains("scripts/azure/validate_stage08_azure.sh", "az monitor action-group show")
-    require_contains("scripts/azure/validate_stage08_azure.sh", "az costmanagement export show")
+    require_contains("scripts/azure/validate_observability_azure.sh", "az aks show")
+    require_contains("scripts/azure/validate_observability_azure.sh", "az monitor action-group show")
+    require_contains("scripts/azure/validate_observability_azure.sh", "az costmanagement export show")
 
-    print("Stage 08 observability, SRE, and FinOps contracts validated.")
+    print("Observability, SRE, and FinOps contracts validated.")
 
 
 if __name__ == "__main__":
