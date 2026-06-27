@@ -291,7 +291,7 @@ def validate_docs() -> None:
         "docs/runbooks/team-onboarding.md": ["Idempotency contract", "Partial failures", "scripts/test/onboarding-smoke.sh"],
         "docs/runbooks/team-decommissioning.md": ["Dry run", "Backstage Components", "Azure role assignments"],
         "docs/adr/0018-inner-loop.md": ["Tilt", "Bridge to Kubernetes", "Telepresence"],
-        "docs/adr/0043-ownership-matrix.md": ["ownership-matrix.md", "spec.owner", "Stage 10"],
+        "docs/adr/0043-ownership-matrix.md": ["ownership-matrix.md", "spec.owner", "multi-tenancy & onboarding"],
     }.items():
         for needle in needles:
             require_contains(path, needle)
