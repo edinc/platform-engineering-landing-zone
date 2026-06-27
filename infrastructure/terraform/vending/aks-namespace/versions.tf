@@ -12,6 +12,6 @@ terraform {
     }
   }
 
-  # Stage 05 AKS namespace vending state.
+  # Tenancy vending AKS namespace state.
   backend "azurerm" {}
 }

@@ -19,8 +19,7 @@ locals {
 }
 
 # Representative, policy-compliant demo resource group. Kept intentionally
-# minimal (Stage 02 does not deploy demo networking/compute - that is Stage
-# 03+); it exists to prove the demo profile plans clean end to end.
+# minimal (subscription baseline does not deploy demo networking/compute - that starts with connectivity & egress); it exists to prove the demo profile plans clean end to end.
 resource "azurerm_resource_group" "demo" {
   name     = "rg-pe-demo-${var.location_short}"
   location = var.location

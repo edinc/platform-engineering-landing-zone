@@ -1,4 +1,4 @@
-# Copy to backend.hcl (gitignored) and fill values from the Stage 01 _bootstrap outputs.
+# Copy to backend.hcl (gitignored) and fill values from the _bootstrap stack outputs.
 resource_group_name  = "rg-pe-bootstrap-sec"
 storage_account_name = "stpebootsec0000"
 container_name       = "platform"

@@ -88,7 +88,7 @@ required reviewers approve.
 ## 4. Run the supply-chain smoke test
 
 Use **Actions -> Supply-chain smoke test** to build the minimal
-[`samples/hello-container`](../../samples/hello-container/) image through the
+[`samples/hello-container`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/samples/hello-container/) image through the
 same reusable workflow used by golden paths. To exercise promotion, provide the
 nonprod and prod `kustomization_path` values for a disposable smoke overlay and
 enable the matching promotion inputs. Prod smoke promotion intentionally depends

@@ -8,7 +8,7 @@ terraform {
     }
   }
 
-  # Stage 04 cluster-state repository state. Backend settings are supplied at
+  # Platform shared services cluster-state repository state. Backend settings are supplied at
   # init time via -backend-config (see backend.hcl.example).
   backend "azurerm" {}
 }

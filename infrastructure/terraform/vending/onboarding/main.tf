@@ -8,7 +8,7 @@ resource "terraform_data" "input_guard" {
   lifecycle {
     precondition {
       condition     = var.monthly_budget_amount == null || (var.budget_start_date != "" && length(var.budget_contact_emails) > 0)
-      error_message = "monthly_budget_amount requires budget_start_date and budget_contact_emails for Stage 02."
+      error_message = "monthly_budget_amount requires budget_start_date and budget_contact_emails for the subscription baseline."
     }
   }
 }

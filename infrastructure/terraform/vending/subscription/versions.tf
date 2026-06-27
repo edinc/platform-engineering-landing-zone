@@ -12,7 +12,7 @@ terraform {
     }
   }
 
-  # Stage 05 subscription vending state. Backend settings are supplied at init
+  # Tenancy vending subscription state. Backend settings are supplied at init
   # time via -backend-config so tenant-specific values are not committed.
   backend "azurerm" {}
 }

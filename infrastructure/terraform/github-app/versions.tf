@@ -8,6 +8,6 @@ terraform {
     }
   }
 
-  # Stage 05 platform-vending-bot metadata state.
+  # Tenancy vending platform-vending-bot metadata state.
   backend "azurerm" {}
 }

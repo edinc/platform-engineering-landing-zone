@@ -1,5 +1,5 @@
 resource "azurerm_key_vault" "platform" {
-  #checkov:skip=CKV2_AZURE_32:Private Endpoint is created by azurerm_private_endpoint.platform when Stage 03 Private DNS zone IDs are supplied; Checkov cannot trace the conditional map.
+  #checkov:skip=CKV2_AZURE_32:Private Endpoint is created by azurerm_private_endpoint.platform when connectivity & egress Private DNS zone IDs are supplied; Checkov cannot trace the conditional map.
   count = var.enable_key_vault ? 1 : 0
 
   name                            = local.key_vault_name

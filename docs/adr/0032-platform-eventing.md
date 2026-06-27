@@ -2,25 +2,25 @@
 
 - Status: accepted
 - Date: 2026-06-10
-- Stage: Stage 04 - platform shared services
+- Capability: platform shared services
 
 ## Context
 
 The platform needs an internal event bus for platform workflows, vending events,
 and later automation hooks. Workload teams also need messaging services, but
 their queues/topics are workload dependencies and should be vended through ASO in
-later stages rather than owned centrally here.
+later capabilities rather than owned centrally here.
 
 ## Decision
 
 **Azure Service Bus is the default platform-internal eventing substrate for the
 MVP.**
 
-1. Stage 04 provisions one namespace per environment.
+1. The platform shared services capability provisions one namespace per environment.
 2. Every enabled environment uses Premium so Private Link and private-only
    networking can be enforced consistently.
 3. Public network access and local SAS auth are disabled.
-4. Workload queues/topics are not created in this stack; Stage 07 ASO v2 handles
+4. Workload queues/topics are not created in this stack; GitOps platform ASO v2 handles
    workload-owned messaging resources through a curated CRD allowlist.
 
 ## Consequences
@@ -40,5 +40,5 @@ MVP.**
 
 ## References
 
-- [`plan/stages/stage-04-platform-shared-services.md`](../../plan/stages/stage-04-platform-shared-services.md)
-- [`infrastructure/terraform/platform/service-bus.tf`](../../infrastructure/terraform/platform/service-bus.tf)
+- [Platform shared services](../how-it-works/platform-services.md)
+- [`infrastructure/terraform/platform/service-bus.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/service-bus.tf)

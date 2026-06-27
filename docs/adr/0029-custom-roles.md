@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-10
-- Stage: Stage 03 - connectivity, identity, and egress
+- Capability: connectivity & egress
 
 ## Context
 
@@ -63,7 +63,7 @@ IAM mutation and makes the default operator assignment PIM eligible.**
 
 ## References
 
-- [`infrastructure/terraform/identity/`](../../infrastructure/terraform/identity/)
-- [`plan/stages/stage-03-connectivity-identity-egress.md`](../../plan/stages/stage-03-connectivity-identity-egress.md)
+- [`infrastructure/terraform/identity/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/identity/)
+- [Connectivity & egress](../how-it-works/connectivity-egress.md)
 - [Azure custom roles](https://learn.microsoft.com/azure/role-based-access-control/custom-roles)
 - [Microsoft Entra Privileged Identity Management](https://learn.microsoft.com/entra/id-governance/privileged-identity-management/pim-configure)

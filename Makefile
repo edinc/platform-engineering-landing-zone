@@ -231,5 +231,5 @@ bootstrap-plan: ## Terraform plan for the _bootstrap stack.
 bootstrap-apply: ## Terraform apply for the _bootstrap stack.
 	cd $(BOOTSTRAP_DIR) && $(MISE_EXEC) terraform apply -input=false -lock-timeout=120s
 
-docs: ## List Markdown documentation included in the current stage.
-	@find README.md CONTRIBUTING.md docs plan -type f -name '*.md' | sort
+docs: ## List Markdown documentation.
+	@find README.md CONTRIBUTING.md docs -type f -name '*.md' | sort

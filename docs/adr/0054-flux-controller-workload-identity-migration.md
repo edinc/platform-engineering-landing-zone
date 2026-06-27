@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-22
-- Stage: Stage 07 - GitOps & in-cluster platform
+- Capability: GitOps platform
 
 ## Context
 
@@ -88,12 +88,12 @@ Do not reintroduce:
 | Keep object-level Workload Identity | It reintroduces extension Helm value conflicts and creates per-source identity complexity. |
 | Manually delete the extension from the portal or CLI as the default path | It is not auditable through IaC and risks deleting the extension before Flux configurations. |
 | Set only `replace_triggered_by` on the extension | Terraform would not necessarily replace the dependent Flux configurations first, contrary to Microsoft guidance. |
-| Disable Flux extension drift detection or multi-tenancy | Weakens the Stage 07 GitOps security posture and tenant isolation model. |
+| Disable Flux extension drift detection or multi-tenancy | Weakens the GitOps platform security posture and tenant isolation model. |
 
 ## References
 
 - [Flux extension recovery runbook](../runbooks/flux-extension-recovery.md)
-- [Stage 07 GitOps & in-cluster platform](../../plan/stages/stage-07-gitops-incluster.md)
+- [GitOps platform](../how-it-works/gitops.md)
 - [Microsoft Learn: GitOps with Flux v2](https://learn.microsoft.com/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2)
 - [Microsoft Learn: Flux cluster extension](https://learn.microsoft.com/azure/azure-arc/kubernetes/conceptual-gitops-flux2#flux-cluster-extension)
 - [Microsoft Learn: Azure Arc Kubernetes extensions troubleshooting](https://learn.microsoft.com/azure/azure-arc/kubernetes/extensions-troubleshooting)

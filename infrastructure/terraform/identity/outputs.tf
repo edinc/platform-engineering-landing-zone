@@ -1,6 +1,6 @@
 output "group_object_ids" {
   value       = local.group_object_ids
-  description = "Object IDs for all Entra groups created by the Stage 03 identity stack."
+  description = "Object IDs for all Entra groups created by the connectivity & egress identity stack."
 }
 
 output "platform_group_display_names" {

@@ -70,7 +70,7 @@ is added just-in-time by the workflow before `terraform init` and also passed to
 Terraform via `TF_VAR_runner_ip_cidrs`, so Terraform owns and drift-detects the
 **full** `ip_rules` set (`allowed_ip_cidrs` + the transient runner IP) without
 evicting its own state access mid-apply; the workflow's `always()` cleanup
-removes the runner entry afterward. Stage 03 retrofits Private Endpoints and
+removes the runner entry afterward. The connectivity & egress capability retrofits Private Endpoints and
 disables public access (ADR-0048, ADR-0031). The intentional `checkov:skip`
 annotations in `main.tf` / `state.tf` document each Phase 1 deferral.
 
@@ -89,7 +89,7 @@ See [`variables.tf`](./variables.tf) and
 ## Outputs
 
 See [`outputs.tf`](./outputs.tf). `backend_config_hint` mirrors the values for
-this stack's own backend; the remaining outputs feed later stages.
+this stack's own backend; the remaining outputs feed later capabilities.
 
 ## Decisions
 

@@ -6,7 +6,21 @@ docs_dir: docs
 nav:
   - Overview: index.md
   - Architecture: architecture/README.md
+  - How it works:
+      - Overview: how-it-works/README.md
+      - Azure foundation: how-it-works/foundation.md
+      - "Connectivity & egress": how-it-works/connectivity-egress.md
+      - Platform shared services: how-it-works/platform-services.md
+      - "Supply chain & CI/CD": how-it-works/supply-chain-cicd.md
+      - GitOps platform: how-it-works/gitops.md
+      - "Tenancy vending & onboarding": how-it-works/tenancy-vending-onboarding.md
+      - Golden paths: how-it-works/golden-paths.md
+      - "Observability, SRE & FinOps": how-it-works/observability-sre-finops.md
+      - Developer portal: how-it-works/developer-portal.md
+      - Reliability operations: how-it-works/reliability-operations.md
+      - "Security & compliance": how-it-works/security-compliance.md
   - Architecture decision records: adr/README.md
   - Runbooks: runbooks/README.md
+  - Roadmap: roadmap/README.md
 plugins:
   - techdocs-core

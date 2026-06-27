@@ -1,4 +1,4 @@
-# Identity (Stage 03)
+# Identity (connectivity & egress)
 
 Entra group primitives, group-only Azure RBAC, the `Platform Operator` custom
 role, and PIM policy/eligibility for the platform subscription boundary.
@@ -19,14 +19,14 @@ Related decision: [ADR-0029](../../../docs/adr/0029-custom-roles.md).
 
 - Management-group scoped assignments owned by the external ALZ.
 - Direct user RBAC assignments; all inputs select a group key.
-- Workload Identity federation credentials; Stage 04 records AKS issuer details
-  and Stage 07 applies per-service-account federation.
-- Sentinel routing for PIM alerts; observability integration is completed in
-  later stages.
+- Workload Identity federation credentials; platform shared services records AKS issuer details
+  and GitOps platform applies per-service-account federation.
+- Sentinel routing for PIM alerts; observability integration is completed by
+  observability, SRE & FinOps.
 
 ## State backend
 
-State lives in the Stage 01 account, container `identity`, with a key such as
+State lives in the Azure foundation account, container `identity`, with a key such as
 `nonprod/identity.tfstate`. Copy `backend.hcl.example` to `backend.hcl`, fill
 `resource_group_name` and `storage_account_name` from `_bootstrap` outputs, then:
 
@@ -79,4 +79,4 @@ make terraform-validate
 |---|-----------|-------|
 | 5 | RBAC created by this repo is group-only | Role assignment variables use `group_key`; resources set `principal_type = "Group"`. |
 | 6 | PIM activation policy exists | `pim.tf` configures max duration, MFA, ticket/justification, and prod approval. |
-| Stage deliverable | Custom role documented | `rbac.tf` and ADR-0029. |
+| Capability deliverable | Custom role documented | `rbac.tf` and ADR-0029. |

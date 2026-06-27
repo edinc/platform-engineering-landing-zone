@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 01 - Bootstrap and secret zero
+- Capability: Azure foundation
 
 ## Context
 
@@ -70,7 +70,7 @@ automation, and an Azure Monitor sign-in alert.**
 
 ## References
 
-- [`plan/stages/stage-01-bootstrap-secret-zero.md`](../../plan/stages/stage-01-bootstrap-secret-zero.md)
-- [`infrastructure/terraform/_bootstrap/monitoring.tf`](../../infrastructure/terraform/_bootstrap/monitoring.tf)
+- [Azure foundation](../how-it-works/foundation.md)
+- [`infrastructure/terraform/_bootstrap/monitoring.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/_bootstrap/monitoring.tf)
 - [`docs/runbooks/bootstrap.md`](../runbooks/bootstrap.md)
 - [ADR-0025: OIDC federation policy](0025-oidc-federation.md)

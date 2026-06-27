@@ -1,6 +1,6 @@
 resource "azurerm_container_registry" "platform" {
-  #checkov:skip=CKV_AZURE_164:Image signing is enforced with cosign/Kyverno in Stage 06/07; ACR trust policy does not cover the keyless signing model.
-  #checkov:skip=CKV_AZURE_166:ACR quarantine can block pull-through cache acceptance; image scan/sign/verify gates are Stage 06/07 supply-chain controls.
+  #checkov:skip=CKV_AZURE_164:Image signing is enforced with cosign/Kyverno in supply chain & CI/CD and GitOps platform; ACR trust policy does not cover the keyless signing model.
+  #checkov:skip=CKV_AZURE_166:ACR quarantine can block pull-through cache acceptance; image scan/sign/verify gates are supply chain & CI/CD and GitOps platform controls.
   #checkov:skip=CKV_AZURE_167:retention_policy_in_days is set to 14; Checkov does not resolve the current azurerm v4 schema for this resource.
   #checkov:skip=CKV_AZURE_233:Zone redundancy is region/profile dependent; prod enables it when zones are supplied.
   count = var.enable_acr ? 1 : 0
