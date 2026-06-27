@@ -81,7 +81,7 @@ guard_out_dir() {
 }
 guard_out_dir
 
-# The eight mandatory tags from plan/plan.md section 10 (kept in lockstep with
+# The eight mandatory tags from the platform tag taxonomy (kept in lockstep with
 # policies/azure/initiatives/tag-baseline.json and the Rego tag policy).
 MANDATORY_TAGS=(env owner costCenter product dataClassification confidentiality managedBy repo)
 REQUIRED_RESOURCE_PROVIDERS=(Microsoft.Security)

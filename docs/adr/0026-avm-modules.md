@@ -2,26 +2,26 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 02 - subscription baseline and compliance alignment
+- Capability: subscription baseline
 
 ## Context
 
-Earlier Stage 02 planning considered `Azure/caf-enterprise-scale` or
+Earlier subscription baseline planning considered `Azure/caf-enterprise-scale` or
 `Azure/avm-ptn-alz` to create the ALZ management-group and policy foundation.
 The scope has changed: an Azure Landing Zone is assumed to already exist, and
 this repository now owns only subscription onboarding/hardening.
 
-That makes ALZ pattern modules unnecessary for Stage 02. The remaining resources
+That makes ALZ pattern modules unnecessary for subscription baseline. The remaining resources
 are small, subscription-scoped `azurerm` resources that must continue to pass
 credential-free CI (`terraform init -backend=false && terraform validate`,
 TFLint, Checkov) with no Azure connection.
 
 ## Decision
 
-**Build Stage 02 as a native `azurerm` subscription-baseline composition under
+**Build subscription baseline as a native `azurerm` subscription-baseline composition under
 `infrastructure/terraform/subscription-baseline/`. Do not adopt
 `Azure/caf-enterprise-scale`, `Azure/avm-ptn-alz`, or another ALZ pattern module
-for this stage.**
+for this capability.**
 
 1. **Subscription-baseline composition.** Defender pricing, Activity Log
    diagnostics, budgets, and optional Cost Management exports are authored
@@ -31,7 +31,7 @@ for this stage.**
    central Log Analytics workspaces, and cost-export storage accounts are inputs
    or prerequisites owned outside this stack.
 
-3. **AVM usage policy.** When a later stage adopts an AVM module it MUST:
+3. **AVM usage policy.** When a later capability adopts an AVM module it MUST:
    - pin an exact GA version in that stack's `versions.tf`/module block;
    - validate credential-free in CI;
    - be recorded in the audit table below.
@@ -44,24 +44,24 @@ for this stage.**
 5. **Provider pinning.** `azurerm ~> 4.14`, `terraform >= 1.9.0, < 2.0.0`,
    mirrored from the `_bootstrap` stack for consistency.
 
-### AVM / ALZ module audit (Stage 02)
+### AVM / ALZ module audit (subscription baseline)
 
 | Module | Version | GA? | Decision |
 |--------|---------|-----|----------|
 | `Azure/caf-enterprise-scale` | n/a | GA | **Not adopted** - creates tenant/MG ALZ resources that are now external prerequisites. |
 | `Azure/avm-ptn-alz` | n/a | Pattern module | **Not adopted** - same scope mismatch; revisit only if this repo later owns ALZ creation again. |
-| `Azure/lz-vending` | n/a | Microsoft-maintained | **Deferred to Stage 05** - used only if this repo owns vending rather than consuming externally-created subscriptions. |
-| `Azure/avm-res-*` | n/a | Mixed | **Deferred to later stages** - adopt per resource when GA; pin and audit at that time. |
+| `Azure/lz-vending` | n/a | Microsoft-maintained | **Deferred to tenancy vending** - used only if this repo owns vending rather than consuming externally-created subscriptions. |
+| `Azure/avm-res-*` | n/a | Mixed | **Deferred to later capabilities** - adopt per resource when GA; pin and audit at that time. |
 
-This table is updated as AVM modules are adopted in later stages.
+This table is updated as AVM modules are adopted in later capabilities.
 
 ## Consequences
 
-- Stage 02 no longer needs tenant root or management-group permissions.
+- The subscription baseline no longer needs tenant root or management-group permissions.
 - The stack is smaller, easier to validate without credentials, and less likely
   to duplicate or conflict with an existing enterprise ALZ.
 - If the repo later needs to create ALZ resources, that is a separate ADR and
-  state/address migration, not an implicit extension of this stage.
+  state/address migration, not an implicit extension of this capability.
 
 ## Alternatives considered
 
@@ -74,7 +74,7 @@ This table is updated as AVM modules are adopted in later stages.
 
 ## References
 
-- [`plan/stages/stage-02-subscription-baseline.md`](../../plan/stages/stage-02-subscription-baseline.md)
-- [`infrastructure/terraform/subscription-baseline/`](../../infrastructure/terraform/subscription-baseline/)
+- [Subscription baseline](../how-it-works/foundation.md)
+- [`infrastructure/terraform/subscription-baseline/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/subscription-baseline/)
 - [ADR-0001: Primary IaC](0001-iac.md)
 - [ADR-0048: Runner connectivity model](0048-runner-connectivity.md)

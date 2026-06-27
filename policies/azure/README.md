@@ -6,7 +6,7 @@ optional/reference compliance policy pack. The JSON files under
 administrators, and a credential-free guard validates their structure and
 security-critical semantics in CI.
 
-The Stage 02 Terraform stack does **not** render or assign these initiatives.
+The subscription-baseline Terraform stack does **not** render or assign these initiatives.
 Tenant/MG-scoped policy assignment is owned by the existing Azure Landing Zone.
 
 See [ADR-0011](../../docs/adr/0011-compliance-baseline.md) (baseline),
@@ -23,7 +23,7 @@ policies/azure/
 │   ├── private-link-required.json  # Audit public network access (Storage, KV, ACR, PG)
 │   └── aks-baseline.json           # Audit AKS identity controls; NO Gatekeeper add-on
 ├── firewall/
-│   └── allowlist.json              # Stage 03 Azure Firewall Premium FQDN allowlist
+│   └── allowlist.json              # Connectivity & egress Azure Firewall Premium FQDN allowlist
 └── README.md
 ```
 
@@ -76,12 +76,12 @@ and
 
 - well-formedness and pinned-GUID format;
 - unique `policyDefinitionReferenceId` values within an initiative;
-- **Stage 02 criterion 3** — `tag-baseline` covers all eight mandatory tags on
+- **Subscription baseline (tag coverage)** — `tag-baseline` covers all eight mandatory tags on
   both resources and resource groups;
-- **Stage 02 criterion 8** — `aks-baseline` contains **no** AKS Policy
+- **Subscription baseline (AKS posture)** — `aks-baseline` contains **no** AKS Policy
   (Gatekeeper) add-on GUID and uses **no** `Deny` effect;
 - `private-link-required` defaults its `effect` to `Audit`.
-- **Stage 03 egress** — the firewall allowlist is well-formed, uses only
+- **Connectivity & egress** — the firewall allowlist is well-formed, uses only
   explicit allow collections, and still covers the required Azure, GitHub,
   package-manager, container-registry, Ubuntu, Docker Hub, and Sigstore FQDNs.
 

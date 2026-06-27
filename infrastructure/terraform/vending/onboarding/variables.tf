@@ -10,7 +10,7 @@ variable "tenant_id" {
 
 variable "subscription_id" {
   type        = string
-  description = "Externally-created subscription ID handed to Stage 02."
+  description = "Externally-created subscription ID handed to subscription baseline."
 
   validation {
     condition     = can(regex("^[0-9a-fA-F-]{36}$", var.subscription_id))
@@ -35,7 +35,7 @@ variable "alz_placement_evidence" {
 
 variable "log_analytics_workspace_id" {
   type        = string
-  description = "Central Log Analytics workspace resource ID passed to Stage 02."
+  description = "Central Log Analytics workspace resource ID passed to subscription baseline."
   default     = ""
 }
 
@@ -50,29 +50,29 @@ variable "defender_tiers" {
     resource_manager = string
     apis             = string
   })
-  description = "Defender plan tiers passed to the Stage 02 subscription-baseline stack."
+  description = "Defender plan tiers passed to the subscription baseline stack."
 }
 
 variable "monthly_budget_amount" {
   type        = number
-  description = "Optional monthly budget amount passed to Stage 02."
+  description = "Optional monthly budget amount passed to subscription baseline."
   default     = null
 }
 
 variable "budget_start_date" {
   type        = string
-  description = "Budget start date passed to Stage 02 when monthly_budget_amount is set."
+  description = "Budget start date passed to subscription baseline when monthly_budget_amount is set."
   default     = ""
 }
 
 variable "budget_contact_emails" {
   type        = list(string)
-  description = "Budget contacts passed to Stage 02."
+  description = "Budget contacts passed to subscription baseline."
   default     = []
 }
 
 variable "output_directory" {
   type        = string
-  description = "Directory where generated Stage 02 handoff files are written."
+  description = "Directory where generated subscription baseline handoff files are written."
   default     = "generated"
 }

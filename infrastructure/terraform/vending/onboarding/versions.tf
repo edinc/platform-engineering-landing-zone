@@ -8,6 +8,6 @@ terraform {
     }
   }
 
-  # Stage 05 external-subscription onboarding state.
+  # Tenancy vending external-subscription onboarding state.
   backend "azurerm" {}
 }

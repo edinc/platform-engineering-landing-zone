@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-12
-- Stage: Stage 08 - Observability, SRE, FinOps
+- Capability: observability, SRE & FinOps
 
 ## Context
 
@@ -14,20 +14,19 @@ minimal custom code.
 
 Use Sloth `PrometheusServiceLevel` resources for SLOs as code. Sloth's opinionated
 model emits Prometheus recording and multi-window multi-burn-rate alerting rules
-that fit the Stage 08 requirement for inherited SLOs and burn-rate alerts.
+that fit the observability, SRE & FinOps requirement for inherited SLOs and burn-rate alerts.
 
 Golden paths must render `templates/_partials/slo.yaml` as the authoring
 convention and `templates/_partials/slo-rule-group.tf` as the Azure Managed
 Prometheus evaluator. Platform-owned SLO alerts are evaluated by
-`azurerm_monitor_alert_prometheus_rule_group` and routed to Stage 08 Action
-Groups. Every generated alert must include a `runbook_url` annotation enforced
+`azurerm_monitor_alert_prometheus_rule_group` and routed to Action Groups owned by observability, SRE & FinOps. Every generated alert must include a `runbook_url` annotation enforced
 by CI.
 
 ## Consequences
 
 - Developers only supply service metadata and targets; Sloth generates the alert
   machinery.
-- Prometheus-compatible SLO data is available to Grafana and the Stage 09
+- Prometheus-compatible SLO data is available to Grafana and the developer portal's
   Backstage dashboard surface.
 - Sloth CRDs must be installed before SLO objects are applied in environments
   that enable the controller.
@@ -43,6 +42,6 @@ by CI.
 
 ## References
 
-- [`templates/_partials/slo.yaml`](../../templates/_partials/slo.yaml)
-- [`scripts/observability/lint_alert_runbooks.py`](../../scripts/observability/lint_alert_runbooks.py)
-- [`plan/stages/stage-08-observability-sre-finops.md`](../../plan/stages/stage-08-observability-sre-finops.md)
+- [`templates/_partials/slo.yaml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/templates/_partials/slo.yaml)
+- [`scripts/observability/lint_alert_runbooks.py`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/scripts/observability/lint_alert_runbooks.py)
+- [observability, SRE & FinOps](../how-it-works/observability-sre-finops.md)

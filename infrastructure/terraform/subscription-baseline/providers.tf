@@ -1,7 +1,7 @@
 provider "azurerm" {
   features {}
 
-  # Stage 02 now targets one existing subscription. Tenant-wide ALZ resources
+  # The subscription baseline now targets one existing subscription. Tenant-wide ALZ resources
   # (management groups, policy definitions, shared workspaces/storage) are owned
   # outside this stack and passed in as resource IDs when needed.
   subscription_id = var.subscription_id

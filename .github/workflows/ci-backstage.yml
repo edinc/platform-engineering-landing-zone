@@ -80,7 +80,7 @@ jobs:
           persist-credentials: false
 
       - name: Validate Backstage contracts
-        run: python3 scripts/backstage/validate_stage09_backstage.py
+        run: python3 scripts/backstage/validate_backstage.py
 
   publish-image:
     name: Publish Backstage image
@@ -247,7 +247,7 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Validate deployed Backstage
-        run: bash scripts/azure/validate_stage09_azure.sh
+        run: bash scripts/azure/validate_backstage_azure.sh
 
       - name: Remove Azure CLI cache
         if: ${{ always() }}

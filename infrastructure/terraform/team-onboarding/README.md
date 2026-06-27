@@ -1,11 +1,11 @@
-# Team onboarding Terraform (Stage 10)
+# Team onboarding Terraform (multi-tenancy & onboarding)
 
 This stack owns the per-team identity and GitHub objects created by the
 `onboard-team` Backstage template.
 
 Related decisions: [ADR-0018](../../../docs/adr/0018-inner-loop.md),
-[ADR-0043](../../../docs/adr/0043-ownership-matrix.md), and the Stage 10
-[team onboarding runbook](../../../docs/runbooks/team-onboarding.md).
+[ADR-0043](../../../docs/adr/0043-ownership-matrix.md), and the [team onboarding runbook](../../../docs/runbooks/team-onboarding.md)
+for multi-tenancy & onboarding.
 
 ## What this stack owns
 
@@ -17,7 +17,7 @@ Related decisions: [ADR-0018](../../../docs/adr/0018-inner-loop.md),
 
 ## State backend
 
-State lives in the Stage 01 account, container `team-onboarding`, with one key
+State lives in the Azure foundation account, container `team-onboarding`, with one key
 per team:
 
 ```bash

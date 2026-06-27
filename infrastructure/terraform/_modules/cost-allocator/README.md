@@ -1,6 +1,6 @@
 # Cost allocator module
 
-Stage 08 uses this module to run a nightly Python Azure Function that reads the
+The observability, SRE & FinOps capability uses this module to run a nightly Python Azure Function that reads the
 existing ALZ-owned Cost Management export container and publishes team/product
 showback CSVs to a private output container.
 

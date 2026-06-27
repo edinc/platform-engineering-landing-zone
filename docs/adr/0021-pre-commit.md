@@ -2,11 +2,11 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 00 - Foundation and repo bootstrap
+- Capability: repository foundation
 
 ## Context
 
-Contributors need fast local feedback before CI runs. Stage 00 requires a
+Contributors need fast local feedback before CI runs. The repository foundation requires a
 pre-commit framework and a clear split between lightweight local checks and
 heavier CI validation.
 
@@ -41,5 +41,5 @@ stub validation.
 
 ## References
 
-- [`plan/stages/stage-00-foundation.md`](../../plan/stages/stage-00-foundation.md)
+- [Repository foundation roadmap](../roadmap/README.md)
 - [pre-commit](https://pre-commit.com/)

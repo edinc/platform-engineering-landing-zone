@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 02 - subscription baseline and compliance alignment
+- Capability: subscription baseline
 
 ## Context
 

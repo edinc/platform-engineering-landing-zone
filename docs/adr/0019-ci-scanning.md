@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 06 - CI/CD and software supply chain
+- Capability: supply chain & CI/CD
 
 ## Context
 
@@ -36,7 +36,7 @@ Use **layered scanning**:
 - GHAS cost is explicit and controlled per repository or organization.
 - Scanner findings can disagree; the release runbook defines the exception path
   instead of weakening workflow defaults.
-- Stage 07 admission control can trust Stage 06 signatures and SBOM attachment
+- GitOps platform admission control can trust supply chain & CI/CD signatures and SBOM attachment
   semantics.
 - `harden-runner` starts in audit mode while endpoint allowlists are tuned; move
   signing and promotion workflows to block mode after smoke tests prove the
@@ -54,4 +54,4 @@ Use **layered scanning**:
 
 - [`docs/runbooks/ghas-cost.md`](../runbooks/ghas-cost.md)
 - [`docs/runbooks/release.md`](../runbooks/release.md)
-- [`plan/stages/stage-06-cicd-supply-chain.md`](../../plan/stages/stage-06-cicd-supply-chain.md)
+- [Supply chain & CI/CD](../how-it-works/supply-chain-cicd.md)

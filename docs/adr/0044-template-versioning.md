@@ -2,18 +2,18 @@
 
 - Status: accepted
 - Date: 2026-06-16
-- Stage: Stage 11 - Golden paths v1
+- Capability: golden paths
 
 ## Context
 
-Stage 11 introduces Backstage templates that create downstream repositories and
+The golden paths capability introduces Backstage templates that create downstream repositories and
 reviewed vending PRs. Template changes can break generated repository contracts,
 CI wiring, GitOps layout, or ownership metadata if consumers cannot tell which
 contract version they received.
 
 ## Decision
 
-Every Stage 11 template declares a platform template contract version using:
+Every golden path template declares a platform template contract version using:
 
 - `metadata.annotations.scaffolder.platform.example.io/api-version:
   scaffolder.platform.example.io/v1`
@@ -40,5 +40,5 @@ updates can be proposed without changing the original generation contract.
 
 ## References
 
-- [`templates/`](../../templates/)
-- [`plan/stages/stage-11-golden-paths.md`](../../plan/stages/stage-11-golden-paths.md)
+- [`templates/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/templates/)
+- [golden paths](../how-it-works/golden-paths.md)

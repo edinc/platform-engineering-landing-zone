@@ -1,6 +1,6 @@
 {
   "version": "2026-06-10",
-  "description": "Stage 03 curated Azure Firewall Premium egress allowlist. Unmatched outbound traffic is denied by policy.",
+  "description": "Curated Azure Firewall Premium egress allowlist for connectivity & egress. Unmatched outbound traffic is denied by policy.",
   "application_rule_collections": [
     {
       "name": "platform-control-plane",

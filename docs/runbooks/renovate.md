@@ -21,7 +21,7 @@ Install the Renovate GitHub App on `platform-engineering-landing-zone`. Grant it
 access to this repository and, later, generated golden-path repositories that
 should inherit the same dependency policy.
 
-Confirm the first onboarding PR references [`renovate.json`](../../renovate.json)
+Confirm the first onboarding PR references [`renovate.json`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/renovate.json)
 and does not propose a second config file.
 
 ## 2. Triage the dependency dashboard

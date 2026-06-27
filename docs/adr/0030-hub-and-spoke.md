@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-10
-- Stage: Stage 03 - connectivity, identity, and egress
+- Capability: connectivity & egress
 
 ## Context
 
@@ -15,7 +15,7 @@ Terraform ownership, and low operational complexity.
 
 **The MVP uses a regional hub-and-spoke topology, not Virtual WAN.**
 
-1. The Stage 03 connectivity stack owns the hub VNet in the connectivity
+1. The connectivity-and-egress stack owns the hub VNet in the connectivity
    subscription.
 2. Workload and platform spokes are linked/peered to the hub by later vending and
    platform stacks.
@@ -31,7 +31,7 @@ Terraform ownership, and low operational complexity.
 - The MVP stays understandable and deployable in brownfield tenants.
 - Route-table and DNS ownership are explicit and reviewable.
 - Future global routing, large branch networks, or multi-region active-active may
-  justify Virtual WAN or AKS Fleet in Stage 13.
+  justify Virtual WAN or AKS Fleet during future-option planning.
 
 ## Alternatives considered
 
@@ -43,6 +43,6 @@ Terraform ownership, and low operational complexity.
 
 ## References
 
-- [`infrastructure/terraform/connectivity/`](../../infrastructure/terraform/connectivity/)
-- [`plan/stages/stage-03-connectivity-identity-egress.md`](../../plan/stages/stage-03-connectivity-identity-egress.md)
+- [`infrastructure/terraform/connectivity/`](https://github.com/edinc/platform-engineering-landing-zone/tree/main/infrastructure/terraform/connectivity/)
+- [Connectivity & egress](../how-it-works/connectivity-egress.md)
 - [Azure Cloud Adoption Framework networking topology](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/traditional-azure-networking-topology)

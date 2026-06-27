@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-15
-- Stage: Stage 09 - Backstage MVP
+- Capability: developer portal
 
 ## Context
 
@@ -16,7 +16,7 @@ Provision a dedicated Azure Storage account and private `techdocs` container fro
 the platform Terraform stack. Disable shared keys and public network access,
 enable Blob versioning and retention, attach a Blob private endpoint, and grant
 `Storage Blob Data Reader` at container scope to the Backstage managed identity.
-Configured Stage 06 publisher principals receive `Storage Blob Data Contributor`
+Configured publisher principals for supply chain & CI/CD receive `Storage Blob Data Contributor`
 so documentation publishing remains CI-owned.
 
 ## Consequences
@@ -38,5 +38,5 @@ so documentation publishing remains CI-owned.
 
 ## References
 
-- [`infrastructure/terraform/platform/techdocs.tf`](../../infrastructure/terraform/platform/techdocs.tf)
-- [`workflows/techdocs-publish.yml`](../../workflows/techdocs-publish.yml)
+- [`infrastructure/terraform/platform/techdocs.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/techdocs.tf)
+- [`workflows/techdocs-publish.yml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/workflows/techdocs-publish.yml)

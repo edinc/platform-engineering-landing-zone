@@ -2,12 +2,12 @@
 
 - Status: accepted
 - Date: 2026-06-15
-- Stage: Stage 09 - Backstage MVP
+- Capability: developer portal
 
 ## Context
 
 Backstage permissions must reflect Entra ID group membership without requiring a
-code change for every onboarded application team in Stage 10.
+code change for every onboarded application team during multi-tenancy & onboarding.
 
 ## Decision
 
@@ -40,19 +40,19 @@ In short: grant Microsoft Graph read permissions to the Backstage workload ident
 Admins receive all permissions. Operators can write catalog data, execute
 scaffolder actions, and view Kubernetes. Application teams can read catalog data,
 write their own catalog entities conditionally, and execute scaffolder actions.
-Direct `kubernetes.*` Backstage permissions remain operator-only until Stage 10
+Direct `kubernetes.*` Backstage permissions remain operator-only until the multi-tenancy & onboarding capability
 generates namespace-scoped RoleBindings for onboarded teams.
 
 ## Consequences
 
-- Stage 10 onboarding can add Entra groups without Backstage code changes.
+- The multi-tenancy & onboarding capability can add Entra groups without Backstage code changes.
 - Delete operations stay admin-only and auditable.
 - The policy file remains deterministic and testable without embedding
   tenant-specific group names.
 - Tenant setup must include the read-only Microsoft Graph app-role grants for
   the Backstage workload identity before users can resolve during sign-in.
-- Application-team Kubernetes self-service requires Stage 10 namespace-scoped
-  RBAC before it is enabled in the portal.
+- Application-team Kubernetes self-service requires namespace-scoped RBAC from the multi-tenancy & onboarding
+  capability before it is enabled in the portal.
 
 ## Alternatives considered
 
@@ -64,6 +64,6 @@ generates namespace-scoped RoleBindings for onboarded teams.
 
 ## References
 
-- [`policies/backstage/permissions.ts`](../../policies/backstage/permissions.ts)
+- [`policies/backstage/permissions.ts`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/policies/backstage/permissions.ts)
 - [`docs/adr/0025-oidc-federation.md`](0025-oidc-federation.md)
-- [`plan/stages/stage-09-backstage-mvp.md`](../../plan/stages/stage-09-backstage-mvp.md)
+- [developer portal](../how-it-works/developer-portal.md)

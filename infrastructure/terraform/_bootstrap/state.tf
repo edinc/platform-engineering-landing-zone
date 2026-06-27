@@ -9,11 +9,11 @@
 #   Terraform state locking.
 # - CMK via the seed Key Vault (azurerm_storage_account_customer_managed_key).
 # - Phase 1 firewall: default-deny + break-glass IP allowlist + AzureServices
-#   bypass. Phase 2 (Stage 03) retrofits Private Endpoints (ADR-0048).
+#   bypass. Phase 2 (connectivity & egress) retrofits Private Endpoints (ADR-0048).
 resource "azurerm_storage_account" "tfstate" {
   #checkov:skip=CKV_AZURE_35:Default network action is Deny by default and guarded by lifecycle precondition; Checkov does not resolve the variable/precondition pair.
-  #checkov:skip=CKV_AZURE_59:Phase 1 public endpoint with default-deny IP allowlist; Private Endpoint retrofit in Stage 03 (ADR-0048 / ADR-0031).
-  #checkov:skip=CKV2_AZURE_33:No VNet exists in Phase 1; Private Endpoint is added in Stage 03 (ADR-0048).
+  #checkov:skip=CKV_AZURE_59:Phase 1 public endpoint with default-deny IP allowlist; Private Endpoint retrofit in connectivity & egress (ADR-0048 / ADR-0031).
+  #checkov:skip=CKV2_AZURE_33:No VNet exists in Phase 1; Private Endpoint is added in connectivity & egress (ADR-0048).
   #checkov:skip=CKV_AZURE_33:State account exposes the blob service only; the queue service is not used.
   name                = local.storage_account_name
   resource_group_name = azurerm_resource_group.tfstate.name
@@ -79,7 +79,7 @@ resource "azurerm_storage_account" "tfstate" {
   tags = local.tags
 }
 
-# One container per stage plus per-profile env state (plan.md section 8).
+# One container per capability stack plus per-profile env state.
 # The "bootstrap" container is adopted; the rest are created here.
 resource "azurerm_storage_container" "stage" {
   #checkov:skip=CKV2_AZURE_21:Blob read/write/delete is logged via azurerm_monitor_diagnostic_setting.tfstate_blob; checkov cannot statically trace the interpolated blobServices target_resource_id.
@@ -106,7 +106,7 @@ resource "azurerm_storage_account_customer_managed_key" "tfstate" {
 
 # Audit every read/write/delete against Terraform state to the bootstrap
 # workspace. State access is security-sensitive, so this is enabled from day one
-# rather than waiting for the Stage 02 central logging build-out.
+# rather than waiting for the subscription baseline central logging build-out.
 resource "azurerm_monitor_diagnostic_setting" "tfstate_blob" {
   name                       = "diag-tfstate-blob"
   target_resource_id         = "${azurerm_storage_account.tfstate.id}/blobServices/default"

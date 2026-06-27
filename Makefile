@@ -12,11 +12,11 @@ BOOTSTRAP_DIR := infrastructure/terraform/_bootstrap
 PLANNABLE_TERRAFORM_DIRS := $(filter-out $(BOOTSTRAP_DIR) infrastructure/terraform/_modules/%,$(TERRAFORM_DIRS))
 HELM_CHART_DIRS := $(shell find . -type f -name 'Chart.yaml' -not -path './.git/*' -not -path './templates/*/skeleton/*' -not -path './golden-path-requests/*' -exec dirname {} \; 2>/dev/null | sort -u)
 K8S_MANIFESTS := $(shell find platform-gitops templates/_partials -type f \( -name '*.yaml' -o -name '*.yml' \) -not -path 'templates/_partials/mkdocs.yml' -not -path 'templates/_partials/on-call-annotations.yaml' 2>/dev/null | sort)
-STAGE08_ALERT_RULES := $(shell { find platform-gitops/clusters/_base/addon-config/observability -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null; printf '%s\n' infrastructure/terraform/platform/monitoring.tf; } | sort)
+OBSERVABILITY_ALERT_RULES := $(shell { find platform-gitops/clusters/_base/addon-config/observability -type f \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null; printf '%s\n' infrastructure/terraform/platform/monitoring.tf; } | sort)
 CONTRACT_REQUESTS := $(shell find docs/contracts -type f \( -path '*/examples/*.yaml' -o -name 'vending-request.yaml' \) ! -name 'team-onboarding-request.yaml' 2>/dev/null | sort)
 CONTRACT_NEGATIVE_REQUESTS := $(shell find docs/contracts/tests -type f -name '*.yaml' 2>/dev/null | sort)
 
-.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts gitops-contracts observability-contracts backstage-contracts onboarding-contracts golden-path-contracts stage07-contracts stage08-contracts stage09-contracts stage10-contracts stage11-contracts alert-runbook-lint finops-cost-test cost-allocator-package azure-test-stage08 azure-test-stage09 policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
+.PHONY: help bootstrap lint pre-commit validate terraform-fmt terraform-validate tflint checkov kubeconform helm-lint contract-test workflow-contracts gitops-contracts observability-contracts backstage-contracts onboarding-contracts golden-path-contracts alert-runbook-lint finops-cost-test cost-allocator-package azure-test-observability azure-test-backstage policy-test-rego policy-test-kyverno policy-test-azure policy-test-firewall plan apply docs bootstrap-init bootstrap-tf-init bootstrap-import bootstrap-plan bootstrap-apply
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -132,32 +132,26 @@ contract-test: ## Validate public request contracts and negative fixtures.
 	fi
 
 workflow-contracts: ## Validate reusable CI/CD workflow contracts.
-	$(PYTHON) scripts/workflows/validate_stage06_workflows.py
+	$(PYTHON) scripts/workflows/validate_supply_chain_workflows.py
 
 gitops-contracts: ## Validate GitOps, Flux, and Kyverno contracts.
-	$(PYTHON) scripts/gitops/validate_stage07_gitops.py
+	$(PYTHON) scripts/gitops/validate_gitops.py
 
 observability-contracts: alert-runbook-lint finops-cost-test ## Validate observability, SRE, and FinOps contracts.
-	$(PYTHON) scripts/observability/validate_stage08_observability.py
+	$(PYTHON) scripts/observability/validate_observability.py
 
 backstage-contracts: ## Validate Backstage portal contracts.
-	$(PYTHON) scripts/backstage/validate_stage09_backstage.py
+	$(PYTHON) scripts/backstage/validate_backstage.py
 
 onboarding-contracts: ## Validate multi-tenancy, onboarding, and ownership contracts.
-	$(PYTHON) scripts/backstage/validate_stage10_multitenancy.py
+	$(PYTHON) scripts/backstage/validate_multitenancy.py
 	bash scripts/test/onboarding-smoke.sh
 
 golden-path-contracts: ## Validate golden-path template contracts.
-	$(PYTHON) scripts/backstage/validate_stage11_golden_paths.py
-
-stage07-contracts: gitops-contracts ## Compatibility alias for GitOps contracts.
-stage08-contracts: observability-contracts ## Compatibility alias for observability contracts.
-stage09-contracts: backstage-contracts ## Compatibility alias for Backstage contracts.
-stage10-contracts: onboarding-contracts ## Compatibility alias for onboarding contracts.
-stage11-contracts: golden-path-contracts ## Compatibility alias for golden-path contracts.
+	$(PYTHON) scripts/backstage/validate_golden_paths.py
 
 alert-runbook-lint: ## Ensure Prometheus alert rules carry runbook_url annotations.
-	$(PYTHON) scripts/observability/lint_alert_runbooks.py $(STAGE08_ALERT_RULES)
+	$(PYTHON) scripts/observability/lint_alert_runbooks.py $(OBSERVABILITY_ALERT_RULES)
 
 finops-cost-test: ## Test cost showback allocation logic and Function packaging.
 	$(PYTHON) scripts/finops/test_cost_showback.py
@@ -165,11 +159,11 @@ finops-cost-test: ## Test cost showback allocation logic and Function packaging.
 cost-allocator-package: ## Build the deterministic cost allocator Function App ZIP.
 	bash scripts/cost-allocator/package-function.sh
 
-azure-test-stage08: ## Run Azure CLI read-only validation for deployed observability resources.
-	bash scripts/azure/validate_stage08_azure.sh
+azure-test-observability: ## Run Azure CLI read-only validation for deployed observability resources.
+	bash scripts/azure/validate_observability_azure.sh
 
-azure-test-stage09: ## Run Azure CLI read-only validation for deployed Backstage resources.
-	bash scripts/azure/validate_stage09_azure.sh
+azure-test-backstage: ## Run Azure CLI read-only validation for deployed Backstage resources.
+	bash scripts/azure/validate_backstage_azure.sh
 
 policy-test-rego: ## Test OPA/Rego policies with conftest fixtures.
 	$(MISE_EXEC) conftest test --namespace terraform.tags --policy policies/rego policies/rego/fixtures/compliant-terraform-plan.json
@@ -231,5 +225,5 @@ bootstrap-plan: ## Terraform plan for the _bootstrap stack.
 bootstrap-apply: ## Terraform apply for the _bootstrap stack.
 	cd $(BOOTSTRAP_DIR) && $(MISE_EXEC) terraform apply -input=false -lock-timeout=120s
 
-docs: ## List Markdown documentation included in the current stage.
-	@find README.md CONTRIBUTING.md docs plan -type f -name '*.md' | sort
+docs: ## List Markdown documentation.
+	@find README.md CONTRIBUTING.md docs -type f -name '*.md' | sort

@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 07 - GitOps and in-cluster platform
+- Capability: GitOps platform
 
 ## Context
 
@@ -41,6 +41,6 @@ Identity and Key Vault RBAC, not static credentials.
 
 ## References
 
-- [`platform-gitops/clusters/_base/platform/secrets.yaml`](../../platform-gitops/clusters/_base/platform/secrets.yaml)
+- [`platform-gitops/clusters/_base/controllers/platform/secrets-store-csi-driver.yaml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/platform-gitops/clusters/_base/controllers/platform/secrets-store-csi-driver.yaml)
 - [`docs/runbooks/secret-rotation.md`](../runbooks/secret-rotation.md)
-- [`plan/stages/stage-07-gitops-incluster.md`](../../plan/stages/stage-07-gitops-incluster.md)
+- [GitOps platform](../how-it-works/gitops.md)

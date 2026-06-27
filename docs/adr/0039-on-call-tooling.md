@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-12
-- Stage: Stage 08 - Observability, SRE, FinOps
+- Capability: observability, SRE & FinOps
 
 ## Context
 
@@ -34,12 +34,12 @@ workspace IDs are committed.
 
 | Alternative | Reason not chosen |
 |-------------|-------------------|
-| Custom PagerDuty webhook only | Bypasses the Azure-native ITSM connector path selected for Stage 08. |
+| Custom PagerDuty webhook only | Bypasses the Azure-native ITSM connector path selected for observability, SRE & FinOps. |
 | Email-only alerting | Insufficient for SEV1 paging and escalation. |
 | In-cluster Alertmanager as the only router | Useful for Kubernetes-local alerts, but Azure control-plane alerts still need Action Groups. |
 
 ## References
 
-- [`infrastructure/terraform/platform/monitoring.tf`](../../infrastructure/terraform/platform/monitoring.tf)
-- [`platform-gitops/clusters/_base/addon-config/observability/alerts/platform-slo-alerts.yaml`](../../platform-gitops/clusters/_base/addon-config/observability/alerts/platform-slo-alerts.yaml)
-- [`plan/stages/stage-08-observability-sre-finops.md`](../../plan/stages/stage-08-observability-sre-finops.md)
+- [`infrastructure/terraform/platform/monitoring.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/monitoring.tf)
+- [`infrastructure/terraform/platform/monitoring.tf`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/infrastructure/terraform/platform/monitoring.tf)
+- [observability, SRE & FinOps](../how-it-works/observability-sre-finops.md)

@@ -2,12 +2,12 @@
 
 - Status: accepted
 - Date: 2026-06-11
-- Stage: Stage 06 - CI/CD and software supply chain
+- Capability: supply chain & CI/CD
 
 ## Context
 
 Reusable workflows, Helm charts, templates, and later Backstage plugins need a
-consistent release signal. The repository is currently stage-driven, so full
+consistent release signal. The repository is currently roadmap-driven, so full
 Release Please automation is not enabled yet, but commit semantics should be
 stable before generated golden-path repositories consume these workflows.
 
@@ -18,7 +18,7 @@ workflow, Helm chart, template, and plugin changes.
 
 1. Feature changes use `feat:`, fixes use `fix:`, and breaking changes include
    the `!` marker or `BREAKING CHANGE:` footer.
-2. Stage implementation branches may contain ordinary local commits, but PR
+2. Capability implementation branches may contain ordinary local commits, but PR
    titles and release-bound commits must use Conventional Commit syntax.
 3. Release Please is the preferred future release automation for reusable
    workflows, Helm charts, Backstage plugins, and templates once the repository
@@ -42,4 +42,4 @@ workflow, Helm chart, template, and plugin changes.
 ## References
 
 - [`docs/runbooks/release.md`](../runbooks/release.md)
-- [`plan/stages/stage-06-cicd-supply-chain.md`](../../plan/stages/stage-06-cicd-supply-chain.md)
+- [Supply chain & CI/CD](../how-it-works/supply-chain-cicd.md)

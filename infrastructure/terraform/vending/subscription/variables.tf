@@ -202,6 +202,6 @@ variable "spoke_virtual_network" {
     hub_network_resource_id = optional(string, "")
     resource_group_name     = optional(string, "")
   })
-  description = "Optional workload spoke VNet to create and peer to the Stage 03 hub."
+  description = "Optional workload spoke VNet to create and peer to the connectivity & egress hub."
   default     = null
 }

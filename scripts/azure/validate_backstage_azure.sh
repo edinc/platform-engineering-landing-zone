@@ -29,7 +29,7 @@ done
 
 if [ "${#missing[@]}" -gt 0 ]; then
   echo "Missing required environment variables: ${missing[*]}" >&2
-  echo "This read-only check expects deployed Stage 09 resource names; no Azure resources were modified." >&2
+  echo "This read-only check expects deployed Backstage resource names; no Azure resources were modified." >&2
   exit 2
 fi
 

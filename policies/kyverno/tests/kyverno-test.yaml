@@ -1,4 +1,4 @@
-name: stage07-kyverno-baseline
+name: gitops-kyverno-baseline
 policies:
   - ../require-standard-labels.yaml
   - ../disallow-latest-image-tag.yaml

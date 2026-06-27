@@ -1,6 +1,6 @@
 # Bootstrap-scoped monitoring for break-glass account activation (acceptance
-# criterion 3). This is a minimal Phase 1 workspace; Stage 02 introduces the
-# central Log Analytics workspace and Defender for Cloud.
+# criterion 3). This is a minimal Phase 1 workspace; subscription baseline configures
+# Defender for Cloud and routes diagnostics to the central Log Analytics workspace.
 #
 # The Entra ID diagnostic setting that routes SigninLogs/AuditLogs into this
 # workspace is a tenant-level operation that the bootstrap deploy identity

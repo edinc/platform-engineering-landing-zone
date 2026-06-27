@@ -33,7 +33,7 @@ output "subscription_baseline_handoff" {
     subscription_alias    = var.subscription_alias_name
     subscription_workload = var.subscription_workload
   }
-  description = "Stage 02 backend and target hints for post-vending subscription baseline."
+  description = "Backend and target hints for post-vending subscription baseline."
 }
 
 output "backend_config_hint" {

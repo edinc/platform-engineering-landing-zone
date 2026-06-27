@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-09
-- Stage: Stage 01 - Bootstrap and secret zero
+- Capability: Azure foundation
 
 ## Context
 
@@ -31,7 +31,7 @@ Microsoft Graph permissions.**
    workflow surfaces configuration as GitHub Actions **variables**, not secrets.
 
 2. **Subject = environment.** The federated credential subject is
-   `repo:<owner>/<repo>:environment:<environment>` (for Stage 01,
+   `repo:<owner>/<repo>:environment:<environment>` (for Azure foundation,
    `environment:bootstrap`). Branch gating is enforced by the GitHub Environment
    deployment-branch policy (ADR-0023), not by a branch-scoped subject. This
    keeps one credential per environment and lets environment protection rules
@@ -42,7 +42,7 @@ Microsoft Graph permissions.**
    Global Administrator running `scripts/bootstrap/bootstrap-init.sh`. Terraform
    (`_bootstrap`) manages **only Azure ARM resources** (the `azurerm` and `time`
    providers); it does not use the `azuread` provider and is never granted any
-   Microsoft Graph permission. This is a deliberate deviation from the stage
+   Microsoft Graph permission. This is a deliberate deviation from the roadmap
    deliverable wording ("state.tf: state, KV, OIDC app regs"): managing OIDC apps
    in Terraform would require Graph write on the deploy identity, which we reject.
 
@@ -57,15 +57,15 @@ Microsoft Graph permissions.**
 
    Root management group roles (`Contributor`, `Resource Policy Contributor`) are
    an explicit, off-by-default opt-in (`--grant-root-mg`) for future
-   tenant-scope work, not required by Stage 02, and never tenant-wide `Graph.*`
+   tenant-scope work, not required by subscription baseline, and never tenant-wide `Graph.*`
    or `Owner` at subscription scope.
 
-5. **Later stages own their identities.** Each later stage provisions its own
+5. **Later capabilities own their identities.** Each later capability provisions its own
    federated identity and scopes through the same admin-run pattern; the bootstrap
-   identity is not a factory for other identities. Stage 01 deliberately ships only
+   identity is not a factory for other identities. Azure foundation deliberately ships only
    the single `sp-pe-bootstrap-<loc>` app; generalizing `bootstrap-init.sh` into a
-   reusable per-stage identity helper (parameterized app name, environment subject,
-   and role set) is a future hardening item, so later stages do not reuse the
+   reusable per-capability identity helper (parameterized app name, environment subject,
+   and role set) is a future hardening item, so later capabilities do not reuse the
    bootstrap identity or hand it broader root-management-group roles.
 
 ## Consequences
@@ -91,8 +91,8 @@ Microsoft Graph permissions.**
 
 ## References
 
-- [`plan/stages/stage-01-bootstrap-secret-zero.md`](../../plan/stages/stage-01-bootstrap-secret-zero.md)
-- [`scripts/bootstrap/bootstrap-init.sh`](../../scripts/bootstrap/bootstrap-init.sh)
-- [`.github/workflows/bootstrap.yml`](../../.github/workflows/bootstrap.yml)
+- [Azure foundation](../how-it-works/foundation.md)
+- [`scripts/bootstrap/bootstrap-init.sh`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/scripts/bootstrap/bootstrap-init.sh)
+- [`.github/workflows/bootstrap.yml`](https://github.com/edinc/platform-engineering-landing-zone/blob/main/.github/workflows/bootstrap.yml)
 - [ADR-0023: SCM branching and GitHub Environments](0023-scm-branching.md)
 - [ADR-0014: Terraform remote state model](0014-terraform-state.md)
