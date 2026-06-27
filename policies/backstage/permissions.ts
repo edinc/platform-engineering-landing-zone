@@ -4,5 +4,5 @@ export {
   validateOwnershipRequired,
 } from './ownership-required';
 
-export const stage09BackstagePermissionPolicySource =
+export const backstagePermissionPolicySource =
   '../../backstage/app/packages/backend/src/plugins/platformPermissionPolicy';

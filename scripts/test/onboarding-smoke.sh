@@ -21,8 +21,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "Validating Stage 10 repository contracts..."
-python3 "${ROOT}/scripts/backstage/validate_stage10_multitenancy.py"
+echo "Validating onboarding repository contracts..."
+python3 "${ROOT}/scripts/backstage/validate_multitenancy.py"
 
 echo "Validating TeamOnboardingRequest example..."
 ruby -rjson -ryaml -e 'puts JSON.pretty_generate(YAML.safe_load_file(ARGV.fetch(0), aliases: false))' \
@@ -75,12 +75,12 @@ YAML
 echo "Validating NamespaceVendingRequest object-id contract..."
 ruby -rjson -ryaml -e 'puts JSON.pretty_generate(YAML.safe_load_file(ARGV.fetch(0), aliases: false))' \
   "${TMP_DIR}/namespace-object-id.yaml" > "${TMP_DIR}/namespace-object-id.json"
-STAGE10_SMOKE_TMP_DIR="$TMP_DIR" python3 - <<'PY'
+ONBOARDING_SMOKE_TMP_DIR="$TMP_DIR" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
 
-tmp_dir = Path(os.environ["STAGE10_SMOKE_TMP_DIR"])
+tmp_dir = Path(os.environ["ONBOARDING_SMOKE_TMP_DIR"])
 request = json.loads((tmp_dir / "namespace-object-id.json").read_text())
 assert request["kind"] == "NamespaceVendingRequest"
 assert request["spec"]["namespace"]["entraGroupObjectId"]
@@ -120,7 +120,7 @@ cat > "${EGRESS_PATCH_DIR}/stage10-smoke-egress.json" <<EOF
       "namespace": "stage10-smoke-demo",
       "dataClassification": "internal",
       "expiresOn": "${expires_on}",
-      "businessJustification": "Stage 10 smoke test fixture"
+      "businessJustification": "Onboarding smoke test fixture"
     }
   },
   "applyTo": "policies/azure/firewall/allowlist.json"
@@ -159,12 +159,12 @@ spec:
             - port: "443"
               protocol: TCP
 YAML
-STAGE10_SMOKE_TMP_DIR="$TMP_DIR" python3 - <<'PY'
+ONBOARDING_SMOKE_TMP_DIR="$TMP_DIR" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
 
-tmp_dir = Path(os.environ["STAGE10_SMOKE_TMP_DIR"])
+tmp_dir = Path(os.environ["ONBOARDING_SMOKE_TMP_DIR"])
 allowlist_path = tmp_dir / "allowlist.json"
 patch_path = tmp_dir / "exception-patches/stage10-smoke-egress.json"
 allowlist = json.loads(allowlist_path.read_text())
@@ -187,7 +187,7 @@ EGRESS_PATCH_DIR="$EGRESS_PATCH_DIR" \
 EGRESS_OVERLAYS_DIR="${TMP_DIR}/overlays" \
 python3 "${ROOT}/scripts/policy/validate_egress_exception_patches.py"
 
-if [ "${STAGE10_SMOKE_AZURE:-false}" = "true" ]; then
+if [ "${ONBOARDING_SMOKE_AZURE:-false}" = "true" ]; then
   for tool in az jq; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       echo "ERROR: Missing required Azure CLI tool: $tool" >&2
@@ -206,7 +206,7 @@ if [ "${STAGE10_SMOKE_AZURE:-false}" = "true" ]; then
     if [ -z "${!name:-}" ]; then missing+=("$name"); fi
   done
   if [ "${#missing[@]}" -gt 0 ]; then
-    echo "ERROR: Missing Stage 10 Azure smoke variables: ${missing[*]}" >&2
+    echo "ERROR: Missing onboarding Azure smoke variables: ${missing[*]}" >&2
     exit 2
   fi
 
@@ -222,9 +222,9 @@ if [ "${STAGE10_SMOKE_AZURE:-false}" = "true" ]; then
     --name "$PLATFORM_ACR_NAME" \
     --query "{name:name,anonymousPull:anonymousPullEnabled,adminUser:adminUserEnabled}" \
     -o table
-  if [ -n "${STAGE10_SMOKE_ENTRA_GROUP_OBJECT_ID:-}" ]; then
-    az ad group show --group "$STAGE10_SMOKE_ENTRA_GROUP_OBJECT_ID" --query "{displayName:displayName,id:id}" -o table
+  if [ -n "${ONBOARDING_SMOKE_ENTRA_GROUP_OBJECT_ID:-}" ]; then
+    az ad group show --group "$ONBOARDING_SMOKE_ENTRA_GROUP_OBJECT_ID" --query "{displayName:displayName,id:id}" -o table
   fi
 fi
 
-echo "Stage 10 onboarding smoke test passed."
+echo "Onboarding smoke test passed."

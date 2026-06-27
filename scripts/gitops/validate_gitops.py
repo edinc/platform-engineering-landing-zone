@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Stage 07 GitOps and in-cluster platform contracts."""
+"""Validate GitOps platform contracts."""
 
 from pathlib import Path
 import re
@@ -277,7 +277,7 @@ def main() -> None:
     validate_policies()
     validate_gitops_seed()
     validate_terraform_and_workflows()
-    print("Stage 07 GitOps contracts validated.")
+    print("GitOps contracts validated.")
 
 
 if __name__ == "__main__":

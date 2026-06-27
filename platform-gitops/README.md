@@ -45,8 +45,8 @@ Before setting `enable_gitops = true` in the platform Terraform stack, confirm:
 3. Private repository access is configured through a supported Flux provider,
    and strict post-build substitution replaces the cluster-state source URL,
    branch, provider, DNS, Key Vault, and Workload Identity values.
-4. The Stage 05 `vend-namespace.yml` workflow can open a PR into `tenants/`.
-5. `make stage07-contracts stage08-contracts stage09-contracts policy-test-kyverno kubeconform` passes in this repo.
+4. The tenancy-vending `vend-namespace.yml` workflow can open a PR into `tenants/`.
+5. `make gitops-contracts observability-contracts backstage-contracts policy-test-kyverno kubeconform` passes in this repo.
 
 The tree under `platform-gitops/` is a seed template. Terraform mirrors
 `policies/kyverno/*.yaml` into

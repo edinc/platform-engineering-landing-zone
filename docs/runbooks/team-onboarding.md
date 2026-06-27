@@ -81,6 +81,6 @@ Before enabling golden paths for a tenant, run:
 scripts/test/onboarding-smoke.sh
 ```
 
-Set `STAGE10_SMOKE_AZURE=true` plus the documented environment variables in the
+Set `ONBOARDING_SMOKE_AZURE=true` plus the documented environment variables in the
 script to perform read-only Azure checks against deployed Backstage and onboarding
 prerequisites.
