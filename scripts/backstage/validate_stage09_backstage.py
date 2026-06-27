@@ -582,7 +582,7 @@ def validate_workflows_and_docs() -> None:
     require_contains("docs/runbooks/README.md", "backstage-ops.md")
     for adr in ["0020-build-vs-buy.md", "0041-backstage-rbac.md", "0042-techdocs-storage.md", "0052-backstage-postgres-auth.md"]:
         require_contains(f"docs/adr/{adr}", "Status: accepted")
-        require_contains(f"docs/adr/{adr}", "Stage 09")
+        require_contains(f"docs/adr/{adr}", "developer portal")
     require_contains("docs/adr/README.md", "0041 | Backstage RBAC | Accepted")
     require_contains("scripts/azure/validate_stage09_azure.sh", "az storage account show")
     require_contains("scripts/azure/validate_stage09_azure.sh", "az aks show")
