@@ -1,0 +1,32 @@
+---
+import GoldenPath from "../islands/GoldenPath.svelte";
+---
+
+<section class="section gp-section" id="golden-path">
+  <div class="container">
+    <header class="gp-section__head">
+      <h2>The life of a request</h2>
+      <p class="section-lead">
+        Follow one namespace request along a golden path, from a Backstage form to
+        a running, governed namespace. Every hop produces a real, reviewable
+        artifact. Press play, or step through it yourself.
+      </p>
+    </header>
+    <GoldenPath client:visible />
+  </div>
+</section>
+
+<style>
+  .gp-section {
+    padding-block: var(--section-y);
+  }
+  .gp-section__head {
+    max-width: 56rem;
+  }
+  .gp-section__head h2 {
+    font-size: var(--text-h2);
+  }
+  .gp-section__head .section-lead {
+    margin-top: var(--s-md);
+  }
+</style>

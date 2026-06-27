@@ -1,0 +1,233 @@
+---
+import { withBase } from "../lib/base";
+import Icon from "./Icon.astro";
+
+const without = [
+  "Every team relearns Azure networking, AKS, identity and CI from scratch.",
+  "Snowflake infrastructure: no two environments built or secured the same way.",
+  "Security and compliance bolted on late, by hand, and easy to skip.",
+  "Delivery is slow and unsafe; the cloud's full complexity sits on every developer.",
+];
+
+const withPlatform = [
+  "Golden paths package the platform's decisions into a supported default route.",
+  "Self-service vending turns a reviewed request into identity, RBAC, quota and a namespace.",
+  "Security, signing, policy and cost tags are wired in from the first commit.",
+  "Developers reach a running, governed service without carrying the whole cloud.",
+];
+---
+
+<section class="section what" id="what">
+  <div class="container">
+    <header class="what__head">
+      <h2>What is platform engineering?</h2>
+      <p class="section-lead">
+        Platform engineering builds an <a href={withBase("/glossary#idp")}
+          >Internal Developer Platform</a
+        >: a product, made by a dedicated team, that gives every other team a
+        paved road to production. It treats the cloud's complexity as a problem
+        to be abstracted once, well, instead of solved badly many times.
+      </p>
+    </header>
+
+    <div class="compare">
+      <article class="compare__panel compare__panel--before">
+        <div class="compare__label">
+          <span class="compare__tag compare__tag--before">Without a platform</span>
+        </div>
+        <ul role="list" class="compare__list">
+          {
+            without.map((t) => (
+              <li>
+                <span class="compare__bullet compare__bullet--x" aria-hidden="true" />
+                <span>{t}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+
+      <div class="compare__arrow" aria-hidden="true">
+        <Icon name="arrow-right" size={22} />
+      </div>
+
+      <article class="compare__panel compare__panel--after">
+        <div class="compare__label">
+          <span class="compare__tag compare__tag--after">With a paved platform</span>
+        </div>
+        <ul role="list" class="compare__list">
+          {
+            withPlatform.map((t) => (
+              <li>
+                <span class="compare__bullet compare__bullet--check" aria-hidden="true">
+                  <Icon name="check" size={13} stroke={2.4} />
+                </span>
+                <span>{t}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+    </div>
+
+    <div class="tenets">
+      <div class="tenet">
+        <h3>Reduce cognitive load</h3>
+        <p>
+          The platform absorbs the parts of the cloud a product team shouldn't
+          have to master, so they keep their attention on their service.
+        </p>
+      </div>
+      <div class="tenet">
+        <h3>The platform is a product</h3>
+        <p>
+          An <a href={withBase("/glossary#enabling-team")}>enabling team</a> runs
+          it with golden paths as features, real users, and a roadmap, not a ticket
+          queue.
+        </p>
+      </div>
+      <div class="tenet">
+        <h3>Guardrails, not gates</h3>
+        <p>
+          You build it, you run it, on rails. The safe, compliant choice is the
+          default choice; stepping off the path is a deliberate, reviewed exception.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .section {
+    padding-block: var(--section-y);
+  }
+  .what__head {
+    max-width: 60rem;
+  }
+  .what__head h2 {
+    font-size: var(--text-h2);
+  }
+  .section-lead {
+    margin-top: var(--s-md);
+  }
+
+  .compare {
+    margin-top: var(--s-xl);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
+    gap: var(--s-md);
+  }
+  .compare__panel {
+    border-radius: var(--radius-lg);
+    padding: clamp(1.25rem, 1rem + 1.5vw, 2rem);
+    border: var(--hair) solid var(--hairline);
+  }
+  .compare__panel--before {
+    background: var(--surface-sunken);
+  }
+  .compare__panel--after {
+    background:
+      linear-gradient(var(--bg), var(--bg)) padding-box,
+      linear-gradient(160deg, var(--accent), var(--accent-deep)) border-box;
+    border: 1.5px solid transparent;
+    box-shadow: var(--shadow-md);
+  }
+  .compare__tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--w-medium);
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-pill);
+  }
+  .compare__tag--before {
+    color: var(--muted);
+    background: color-mix(in oklab, var(--muted) 12%, transparent);
+  }
+  .compare__tag--after {
+    color: var(--accent-deep);
+    background: var(--accent-wash);
+  }
+  .compare__list {
+    margin-top: var(--s-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-sm);
+  }
+  .compare__list li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.7rem;
+    align-items: start;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .compare__panel--before .compare__list li {
+    color: var(--muted);
+  }
+  .compare__bullet {
+    margin-top: 0.28rem;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+  }
+  .compare__bullet--x {
+    margin-top: 0.5rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: var(--muted);
+    opacity: 0.45;
+  }
+  .compare__bullet--check {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .compare__arrow {
+    align-self: center;
+    color: var(--faint);
+  }
+
+  .tenets {
+    margin-top: var(--s-xl);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(1.5rem, 1rem + 2vw, 3rem);
+    padding-top: var(--s-lg);
+    border-top: var(--hair) solid var(--hairline);
+  }
+  .tenet h3 {
+    font-size: 1.15rem;
+  }
+  .tenet h3::before {
+    content: "";
+    display: block;
+    width: 28px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--accent);
+    margin-bottom: 0.85rem;
+  }
+  .tenet p {
+    margin-top: 0.5rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 820px) {
+    .compare {
+      grid-template-columns: 1fr;
+    }
+    .compare__arrow {
+      transform: rotate(90deg);
+      justify-self: center;
+    }
+    .tenets {
+      grid-template-columns: 1fr;
+      gap: var(--s-lg);
+    }
+  }
+</style>

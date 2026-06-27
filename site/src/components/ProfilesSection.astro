@@ -1,0 +1,43 @@
+---
+import ProfileSwitcher from "../islands/ProfileSwitcher.svelte";
+---
+
+<section class="section prof-section" id="profiles">
+  <div class="container">
+    <header class="prof-section__head">
+      <h2>One codebase, three profiles</h2>
+      <p class="section-lead">
+        The same Terraform targets <code>demo</code>, <code>nonprod</code> and
+        <code>prod</code>. It stays approachable and cheap to evaluate, yet
+        production-capable at full tier. Switch a profile to see how posture
+        shifts across cost, availability and security.
+      </p>
+    </header>
+    <ProfileSwitcher client:visible />
+  </div>
+</section>
+
+<style>
+  .prof-section {
+    padding-block: var(--section-y);
+    background: var(--surface);
+    border-block: var(--hair) solid var(--hairline);
+  }
+  .prof-section__head {
+    max-width: 56rem;
+  }
+  .prof-section__head h2 {
+    font-size: var(--text-h2);
+  }
+  .prof-section__head .section-lead {
+    margin-top: var(--s-md);
+  }
+  .prof-section__head code {
+    font-size: 0.88em;
+    background: var(--bg);
+    padding: 0.08em 0.4em;
+    border-radius: var(--radius-sm);
+    border: var(--hair) solid var(--hairline);
+    color: var(--accent-deep);
+  }
+</style>

@@ -1,0 +1,386 @@
+---
+import { withBase, REPO, repoPath } from "../lib/base";
+import Icon from "./Icon.astro";
+---
+
+<section class="hero">
+  <div class="container hero__grid">
+    <div class="hero__copy">
+      <p class="eyebrow reveal" style="--i:0">
+        <span class="eyebrow__dot" aria-hidden="true"></span> An interactive guide to platform
+        engineering
+      </p>
+      <h1 class="hero__title reveal" style="--i:1">
+        The paved road from <span class="hero__mono">commit</span> to a running, governed
+        service.
+      </h1>
+      <p class="hero__lead reveal" style="--i:2">
+        Platform engineering turns hard-won Azure, Kubernetes and supply-chain
+        decisions into golden paths, so developers ship without carrying the whole
+        cloud in their head. This is a tour of those ideas, built on a real,
+        opinionated Internal Developer Platform that proves each one.
+      </p>
+      <div class="hero__cta reveal" style="--i:3">
+        <a class="btn btn--primary" href={withBase("/#architecture")}>
+          Explore the architecture
+          <Icon name="arrow-right" size={18} />
+        </a>
+        <a class="btn btn--ghost" href={repoPath("docs/how-it-works/README.md")} target="_blank" rel="noopener">
+          Read the docs
+        </a>
+        <a class="btn btn--quiet" href={REPO} target="_blank" rel="noopener">
+          <Icon name="github" size={17} /> GitHub
+        </a>
+      </div>
+      <p class="hero__meta reveal mono" style="--i:4">
+        Internal Developer Platform · Azure · GitOps · secure by default · WCAG&nbsp;AA
+      </p>
+    </div>
+
+    <figure class="hero__figure reveal" style="--i:3">
+      <svg
+        class="schematic"
+        viewBox="0 0 480 528"
+        role="img"
+        aria-label="Schematic: GitHub authenticates to the platform subscription with OIDC and no stored secrets. Inside, a private AKS cluster, container registry, Key Vault and Postgres. Flux reconciles GitOps state into vended team namespaces, and everything reports to Azure Monitor, Defender and Cost Management."
+      >
+        <defs>
+          <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="var(--accent)" stop-opacity="0"></stop>
+            <stop offset="0.5" stop-color="var(--accent)"></stop>
+            <stop offset="1" stop-color="var(--accent)" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+
+        <!-- wires (behind nodes) -->
+        <g class="wires" aria-hidden="true" fill="none" stroke="var(--hairline-strong)" stroke-width="1.5">
+          <path d="M240 86 L240 140" />
+          <path d="M138 260 L138 408" />
+          <path d="M224 437 L252 437" />
+          <path d="M138 468 L138 488" />
+          <path d="M356 468 L356 488" />
+        </g>
+        <!-- animated golden-path flow -->
+        <g class="flows" aria-hidden="true" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round">
+          <path class="flow" d="M240 86 L240 140" />
+          <path class="flow flow--2" d="M138 260 L138 408" />
+          <path class="flow flow--3" d="M224 437 L252 437" />
+        </g>
+
+        <!-- GitHub -->
+        <g class="node">
+          <rect x="40" y="22" width="400" height="64" rx="11" />
+          <text class="t-title" x="64" y="50">GitHub</text>
+          <text class="t-sub" x="64" y="70">reusable workflows · OIDC · cosign · SBOM</text>
+          <g class="node__badge" transform="translate(396, 44)">
+            <circle r="13" class="badge-bg" />
+          </g>
+        </g>
+        <text class="t-wire" x="250" y="118">OIDC · no secrets</text>
+
+        <!-- Platform subscription container -->
+        <g class="frame">
+          <rect x="24" y="140" width="432" height="232" rx="14" />
+          <text class="t-frame" x="42" y="162">Platform subscription</text>
+        </g>
+
+        <!-- AKS (the heart) -->
+        <g class="node node--accent">
+          <rect x="44" y="180" width="188" height="80" rx="10" />
+          <text class="t-title" x="62" y="212">Private AKS</text>
+          <text class="t-sub" x="62" y="232">Workload Identity</text>
+        </g>
+        <!-- ACR -->
+        <g class="node">
+          <rect x="248" y="180" width="188" height="80" rx="10" />
+          <text class="t-title" x="266" y="212">ACR</text>
+          <text class="t-sub" x="266" y="232">signed images</text>
+        </g>
+        <!-- Key Vault -->
+        <g class="node">
+          <rect x="44" y="276" width="188" height="78" rx="10" />
+          <text class="t-title" x="62" y="307">Key Vault</text>
+          <text class="t-sub" x="62" y="327">Private Link</text>
+        </g>
+        <!-- Postgres -->
+        <g class="node">
+          <rect x="248" y="276" width="188" height="78" rx="10" />
+          <text class="t-title" x="266" y="307">Postgres</text>
+          <text class="t-sub" x="266" y="327">HA · PITR</text>
+        </g>
+
+        <!-- Flux -->
+        <g class="node">
+          <rect x="44" y="408" width="180" height="58" rx="10" />
+          <text class="t-title" x="62" y="434">Flux</text>
+          <text class="t-sub" x="62" y="452">GitOps reconcile</text>
+        </g>
+        <!-- Namespaces -->
+        <g class="node">
+          <rect x="252" y="408" width="204" height="58" rx="10" />
+          <text class="t-title" x="270" y="434">Vended namespaces</text>
+          <g class="chips" transform="translate(270, 446)">
+            <rect class="chip" x="0" y="0" width="34" height="12" rx="3" />
+            <rect class="chip" x="40" y="0" width="34" height="12" rx="3" />
+            <rect class="chip" x="80" y="0" width="34" height="12" rx="3" />
+          </g>
+        </g>
+
+        <!-- Monitor bar -->
+        <g class="bar">
+          <rect x="24" y="488" width="432" height="32" rx="9" />
+          <text class="t-bar" x="240" y="508">Azure Monitor · Defender · Cost Management</text>
+        </g>
+      </svg>
+      <figcaption class="hero__caption">
+        One request, one paved road: identity over secrets, GitOps delivery, and
+        governance the whole way down.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-top: clamp(2.5rem, 1rem + 6vw, 5.5rem);
+    padding-bottom: var(--section-y);
+    position: relative;
+    overflow: clip;
+  }
+  /* faint schematic grid backdrop — structure, not decoration */
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--hairline) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--hairline) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(120% 80% at 72% 18%, oklch(0 0 0 / 0.5), transparent 70%);
+    mask-image: radial-gradient(120% 80% at 72% 18%, oklch(0 0 0 / 0.5), transparent 70%);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .hero__grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: clamp(2rem, 1rem + 4vw, 4.5rem);
+    align-items: center;
+  }
+  .hero__title {
+    font-size: var(--text-display);
+    margin-top: var(--s-md);
+    max-width: 15ch;
+  }
+  .hero__mono {
+    font-family: var(--font-mono);
+    font-weight: var(--w-medium);
+    font-size: 0.82em;
+    color: var(--accent-deep);
+    background: var(--accent-wash);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0;
+  }
+  .hero__lead {
+    margin-top: var(--s-md);
+    font-size: var(--text-lead);
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 48ch;
+  }
+  .eyebrow__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-wash);
+  }
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-xs);
+    margin-top: var(--s-lg);
+  }
+  .hero__meta {
+    margin-top: var(--s-lg);
+    color: var(--faint);
+    font-size: var(--text-sm);
+  }
+
+  /* Buttons (shared) */
+  :global(.btn) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2.85rem;
+    padding-inline: 1.15rem;
+    border-radius: var(--radius);
+    font-weight: var(--w-medium);
+    font-size: 0.96rem;
+    line-height: 1;
+    border: var(--hair) solid transparent;
+    transition:
+      transform var(--dur-1) var(--ease-out-quart),
+      background var(--dur-1) var(--ease-out-quart),
+      border-color var(--dur-1) var(--ease-out-quart),
+      box-shadow var(--dur-2) var(--ease-out-quart);
+  }
+  :global(.btn:hover) {
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+  :global(.btn:active) {
+    transform: translateY(0);
+  }
+  :global(.btn--primary) {
+    background: var(--accent);
+    color: var(--accent-ink);
+    box-shadow: var(--shadow-accent);
+  }
+  :global(.btn--primary:hover) {
+    background: var(--accent-deep);
+  }
+  :global(.btn--ghost) {
+    background: var(--bg);
+    color: var(--ink);
+    border-color: var(--hairline-strong);
+  }
+  :global(.btn--ghost:hover) {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+    background: var(--surface);
+  }
+  :global(.btn--quiet) {
+    color: var(--muted);
+    padding-inline: 0.85rem;
+  }
+  :global(.btn--quiet:hover) {
+    color: var(--ink);
+    background: var(--surface-sunken);
+  }
+
+  /* Schematic */
+  .hero__figure {
+    margin: 0;
+  }
+  .schematic {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(var(--shadow-md));
+  }
+  .schematic .frame rect {
+    fill: color-mix(in oklab, var(--surface) 70%, transparent);
+    stroke: var(--hairline-strong);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 5;
+  }
+  .schematic .node rect {
+    fill: var(--surface);
+    stroke: var(--hairline-strong);
+    stroke-width: 1.5;
+  }
+  .schematic .node--accent rect {
+    stroke: var(--accent);
+    fill: var(--accent-wash);
+  }
+  .schematic .bar rect {
+    fill: var(--surface-sunken);
+    stroke: var(--hairline);
+    stroke-width: 1.5;
+  }
+  .schematic .badge-bg {
+    fill: var(--ink);
+  }
+  .schematic .chip {
+    fill: var(--accent);
+    opacity: 0.32;
+  }
+  .schematic text {
+    font-family: var(--font-mono);
+    fill: var(--ink);
+  }
+  .schematic .t-title {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+  }
+  .schematic .node--accent .t-title {
+    fill: var(--accent-deep);
+  }
+  .schematic .t-sub {
+    font-size: 11.5px;
+    fill: var(--muted);
+  }
+  .schematic .t-frame {
+    font-size: 11px;
+    fill: var(--faint);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .schematic .t-wire {
+    font-size: 11px;
+    fill: var(--muted);
+  }
+  .schematic .t-bar {
+    font-size: 11.5px;
+    fill: var(--muted);
+    text-anchor: middle;
+  }
+
+  .schematic .flow {
+    stroke-dasharray: 16 150;
+    stroke-dashoffset: 166;
+    animation: flow 2.6s linear infinite;
+  }
+  .schematic .flow--2 {
+    animation-delay: 0.5s;
+    animation-duration: 3s;
+  }
+  .schematic .flow--3 {
+    animation-delay: 1.1s;
+    animation-duration: 1.4s;
+  }
+  @keyframes flow {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Entrance — content visible by default; this enhances, never gates */
+  .reveal {
+    animation: rise 0.7s var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+
+  .hero__caption {
+    margin-top: var(--s-md);
+    color: var(--faint);
+    font-size: var(--text-sm);
+    max-width: 44ch;
+  }
+
+  @media (max-width: 940px) {
+    .hero__grid {
+      grid-template-columns: 1fr;
+      gap: var(--s-xl);
+    }
+    .hero__figure {
+      max-width: 460px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .schematic .flow {
+      animation: none;
+      stroke-dasharray: none;
+      opacity: 0.55;
+    }
+  }
+</style>
