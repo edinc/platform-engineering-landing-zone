@@ -103,3 +103,52 @@ export const categoryMeta: Record<Category, { label: string; fill: string; ink: 
   availability: { label: "Availability", fill: "var(--cat-3)", ink: "var(--cat-3-ink)" },
   security: { label: "Security", fill: "var(--cat-1)", ink: "var(--cat-1-ink)" },
 };
+
+/** The posture summarised as three meters (max level = 3). The story the section
+ *  tells: cost and resilience scale up demo -> prod, while the security baseline
+ *  stays maxed on every profile. */
+export interface Meter {
+  id: string;
+  label: string;
+  icon: string;
+  category: Category;
+  note?: string;
+  levels: Record<ProfileId, { n: number; word: string }>;
+}
+
+export const meters: Meter[] = [
+  {
+    id: "cost",
+    label: "Monthly cost",
+    icon: "coins",
+    category: "cost",
+    levels: {
+      demo: { n: 1, word: "Lowest" },
+      nonprod: { n: 2, word: "Moderate" },
+      prod: { n: 3, word: "Highest" },
+    },
+  },
+  {
+    id: "resilience",
+    label: "Resilience",
+    icon: "layers",
+    category: "availability",
+    levels: {
+      demo: { n: 1, word: "Single zone" },
+      nonprod: { n: 2, word: "Reduced redundancy" },
+      prod: { n: 3, word: "Zone-redundant + DR" },
+    },
+  },
+  {
+    id: "security",
+    label: "Security baseline",
+    icon: "shield",
+    category: "security",
+    note: "constant",
+    levels: {
+      demo: { n: 3, word: "Full" },
+      nonprod: { n: 3, word: "Full" },
+      prod: { n: 3, word: "Full" },
+    },
+  },
+];
