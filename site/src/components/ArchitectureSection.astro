@@ -1,5 +1,5 @@
 ---
-import ArchitectureExplorer from "../islands/ArchitectureExplorer.svelte";
+import ArchitectureView from "../islands/ArchitectureView.svelte";
 ---
 
 <section class="section arch-section" id="architecture">
@@ -7,15 +7,12 @@ import ArchitectureExplorer from "../islands/ArchitectureExplorer.svelte";
     <header class="arch-section__head">
       <h2>Architecture explorer</h2>
       <p class="section-lead">
-        The platform is a stack of capabilities, each depending on the ones
-        below. Select a layer to see what it is, why it's there, who owns it, and
-        the decision record behind it.
-      </p>
-      <p class="arch-section__hint mono" aria-hidden="true">
-        ↕ arrow keys to move through layers
+        The platform as a real, connected system. Explore the live diagram, or
+        switch to the capability layers. Either way, every component links to what
+        it is, why it's there, who owns it, and the decision record behind it.
       </p>
     </header>
-    <ArchitectureExplorer client:visible />
+    <ArchitectureView client:visible />
   </div>
 </section>
 
@@ -33,10 +30,5 @@ import ArchitectureExplorer from "../islands/ArchitectureExplorer.svelte";
   }
   .arch-section__head .section-lead {
     margin-top: var(--s-md);
-  }
-  .arch-section__hint {
-    margin-top: var(--s-sm);
-    font-size: var(--text-sm);
-    color: var(--faint);
   }
 </style>
