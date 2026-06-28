@@ -31,20 +31,12 @@ Zones, and the Well-Architected Framework.
 
 ## Architecture at a glance
 
-```mermaid
-flowchart LR
-  gh["GitHub: reusable workflows, OIDC, cosign, SBOM"] -->|OIDC, no secrets| az
-  subgraph az["Platform subscription"]
-    aks["Private AKS (Cilium)"]
-    acr["ACR"]
-    kv["Key Vault"]
-    pg["Postgres"]
-  end
-  aks --> flux["Flux (GitOps)"]
-  flux --> portal["Backstage portal"]
-  flux --> tenants["Vended team namespaces"]
-  az --> obs["Azure Monitor / Defender / Cost Management"]
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-dark.png">
+    <img alt="Architecture overview: GitHub reusable workflows federate via OIDC (no secrets) into the platform subscription — a private AKS cluster on Cilium running Flux for GitOps, Kyverno admission, the Backstage portal, and observability, alongside ACR, Key Vault (Private Link), and HA Postgres. A connectivity hub enforces default-deny egress; workload landing zones provide vended namespaces and Azure Service Operator; everything reports to Azure Monitor, Defender, and Cost Management." src="docs/assets/architecture-light.png" width="900">
+  </picture>
+</p>
 
 - **Identity over secrets** — OIDC federation for CI and Workload Identity for
   workloads; no long-lived cloud credentials are stored.
