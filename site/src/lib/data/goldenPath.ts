@@ -4,22 +4,26 @@ export interface Actor {
   id: string;
   label: string;
   fill: string;
+  icon: string;
 }
 
 export const actors: Record<string, Actor> = {
-  developer: { id: "developer", label: "Developer", fill: "var(--cat-7)" },
-  backstage: { id: "backstage", label: "Backstage", fill: "var(--cat-7)" },
-  platform: { id: "platform", label: "Platform repo", fill: "var(--cat-1)" },
-  github: { id: "github", label: "GitHub Actions", fill: "var(--cat-6)" },
-  terraform: { id: "terraform", label: "Terraform", fill: "var(--cat-1)" },
-  flux: { id: "flux", label: "Flux", fill: "var(--cat-4)" },
-  azure: { id: "azure", label: "Azure", fill: "var(--cat-2)" },
+  developer: { id: "developer", label: "Developer", fill: "var(--cat-7)", icon: "terminal" },
+  backstage: { id: "backstage", label: "Backstage", fill: "var(--cat-7)", icon: "compass" },
+  platform: { id: "platform", label: "Platform & security review", fill: "var(--cat-1)", icon: "shield" },
+  github: { id: "github", label: "GitHub Actions", fill: "var(--cat-6)", icon: "git-branch" },
+  terraform: { id: "terraform", label: "Terraform", fill: "var(--cat-1)", icon: "boxes" },
+  flux: { id: "flux", label: "Flux", fill: "var(--cat-4)", icon: "route" },
+  azure: { id: "azure", label: "Azure", fill: "var(--cat-2)", icon: "cpu" },
 };
+
+export type StepKind = "you" | "automated" | "gate" | "outcome";
 
 export interface Step {
   n: number;
   title: string;
   actor: keyof typeof actors;
+  kind: StepKind;
   summary: string;
   artifact: { name: string; lang: string; code: string };
 }
@@ -29,6 +33,7 @@ export const steps: Step[] = [
     n: 1,
     title: "Request a paved road",
     actor: "developer",
+    kind: "you",
     summary:
       "A developer opens the Backstage portal and picks a golden-path template, then describes the service: ownership, product, cost centre, environment and runtime.",
     artifact: {
@@ -48,6 +53,7 @@ onCall: payments-primary`,
     n: 2,
     title: "Reviewed PR, as code",
     actor: "backstage",
+    kind: "automated",
     summary:
       "Backstage checks template permissions through platform RBAC, renders the request as code, and opens a pull request in the platform repository. Nothing is provisioned yet.",
     artifact: {
@@ -69,6 +75,7 @@ spec:
     n: 3,
     title: "Plan-time guardrails",
     actor: "github",
+    kind: "automated",
     summary:
       "The PR runs reusable checks before a human looks: OPA/Rego via conftest validates the request and the Terraform plan, and required tags and ownership are enforced.",
     artifact: {
@@ -85,6 +92,7 @@ PASS - dataClassification is a known value
     n: 4,
     title: "Platform & security review",
     actor: "platform",
+    kind: "gate",
     summary:
       "Platform and security reviewers inspect the generated request. Merge, not authorship, is the trigger: only a reviewed, merged PR provisions anything.",
     artifact: {
@@ -100,6 +108,7 @@ PASS - dataClassification is a known value
     n: 5,
     title: "Terraform provisions identity",
     actor: "terraform",
+    kind: "automated",
     summary:
       "Merge triggers GitHub Actions and Terraform to create the tenancy primitives: a workload identity, scoped role assignments and the namespace's Azure-side bindings.",
     artifact: {
@@ -117,6 +126,7 @@ PASS - dataClassification is a known value
     n: 6,
     title: "Cluster-state PR",
     actor: "github",
+    kind: "automated",
     summary:
       "The workflow opens a pull request in the separate platform-cluster-state repository with the namespace's desired Kubernetes state. Flux watches that repo, not this one.",
     artifact: {
@@ -136,6 +146,7 @@ metadata:
     n: 7,
     title: "Flux reconciles",
     actor: "flux",
+    kind: "automated",
     summary:
       "After the cluster-state PR merges, Flux pulls the desired state and reconciles the cluster. Kyverno admits the resources, applying quota, network policy and a service account.",
     artifact: {
@@ -156,6 +167,7 @@ spec:
     n: 8,
     title: "Running & governed",
     actor: "azure",
+    kind: "outcome",
     summary:
       "The team has an isolated, governed namespace: quota, default-deny networking, a bound identity, cost tags, dashboards and SLOs, ready for the first signed workload.",
     artifact: {
