@@ -1,0 +1,32 @@
+---
+import PersonaJourneys from "../islands/PersonaJourneys.svelte";
+---
+
+<section class="section persona-section" id="personas">
+  <div class="container">
+    <header class="persona-section__head">
+      <h2>Find your path</h2>
+      <p class="section-lead">
+        The same platform serves very different people. Pick the role that fits
+        you to trace a journey through it, and watch the concepts that matter to
+        you light up.
+      </p>
+    </header>
+    <PersonaJourneys client:visible />
+  </div>
+</section>
+
+<style>
+  .persona-section {
+    padding-block: var(--section-y);
+  }
+  .persona-section__head {
+    max-width: 56rem;
+  }
+  .persona-section__head h2 {
+    font-size: var(--text-h2);
+  }
+  .persona-section__head .section-lead {
+    margin-top: var(--s-md);
+  }
+</style>

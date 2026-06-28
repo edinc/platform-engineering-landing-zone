@@ -1,0 +1,34 @@
+---
+import ArchitectureView from "../islands/ArchitectureView.svelte";
+---
+
+<section class="section arch-section" id="architecture">
+  <div class="container">
+    <header class="arch-section__head">
+      <h2>Architecture explorer</h2>
+      <p class="section-lead">
+        The platform as a real, connected system. Explore the live diagram, or
+        switch to the capability layers. Either way, every component links to what
+        it is, why it's there, who owns it, and the decision record behind it.
+      </p>
+    </header>
+    <ArchitectureView client:visible />
+  </div>
+</section>
+
+<style>
+  .arch-section {
+    padding-block: var(--section-y);
+    background: var(--surface);
+    border-block: var(--hair) solid var(--hairline);
+  }
+  .arch-section__head {
+    max-width: 56rem;
+  }
+  .arch-section__head h2 {
+    font-size: var(--text-h2);
+  }
+  .arch-section__head .section-lead {
+    margin-top: var(--s-md);
+  }
+</style>

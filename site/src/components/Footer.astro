@@ -1,0 +1,189 @@
+---
+import { withBase, REPO, repoPath } from "../lib/base";
+import LogoMark from "./LogoMark.astro";
+import Icon from "./Icon.astro";
+
+const cols = [
+  {
+    title: "Learn the concepts",
+    links: [
+      { label: "What & why", href: withBase("/#what") },
+      { label: "Core concepts", href: withBase("/#concepts") },
+      { label: "Architecture explorer", href: withBase("/#architecture") },
+      { label: "Golden-path walkthrough", href: withBase("/#golden-path") },
+      { label: "Cost & FinOps", href: withBase("/#cost") },
+      { label: "Glossary", href: withBase("/glossary") },
+    ],
+  },
+  {
+    title: "Go deeper (repo)",
+    links: [
+      { label: "Reference architecture", href: repoPath("docs/architecture/README.md"), ext: true },
+      { label: "How-it-works guides", href: repoPath("docs/how-it-works/README.md"), ext: true },
+      { label: "Decision records (ADRs)", href: repoPath("docs/adr/README.md"), ext: true },
+      { label: "Golden-path templates", href: repoPath("templates"), ext: true },
+      { label: "Runbooks", href: repoPath("docs/runbooks/README.md"), ext: true },
+    ],
+  },
+];
+---
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div class="footer__brand">
+      <a class="footer__mark" href={withBase("/")} aria-label="Home">
+        <LogoMark size={32} />
+        <span>Platform Engineering Landing Zone</span>
+      </a>
+      <p class="footer__thesis">
+        An opinionated, secure Internal Developer Platform on Azure, and the
+        front door that explains the ideas behind it.
+      </p>
+      <a class="footer__cta" href={REPO} target="_blank" rel="noopener">
+        <Icon name="github" size={18} /> Star the repository
+        <Icon name="arrow-up-right" size={15} />
+      </a>
+    </div>
+
+    {
+      cols.map((col) => (
+        <nav class="footer__col" aria-label={col.title}>
+          <h2 class="footer__col-title">{col.title}</h2>
+          <ul role="list" class="footer__list">
+            {col.links.map((l) => (
+              <li>
+                <a
+                  href={l.href}
+                  {...("ext" in l && l.ext ? { target: "_blank", rel: "noopener" } : {})}
+                >
+                  {l.label}
+                  {"ext" in l && l.ext && <Icon name="arrow-up-right" size={13} />}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))
+    }
+  </div>
+
+  <div class="container footer__base">
+    <p class="footer__note">
+      Conceptual front door: the repository <a
+        href={repoPath("docs")}
+        target="_blank"
+        rel="noopener">docs</a
+      > remain the single source of truth. Figures and walkthroughs use clearly
+      labelled <strong>representative data</strong>; no live endpoints, tenant IDs
+      or secrets.
+    </p>
+    <p class="footer__meta">
+      Built to practise what it preaches. Aligned with CAF, Azure Landing Zones &
+      Well-Architected.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: var(--hair) solid var(--hairline);
+    margin-top: var(--s-3xl);
+    padding-block: var(--s-2xl) var(--s-xl);
+    background: linear-gradient(to bottom, var(--bg), var(--surface));
+  }
+  .footer__grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: clamp(2rem, 1rem + 4vw, 4rem);
+  }
+  .footer__mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--ink);
+    font-weight: var(--w-semibold);
+    font-size: 1.02rem;
+    letter-spacing: -0.01em;
+  }
+  .footer__mark:hover {
+    text-decoration: none;
+    color: var(--accent-deep);
+  }
+  .footer__thesis {
+    margin-top: var(--s-sm);
+    color: var(--muted);
+    max-width: 32ch;
+    font-size: 0.95rem;
+  }
+  .footer__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: var(--s-md);
+    font-weight: var(--w-medium);
+    color: var(--ink);
+  }
+  .footer__cta:hover {
+    color: var(--accent-deep);
+    text-decoration: none;
+  }
+  .footer__col-title {
+    font-size: 0.8rem;
+    font-weight: var(--w-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: var(--s-sm);
+  }
+  .footer__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .footer__list a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .footer__list a:hover {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .footer__list :global(svg) {
+    color: var(--faint);
+  }
+  .footer__base {
+    margin-top: var(--s-2xl);
+    padding-top: var(--s-md);
+    border-top: var(--hair) solid var(--hairline);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-sm);
+  }
+  .footer__note {
+    color: var(--muted);
+    font-size: 0.85rem;
+    max-width: 62ch;
+  }
+  .footer__meta {
+    color: var(--faint);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 760px) {
+    .footer__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .footer__brand {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 460px) {
+    .footer__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

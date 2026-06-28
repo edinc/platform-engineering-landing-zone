@@ -1,6 +1,6 @@
 # Plan: Interactive platform-engineering concepts site (GitHub Pages)
 
-Status: proposed (design brief)
+Status: Phase A built — site implemented in `site/` and validated locally (under PR review); Phase B (GitHub Pages publish) specified below
 Owner: platform engineering / developer relations
 Audience: maintainers building a public educational microsite
 Design: shaped with the impeccable `shape` flow (register `brand`, lane "Engineered-light")
@@ -199,25 +199,134 @@ versions.
 | MkDocs Material | Reuses TechDocs stack | Weak for bespoke interactivity |
 | Custom Vite + Svelte/React | Max control | Most maintenance |
 
-## Deployment — local preview first, Pages later (gated)
+## Deployment — local-first, then GitHub Pages (Phase B)
 
-**This is a hard requirement: validate locally and get sign-off before any
-GitHub Pages deploy.**
+**Hard requirement (satisfied for Phase A):** the site is built and validated
+locally before anything deploys. Phase B publishes the already-built `site/`
+artifact to GitHub Pages. It stays gated — deploys run only from `main`, behind
+an environment-protection approval, and pull requests build-without-deploy for
+validation.
 
-1. **Phase A — local only.** Scaffold `site/` (Astro). Iterate with `astro dev`,
-   then build and serve the **production** build with `astro preview` to validate
-   the real artifact (base-path, hydration, perf, a11y). The maintainer reviews
-   and signs off. **No Pages workflow is enabled and nothing deploys in this
-   phase.**
-2. **Phase B — Pages (only after sign-off).** Add `.github/workflows/pages.yml`
-   using the official Pages actions (`actions/configure-pages`,
-   `actions/upload-pages-artifact`, `actions/deploy-pages`), the `github-pages`
-   environment, and least-privilege `pages: write` + `id-token: write`. Until
-   sign-off the workflow is absent or `workflow_dispatch`-only — it does **not**
-   auto-deploy on push. PRs build for preview validation (no deploy).
-3. Configure Astro `site`/`base` for the project-pages subpath (or a custom
-   domain). Verify the built artifact locally before the first deploy. Cache
-   `node_modules`/build for fast deploys. Optional `CNAME` for a custom domain.
+### Phase A — local only (done)
+
+`site/` is scaffolded (Astro). Iterate with `astro dev`, then validate the
+**production** build via `astro build && astro preview` against the real base
+path (assets, hydration, perf, a11y). No Pages workflow exists yet and nothing
+deploys in this phase; the maintainer reviews and signs off first.
+
+### Phase B — publish to GitHub Pages
+
+Concrete build/deploy facts for this site (keep the workflow in sync with these):
+
+| Setting | Value |
+| --- | --- |
+| Framework / mode | Astro 7, fully static (no SSR adapter) |
+| Project root | `site/` (monorepo subdir; there is **no** root `package.json`) |
+| Build command | `pnpm build` → `astro check && astro build` |
+| Output dir | `site/dist` |
+| Astro `site` | `https://edinc.github.io` |
+| Astro `base` | `/platform-engineering-landing-zone` |
+| Published URL | `https://edinc.github.io/platform-engineering-landing-zone/` |
+| Node | `20.18.1` (`site/.nvmrc`; `engines.node >= 20.18.1`) |
+| Package manager | `pnpm@9.15.4` (`packageManager` pin) |
+
+**Step 1 — one-time repository setup (manual; the maintainer; this is the gate).**
+In **Settings → Pages → Build and deployment**, set **Source = GitHub Actions**
+(no `gh-pages` branch — the build artifact deploys directly). Then add a
+protection rule to the auto-created **`github-pages`** environment requiring a
+maintainer to approve each deployment, so "merged to `main`" still cannot publish
+without a human click. This is the durable form of the local-first sign-off gate.
+
+**Step 2 — add the workflow** `.github/workflows/site-pages.yml`. Build with the
+first-party Pages actions (smaller third-party surface than a bundled action,
+matching this repo's supply-chain posture), upload `site/dist`, and deploy only
+from `main`:
+
+```yaml
+name: Publish concepts site to Pages
+
+# Builds the static Astro site in site/ and deploys it to GitHub Pages.
+# Local-first gate (Phase A) precedes this; deploys run only from main and are
+# further gated by required reviewers on the github-pages environment. Pull
+# requests build (validate) but never deploy. Identity is the Pages OIDC token —
+# there are no long-lived secrets.
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/site-pages.yml"]
+  pull_request:
+    paths: ["site/**", ".github/workflows/site-pages.yml"]
+  workflow_dispatch:
+
+# Least privilege: read the repo, mint the Pages deployment token.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel an in-flight deployment.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: site
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: site/package.json   # uses the pnpm@9.15.4 pin
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: site/.nvmrc          # 20.18.1
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build                            # astro check && astro build
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: site/dist                          # workspace-relative, not site/
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'            # PRs validate; only main deploys
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+Pin every action to a release tag (ideally a commit SHA, per the repo's
+supply-chain stance) and let Dependabot bump them. The official one-liner
+alternative is `withastro/action@v6`
+(`with: { path: ./site, node-version: 20.18.1, package-manager: pnpm@9.15.4 }`),
+which bundles install + build + artifact upload — simpler, but pulls in a
+composite action; prefer the explicit first-party steps above for auditability.
+
+**Step 3 — base path & verification.** Astro `site`/`base` are already set for
+the project-pages subpath, so the built artifact is correct as-is (validated
+locally in Phase A — there is nothing to change at deploy time). After the first
+deploy, verify on the live URL: CSS/JS/font assets resolve under the base path,
+the nav and every interactive island hydrate, the sitemap is at
+`…/platform-engineering-landing-zone/sitemap-index.xml`, and the OG/social card
+resolves. Re-run a secret scan over `site/` before the first publish.
+
+**Optional — custom domain.** Add `site/public/CNAME`, set the domain in
+**Settings → Pages**, and create the DNS record. A custom apex/root domain serves
+from `/`, so change Astro `base` to `/` (the `withBase()` / `repoPath()` helpers
+keep every internal link correct) and re-validate the built artifact locally
+before deploying.
 
 ## Design & quality
 
@@ -268,8 +377,9 @@ GitHub Pages deploy.**
 3. **Architecture explorer** — the flagship interactive diagram.
 4. **Golden-path walkthrough + cost visualization** — the two narrative interactives.
 5. **Personas, glossary, polish** — a11y/perf/SEO pass, social cards.
-6. **Pages deployment** — only after local sign-off: add/enable the gated Pages
-   workflow; optional custom domain.
+6. **GitHub Pages deployment** — after local sign-off, add the gated
+   `.github/workflows/site-pages.yml` and switch Pages to *Source: GitHub
+   Actions* per **Deployment — Phase B** above; optional custom domain.
 
 ## Risks & mitigations
 
