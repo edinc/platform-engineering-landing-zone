@@ -1,0 +1,54 @@
+---
+import { repoPath } from "../lib/base";
+import Icon from "./Icon.astro";
+
+interface Props {
+  label: string;
+  path: string;
+  kind: "guide" | "adr" | "code";
+}
+const { label, path, kind } = Astro.props;
+const iconByKind = { guide: "book", adr: "scale", code: "terminal" } as const;
+---
+
+<a class="chip" href={repoPath(path)} target="_blank" rel="noopener" data-kind={kind}>
+  <Icon name={iconByKind[kind]} size={14} />
+  <span class="chip__label">{label}</span>
+  <Icon name="arrow-up-right" size={12} />
+</a>
+
+<style>
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.32rem 0.6rem;
+    border: var(--hair) solid var(--hairline-strong);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: var(--bg);
+    transition:
+      color var(--dur-1) var(--ease-out-quart),
+      border-color var(--dur-1) var(--ease-out-quart),
+      background var(--dur-1) var(--ease-out-quart);
+  }
+  .chip :global(svg:first-child) {
+    color: var(--faint);
+    transition: color var(--dur-1) var(--ease-out-quart);
+  }
+  .chip__label {
+    color: var(--ink);
+    font-weight: var(--w-medium);
+  }
+  .chip:hover {
+    text-decoration: none;
+    border-color: var(--accent);
+    background: var(--accent-wash);
+    color: var(--accent-deep);
+  }
+  .chip:hover :global(svg) {
+    color: var(--accent-deep);
+  }
+</style>

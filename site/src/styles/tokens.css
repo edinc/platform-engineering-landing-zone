@@ -1,0 +1,150 @@
+/* ============================================================================
+   Design tokens — "Engineered-light"
+   All color in OKLCH. Light is primary; [data-theme="dark"] is secondary and
+   inherits the same structure. See site/DESIGN.md for the rationale.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* --- Brand chrome (restrained) ------------------------------------------ */
+  --bg: oklch(1 0 0);
+  --surface: oklch(0.985 0.002 270);
+  --surface-sunken: oklch(0.965 0.004 270);
+  --ink: oklch(0.23 0.02 270);
+  --muted: oklch(0.45 0.02 270);
+  --faint: oklch(0.555 0.018 270); /* large text / captions only */
+  --accent: oklch(0.52 0.19 270); /* electric indigo — the one signal */
+  --accent-deep: oklch(0.4 0.16 270); /* inline links, hover/active, depth */
+  --accent-ink: oklch(0.985 0.01 270); /* text on accent fills */
+  --accent-wash: oklch(0.965 0.028 270); /* tint behind active states */
+  --hairline: oklch(0.92 0.01 270);
+  --hairline-strong: oklch(0.86 0.012 270);
+  --selection: oklch(0.9 0.06 270);
+
+  /* --- Diagram categoricals (data-viz only; colorblind-safe) --------------- */
+  --cat-1: oklch(0.62 0.14 264); /* identity        */
+  --cat-2: oklch(0.66 0.13 196); /* network         */
+  --cat-3: oklch(0.7 0.14 162); /* platform        */
+  --cat-4: oklch(0.74 0.14 130); /* gitops          */
+  --cat-5: oklch(0.76 0.13 92); /* supply chain    */
+  --cat-6: oklch(0.7 0.14 56); /* observability   */
+  --cat-7: oklch(0.64 0.16 24); /* portal          */
+  /* darker, AA-on-white variants for category text/labels */
+  --cat-1-ink: oklch(0.46 0.15 264);
+  --cat-2-ink: oklch(0.47 0.12 233);
+  --cat-3-ink: oklch(0.47 0.12 162);
+  --cat-4-ink: oklch(0.47 0.12 138);
+  --cat-5-ink: oklch(0.5 0.12 86);
+  --cat-6-ink: oklch(0.5 0.14 50);
+  --cat-7-ink: oklch(0.5 0.17 24);
+
+  /* --- Type --------------------------------------------------------------- */
+  --font-sans:
+    "Mona Sans Variable", "Mona Sans Fallback", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Commit Mono", "Commit Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-display: clamp(2.5rem, 1.6rem + 3.9vw, 4.5rem);
+  --text-h1: clamp(2.1rem, 1.4rem + 2.9vw, 3.4rem);
+  --text-h2: clamp(1.85rem, 1.3rem + 2.3vw, 2.7rem);
+  --text-h3: clamp(1.3rem, 1.06rem + 1vw, 1.6rem);
+  --text-lead: clamp(1.1rem, 1.02rem + 0.4vw, 1.3rem);
+  --text-body: 1rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.785rem;
+  --text-mono: 0.9rem;
+
+  --lh-tight: 1.05;
+  --lh-snug: 1.18;
+  --lh-body: 1.62;
+  --tracking-display: -0.025em;
+  --tracking-tight: -0.012em;
+  --tracking-label: 0.04em;
+
+  --w-regular: 400;
+  --w-medium: 500;
+  --w-semibold: 600;
+  --w-bold: 700;
+
+  /* --- Spacing (4pt scale) ------------------------------------------------ */
+  --s-3xs: 0.25rem; /* 4  */
+  --s-2xs: 0.5rem; /* 8  */
+  --s-xs: 0.75rem; /* 12 */
+  --s-sm: 1rem; /* 16 */
+  --s-md: 1.5rem; /* 24 */
+  --s-lg: 2rem; /* 32 */
+  --s-xl: 3rem; /* 48 */
+  --s-2xl: 4rem; /* 64 */
+  --s-3xl: 6rem; /* 96 */
+  --s-4xl: 8rem; /* 128 */
+  --section-y: clamp(3.5rem, 2rem + 7vw, 7rem);
+
+  /* --- Sizing ------------------------------------------------------------- */
+  --content-max: 75rem;
+  --prose-max: 42rem; /* ~66ch */
+  --radius-sm: 6px;
+  --radius: 9px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+  --hair: 1px;
+
+  /* --- Elevation (subtle; engineered, not glossy) ------------------------- */
+  --shadow-sm: 0 1px 2px oklch(0.4 0.03 270 / 0.06);
+  --shadow-md:
+    0 2px 4px oklch(0.4 0.03 270 / 0.05), 0 8px 24px oklch(0.4 0.03 270 / 0.07);
+  --shadow-lg:
+    0 4px 8px oklch(0.4 0.03 270 / 0.06), 0 20px 48px oklch(0.35 0.04 270 / 0.12);
+  --shadow-accent: 0 8px 30px oklch(0.52 0.19 270 / 0.16);
+
+  /* --- Motion ------------------------------------------------------------- */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 140ms;
+  --dur-2: 220ms;
+  --dur-3: 320ms;
+  --dur-4: 460ms;
+
+  /* --- Z-index (semantic) ------------------------------------------------- */
+  --z-base: 0;
+  --z-nav: 100;
+  --z-sticky: 200;
+  --z-backdrop: 300;
+  --z-panel: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: oklch(0.205 0.018 270);
+  --surface: oklch(0.245 0.02 270);
+  --surface-sunken: oklch(0.185 0.018 270);
+  --ink: oklch(0.95 0.012 270);
+  --muted: oklch(0.74 0.022 270);
+  --faint: oklch(0.62 0.02 270);
+  --accent: oklch(0.72 0.15 270);
+  --accent-deep: oklch(0.8 0.13 270);
+  --accent-ink: oklch(0.18 0.03 270);
+  --accent-wash: oklch(0.3 0.05 270);
+  --hairline: oklch(0.33 0.02 270);
+  --hairline-strong: oklch(0.42 0.022 270);
+  --selection: oklch(0.4 0.09 270);
+
+  --cat-1-ink: oklch(0.78 0.12 264);
+  --cat-2-ink: oklch(0.8 0.1 233);
+  --cat-3-ink: oklch(0.82 0.12 162);
+  --cat-4-ink: oklch(0.85 0.13 138);
+  --cat-5-ink: oklch(0.86 0.12 92);
+  --cat-6-ink: oklch(0.82 0.13 56);
+  --cat-7-ink: oklch(0.78 0.14 24);
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-md: 0 2px 4px oklch(0 0 0 / 0.35), 0 8px 24px oklch(0 0 0 / 0.45);
+  --shadow-lg: 0 4px 8px oklch(0 0 0 / 0.4), 0 20px 48px oklch(0 0 0 / 0.55);
+  --shadow-accent: 0 8px 30px oklch(0.72 0.15 270 / 0.22);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}

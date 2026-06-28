@@ -1,0 +1,37 @@
+{
+  "name": "platform-engineering-concepts-site",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Interactive concepts site for the Azure Platform Engineering Landing Zone — the brand/explainer front door that teaches platform engineering through the project.",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.18.1"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "build:nocheck": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "format": "prettier --write \"src/**/*.{astro,svelte,ts,css,md,mdx}\"",
+    "format:check": "prettier --check \"src/**/*.{astro,svelte,ts,css,md,mdx}\""
+  },
+  "dependencies": {
+    "@astrojs/mdx": "7.0.0",
+    "@astrojs/sitemap": "3.7.3",
+    "@astrojs/svelte": "9.0.0",
+    "@fontsource-variable/mona-sans": "5.2.8",
+    "@fontsource/commit-mono": "5.2.5",
+    "astro": "7.0.3",
+    "svelte": "5.56.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.9",
+    "prettier": "3.9.0",
+    "prettier-plugin-astro": "0.14.1",
+    "prettier-plugin-svelte": "4.1.1",
+    "typescript": "6.0.3"
+  }
+}

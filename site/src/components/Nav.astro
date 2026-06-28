@@ -1,0 +1,320 @@
+---
+import { withBase, REPO } from "../lib/base";
+import LogoMark from "./LogoMark.astro";
+import Icon from "./Icon.astro";
+
+const links = [
+  { label: "What & why", href: withBase("/#what") },
+  { label: "Concepts", href: withBase("/#concepts") },
+  { label: "Architecture", href: withBase("/#architecture") },
+  { label: "Golden path", href: withBase("/#golden-path") },
+  { label: "Cost", href: withBase("/#cost") },
+  { label: "Glossary", href: withBase("/glossary") },
+];
+---
+
+<header class="nav" data-nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="container nav__bar">
+    <a class="nav__brand" href={withBase("/")} aria-label="Platform Engineering Landing Zone — home">
+      <LogoMark size={30} />
+      <span class="nav__word">
+        <span class="nav__word-strong">Platform&nbsp;Engineering</span>
+        <span class="nav__word-soft">Landing&nbsp;Zone</span>
+      </span>
+    </a>
+
+    <nav class="nav__links" aria-label="Primary">
+      {
+        links.map((l) => (
+          <a class="nav__link" href={l.href} data-nav-link={l.href.split("#")[1] ?? ""}>
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="nav__actions">
+      <a class="nav__icon" href={REPO} target="_blank" rel="noopener" aria-label="View on GitHub">
+        <Icon name="github" size={19} />
+      </a>
+      <button
+        class="nav__icon"
+        type="button"
+        data-theme-toggle
+        aria-label="Toggle colour theme"
+        title="Toggle colour theme"
+      >
+        <span class="nav__theme nav__theme--sun"><Icon name="sun" size={19} /></span>
+        <span class="nav__theme nav__theme--moon"><Icon name="moon" size={19} /></span>
+      </button>
+      <button
+        class="nav__burger"
+        type="button"
+        data-menu-toggle
+        aria-expanded="false"
+        aria-controls="nav-mobile"
+        aria-label="Open menu"
+      >
+        <Icon name="menu" size={22} />
+      </button>
+    </div>
+  </div>
+
+  <div class="nav__mobile" id="nav-mobile" data-menu hidden>
+    <nav class="container nav__mobile-links" aria-label="Mobile">
+      {
+        links.map((l) => (
+          <a class="nav__mobile-link" href={l.href}>
+            {l.label}
+          </a>
+        ))
+      }
+      <a class="nav__mobile-link nav__mobile-link--repo" href={REPO} target="_blank" rel="noopener">
+        View on GitHub <Icon name="arrow-up-right" size={16} />
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
+    background: color-mix(in oklab, var(--bg) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(8px);
+    border-bottom: var(--hair) solid transparent;
+    transition:
+      border-color var(--dur-2) var(--ease-out-quart),
+      background var(--dur-2) var(--ease-out-quart);
+  }
+  .nav[data-scrolled] {
+    border-bottom-color: var(--hairline);
+    box-shadow: 0 1px 0 oklch(0.5 0.02 270 / 0.02);
+  }
+  .nav__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--s-md);
+    height: 4.25rem;
+  }
+  .nav__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--ink);
+    flex: 0 0 auto;
+  }
+  .nav__brand:hover {
+    text-decoration: none;
+  }
+  .nav__word {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.04;
+    font-size: 0.82rem;
+  }
+  .nav__word-strong {
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .nav__word-soft {
+    font-weight: var(--w-medium);
+    color: var(--muted);
+    font-size: 0.74rem;
+    letter-spacing: 0.02em;
+  }
+
+  .nav__links {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.4rem, 0.1rem + 1vw, 1.4rem);
+    margin-inline-start: auto;
+  }
+  .nav__link {
+    position: relative;
+    color: var(--muted);
+    font-size: 0.92rem;
+    font-weight: var(--w-medium);
+    padding: 0.4rem 0.15rem;
+    transition: color var(--dur-1) var(--ease-out-quart);
+  }
+  .nav__link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.1rem;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-2) var(--ease-out-quart);
+  }
+  .nav__link:hover {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .nav__link:hover::after,
+  .nav__link[aria-current="true"]::after {
+    transform: scaleX(1);
+  }
+  .nav__link[aria-current="true"] {
+    color: var(--ink);
+  }
+
+  .nav__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 0 0 auto;
+  }
+  .nav__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    position: relative;
+    transition:
+      color var(--dur-1) var(--ease-out-quart),
+      background var(--dur-1) var(--ease-out-quart);
+  }
+  .nav__icon:hover {
+    color: var(--ink);
+    background: var(--surface-sunken);
+  }
+  .nav__theme {
+    display: inline-grid;
+    place-items: center;
+  }
+  .nav__theme--moon {
+    display: none;
+  }
+  :global([data-theme="dark"]) .nav__theme--sun {
+    display: none;
+  }
+  :global([data-theme="dark"]) .nav__theme--moon {
+    display: inline-grid;
+  }
+
+  .nav__burger {
+    display: none;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+  }
+  .nav__mobile {
+    display: none;
+    border-top: var(--hair) solid var(--hairline);
+    background: var(--bg);
+  }
+  .nav__mobile-links {
+    display: flex;
+    flex-direction: column;
+    padding-block: var(--s-2xs) var(--s-md);
+  }
+  .nav__mobile-link {
+    padding: 0.85rem 0.25rem;
+    color: var(--ink);
+    font-size: 1.05rem;
+    font-weight: var(--w-medium);
+    border-bottom: var(--hair) solid var(--hairline);
+  }
+  .nav__mobile-link:hover {
+    text-decoration: none;
+    color: var(--accent-deep);
+  }
+  .nav__mobile-link--repo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--accent-deep);
+    border-bottom: none;
+  }
+
+  @media (max-width: 860px) {
+    .nav__links {
+      display: none;
+    }
+    .nav__burger {
+      display: inline-grid;
+    }
+    .nav[data-open] .nav__mobile {
+      display: block;
+    }
+    .nav__word-soft {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Theme toggle (persisted; light is primary default).
+  const root = document.documentElement;
+  document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try {
+        localStorage.setItem("theme", next);
+      } catch {}
+    });
+  });
+
+  // Sticky-nav border on scroll.
+  const nav = document.querySelector<HTMLElement>("[data-nav]");
+  const onScroll = () => {
+    if (!nav) return;
+    if (window.scrollY > 8) nav.setAttribute("data-scrolled", "");
+    else nav.removeAttribute("data-scrolled");
+  };
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  // Mobile menu disclosure.
+  const toggle = document.querySelector<HTMLButtonElement>("[data-menu-toggle]");
+  const panel = document.querySelector<HTMLElement>("[data-menu]");
+  const setOpen = (open: boolean) => {
+    if (!nav || !toggle || !panel) return;
+    nav.toggleAttribute("data-open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    panel.hidden = !open;
+  };
+  toggle?.addEventListener("click", () => setOpen(toggle.getAttribute("aria-expanded") !== "true"));
+  panel?.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setOpen(false);
+  });
+
+  // Scroll-spy: highlight the in-view section in the primary nav.
+  const navLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-nav-link]"));
+  const ids = navLinks.map((l) => l.dataset.navLink).filter(Boolean) as string[];
+  const sections = ids
+    .map((id) => document.getElementById(id))
+    .filter((el): el is HTMLElement => Boolean(el));
+  if (sections.length) {
+    const setCurrent = (id: string) => {
+      navLinks.forEach((l) =>
+        l.setAttribute("aria-current", String(l.dataset.navLink === id)),
+      );
+    };
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setCurrent(visible.target.id);
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: [0, 0.25, 0.5, 1] },
+    );
+    sections.forEach((s) => obs.observe(s));
+  }
+</script>
