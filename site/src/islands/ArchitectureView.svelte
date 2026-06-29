@@ -50,9 +50,10 @@
 
   {#if view === "diagram"}
     <ArchitectureMap />
-  {:else}
-    <ArchitectureExplorer />
   {/if}
+  <div class="aview__panel" hidden={view !== "layers"}>
+    <ArchitectureExplorer />
+  </div>
 </div>
 
 <style>
