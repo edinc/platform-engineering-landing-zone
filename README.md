@@ -8,8 +8,12 @@ developer portal — aligned with the Cloud Adoption Framework, Azure Landing
 Zones, and the Well-Architected Framework.
 
 [![CI](https://github.com/edinc/platform-engineering-landing-zone/actions/workflows/ci.yml/badge.svg)](https://github.com/edinc/platform-engineering-landing-zone/actions/workflows/ci.yml)
+[![Concepts site](https://img.shields.io/badge/concepts%20site-live-2563EB.svg)](https://edinc.github.io/platform-engineering-landing-zone/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-how--it--works-blue.svg)](docs/how-it-works/README.md)
+[![IaC: Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC.svg?logo=terraform&logoColor=white)](infrastructure/terraform)
+[![GitOps: Flux](https://img.shields.io/badge/GitOps-Flux-5468FF.svg?logo=flux&logoColor=white)](docs/how-it-works/gitops.md)
+[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg?logo=renovatebot)](renovate.json)
 
 > Built for platform engineers who already run an Azure Landing Zone and want a
 > reusable, GitOps-driven developer platform on top of it — without owning the

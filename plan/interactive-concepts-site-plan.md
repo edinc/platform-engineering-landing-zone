@@ -227,7 +227,7 @@ Concrete build/deploy facts for this site (keep the workflow in sync with these)
 | Astro `site` | `https://edinc.github.io` |
 | Astro `base` | `/platform-engineering-landing-zone` |
 | Published URL | `https://edinc.github.io/platform-engineering-landing-zone/` |
-| Node | `20.18.1` (`site/.nvmrc`; `engines.node >= 20.18.1`) |
+| Node | `22.12.0` (`site/.nvmrc`; `engines.node >= 22.12.0`) |
 | Package manager | `pnpm@9.15.4` (`packageManager` pin) |
 
 **Step 1 — one-time repository setup (manual; the maintainer; this is the gate).**
@@ -258,11 +258,9 @@ on:
     paths: ["site/**", ".github/workflows/site-pages.yml"]
   workflow_dispatch:
 
-# Least privilege: read the repo, mint the Pages deployment token.
+# Least privilege at the top level; the deploy job widens to mint the Pages token.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # Never cancel an in-flight deployment.
 concurrency:
@@ -283,7 +281,7 @@ jobs:
           package_json_file: site/package.json   # uses the pnpm@9.15.4 pin
       - uses: actions/setup-node@v4
         with:
-          node-version-file: site/.nvmrc          # 20.18.1
+          node-version-file: site/.nvmrc          # 22.12.0
           cache: pnpm
           cache-dependency-path: site/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
@@ -299,6 +297,9 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'            # PRs validate; only main deploys
     runs-on: ubuntu-latest
+    permissions:
+      pages: write       # deploy-only: mint the Pages OIDC token (no secrets)
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -310,7 +311,7 @@ jobs:
 Pin every action to a release tag (ideally a commit SHA, per the repo's
 supply-chain stance) and let Dependabot bump them. The official one-liner
 alternative is `withastro/action@v6`
-(`with: { path: ./site, node-version: 20.18.1, package-manager: pnpm@9.15.4 }`),
+(`with: { path: ./site, node-version: 22.12.0, package-manager: pnpm@9.15.4 }`),
 which bundles install + build + artifact upload — simpler, but pulls in a
 composite action; prefer the explicit first-party steps above for auditability.
 

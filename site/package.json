@@ -6,7 +6,7 @@
   "description": "Interactive concepts site for the Azure Platform Engineering Landing Zone — the brand/explainer front door that teaches platform engineering through the project.",
   "packageManager": "pnpm@9.15.4",
   "engines": {
-    "node": ">=20.18.1"
+    "node": ">=22.12.0"
   },
   "scripts": {
     "dev": "astro dev",
