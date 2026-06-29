@@ -6,11 +6,13 @@ Backstage runs in AKS through Flux and the reusable supply-chain workflows.
 
 1. Let Renovate open dependency updates for `backstage/app`, the Backstage Helm
    chart, and community plugin packages.
-2. Confirm `ci-backstage.yml` passes app tests, chart lint, and Backstage
-   contracts.
-3. Run **Backstage CI** from `main` to publish the signed Backstage image,
-   catalog reconciler image, and Helm chart. The workflow summary prints the
-   digest values expected by the platform Terraform stack.
+2. Confirm `ci-backstage.yml` (**Backstage CI**) passes app tests, chart lint, and
+   Backstage contracts on the PR.
+3. After merge to `main`, **Backstage CD** publishes the signed Backstage image,
+   catalog reconciler image, and Helm chart when `PLATFORM_ONLINE` is `true`. The
+   workflow summary prints the digest values expected by the platform Terraform
+   stack. When the platform/self-hosted runner is offline (`PLATFORM_ONLINE`
+   unset), the publish jobs skip cleanly instead of queueing.
 4. Promote by updating `backstage_image_digest`,
    `backstage_catalog_reconciler_image_digest`, `backstage_chart_digest`, and
    `backstage_chart_version` in the protected platform Terraform tfvars JSON for
@@ -22,8 +24,8 @@ Backstage runs in AKS through Flux and the reusable supply-chain workflows.
 5. Confirm the dedicated `backstage-<env>` Flux configuration reconciles and that
    the Backstage availability panel in `grafana-dashboard-platform-slos` stays
    green.
-6. Re-run **Backstage CI** with `run_azure_smoke=true` to validate the deployed
-   AKS, TechDocs storage, private endpoint, and readiness endpoint wiring.
+6. Re-run **Backstage CD** (dispatch) with `run_azure_smoke=true` to validate the
+   deployed AKS, TechDocs storage, private endpoint, and readiness endpoint wiring.
 
 ## Public demo access
 

@@ -126,7 +126,7 @@ Ownership is split deliberately: Azure foundation and subscription baseline prov
 | AKS node auto-provisioning | Cluster capacity expands and contracts to fit workload demand. |
 | KEDA scale-to-zero patterns | Golden paths reference ScaledObject patterns where event-driven scale-to-zero is safe. |
 | VPA Recommender and Goldilocks | Weekly reports identify over-provisioned workloads and open improvement issues. |
-| Demo TTL sweep | A scheduled workflow checks `expiresOn` and opens decommission PRs for expired demo environments. |
+| Demo TTL sweep | A scheduled workflow checks `expiresOn` and opens decommission PRs for expired demo environments. It runs nightly only when the `PLATFORM_ONLINE` repository variable is `true`; when the demo subscription is torn down it skips cleanly instead of failing health. Manual dispatch can still force a run for investigation. |
 
 ### Profiles
 

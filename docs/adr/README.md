@@ -4,7 +4,7 @@ This directory contains accepted and proposed architecture decision records
 for the platform landing zone. Use [`0000-template.md`](0000-template.md) for
 new ADRs.
 
-Next free number: **0058**
+Next free number: **0059**
 
 | ADR | Title | Status | File |
 |-----|-------|--------|------|
@@ -65,6 +65,7 @@ Next free number: **0058**
 | 0055 | Dedicated public Backstage ingress for demo access | Accepted | [`0055-public-backstage-ingress.md`](0055-public-backstage-ingress.md) |
 | 0056 | Dedicated Backstage GitHub App | Accepted | [`0056-backstage-github-app.md`](0056-backstage-github-app.md) |
 | 0057 | Cost allocator Function publishes via AAD OneDeploy | Accepted | [`0057-cost-allocator-aad-onedeploy.md`](0057-cost-allocator-aad-onedeploy.md) |
+| 0058 | PLATFORM_ONLINE gate for platform-dependent workflows | Accepted | [`0058-platform-online-gate.md`](0058-platform-online-gate.md) |
 
 ADR seeds and the capability roadmap are described in the [roadmap](../roadmap/README.md).
 Promote seeded ADRs to full ADR files as their owning capabilities are implemented.

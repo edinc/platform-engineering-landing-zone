@@ -27,7 +27,10 @@ concurrency:
 jobs:
   sweep:
     name: Find expired demo resources
-    if: ${{ github.ref == 'refs/heads/main' }}
+    # Scheduled runs require the platform to be online; a torn-down demo
+    # subscription has no runner/Azure to sweep, so skip cleanly instead of
+    # failing nightly. Manual dispatch can still force a run when investigating.
+    if: ${{ github.ref == 'refs/heads/main' && (vars.PLATFORM_ONLINE == 'true' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     environment: finops
     env:

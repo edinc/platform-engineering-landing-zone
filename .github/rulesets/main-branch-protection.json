@@ -25,6 +25,12 @@
           },
           {
             "context": "Backstage app contract (22.x)"
+          },
+          {
+            "context": "Backstage Helm chart"
+          },
+          {
+            "context": "Backstage contract validation"
           }
         ]
       }
