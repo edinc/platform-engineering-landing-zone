@@ -1,6 +1,9 @@
 # Plan: Public documentation rewrite
 
-Status: proposed
+Status: done — delivered. Public README, LICENSE, SECURITY, and CODE_OF_CONDUCT
+landed; stage vocabulary removed from public-facing material (enforced by the
+docs-gate CI). The "Current state" table below is the original pre-rewrite
+audit, kept for history.
 Owner: platform engineering
 Audience: maintainers preparing this repository to be public
 
