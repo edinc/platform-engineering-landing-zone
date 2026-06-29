@@ -323,6 +323,8 @@ def validate_permissions() -> None:
         "scripts/azure/validate_backstage_azure.sh",
         "runs-on: [self-hosted, azure, private-acr, swedencentral]",
         "github.ref == 'refs/heads/main'",
+        "needs.gate.outputs.online == 'true'",
+        "PLATFORM_ONLINE",
         "BACKSTAGE_TRUST_PRIVATE_CA",
         "BACKSTAGE_TLS_CA_KEY_VAULT_NAME",
         "BACKSTAGE_RESOLVE_IP",
@@ -333,8 +335,8 @@ def validate_permissions() -> None:
         '"enable_gitops": true',
         '"enable_techdocs_storage": true',
     ]:
-        require_contains(".github/workflows/ci-backstage.yml", needle)
-    require_backstage_image_amd64_platform(".github/workflows/ci-backstage.yml")
+        require_contains(".github/workflows/cd-backstage.yml", needle)
+    require_backstage_image_amd64_platform(".github/workflows/cd-backstage.yml")
     for needle in [
         'jq -r \'.oidc\'',
         'jq -r \'.workloadIdentity\'',
@@ -568,7 +570,7 @@ def validate_terraform() -> None:
     require_contains("backstage/app/packages/backend/src/plugins/platformCostShowback.ts", "blob.name.endsWith('.csv')")
     if "plugin-mcp-actions-backend" in read("backstage/app/packages/backend/src/index.ts"):
         fail("MCP actions backend must not be enabled for the the developer portal MVP")
-    require_contains(".github/workflows/ci-backstage.yml", "platform/backstage-catalog-reconciler")
+    require_contains(".github/workflows/cd-backstage.yml", "platform/backstage-catalog-reconciler")
     require_contains(".github/rulesets/main-branch-protection.json", "Backstage app contract (22.x)")
     require_contains("infrastructure/terraform/platform/gitops.tf", "backstage_cost_showback_url")
     require_contains("backstage/app/packages/backend/src/plugins/platformCostShowback.ts", "slice(0, 10)")
@@ -577,8 +579,10 @@ def validate_terraform() -> None:
 
 
 def validate_workflows_and_docs() -> None:
-    for needle in ["container-build-sign.yml", "helm-publish.yml", "backstage/app", "backstage/deploy"]:
+    for needle in ["backstage/app", "backstage/deploy"]:
         require_contains(".github/workflows/ci-backstage.yml", needle)
+    for needle in ["container-build-sign.yml", "helm-publish.yml", "backstage/app", "backstage/deploy"]:
+        require_contains(".github/workflows/cd-backstage.yml", needle)
     require_contains("docs/runbooks/README.md", "backstage-ops.md")
     for adr in ["0020-build-vs-buy.md", "0041-backstage-rbac.md", "0042-techdocs-storage.md", "0052-backstage-postgres-auth.md"]:
         require_contains(f"docs/adr/{adr}", "Status: accepted")
