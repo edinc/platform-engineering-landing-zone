@@ -8,8 +8,9 @@ Backstage is not a special deployment path. The platform builds, signs, publishe
 
 ```mermaid
 flowchart LR
-    A["Backstage source (app and chart)"] --> B["Backstage CI (build test sign)"]
-    B --> C["ACR (image and Helm chart)"]
+    A["Backstage source (app and chart)"] --> B["Backstage CI (test lint contracts)"]
+    B --> CD["Backstage CD (build sign publish)"]
+    CD --> C["ACR (image and Helm chart)"]
     C --> D["Promotion PR (environment values)"]
     D --> E["Terraform platform stack (substitutions)"]
     E --> F["Flux source (OCI chart)"]
@@ -21,7 +22,7 @@ flowchart LR
 ```
 
 1. The Backstage application lives under `backstage/app` and the Helm deployment contract lives under `backstage/deploy`.
-2. Backstage CI tests the app and chart, builds the image, publishes the Helm chart, signs artifacts, and writes the immutable digests expected by the platform configuration.
+2. Backstage CI tests the app and chart and validates contracts on PRs; Backstage CD then builds the image, publishes the Helm chart, signs artifacts, and writes the immutable digests expected by the platform configuration when the platform is online.
 3. Promotion updates environment-specific digest and chart values through the protected platform workflow path.
 4. Terraform owns Azure resources, managed identities, federated credentials, runtime configuration, TechDocs storage, and public demo ingress Azure primitives; Flux and Helm own the Kubernetes deployment, service accounts, ingress objects, and runtime state.
 5. Flux consumes the signed Helm chart from ACR and reconciles Backstage into the platform AKS cluster.
