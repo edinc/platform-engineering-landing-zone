@@ -187,3 +187,20 @@ jobs:
       - name: Remove Azure CLI cache
         if: ${{ always() }}
         run: rm -rf "$AZURE_CONFIG_DIR"
+
+  environment-reference:
+    name: Environment protection reference
+    if: github.event_name == 'workflow_dispatch'
+    needs: gate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment:
+          - dev
+          - nonprod
+          - prod
+    environment: ${{ matrix.environment }}
+    steps:
+      - name: Reference protected environment
+        run: |
+          echo "Referenced ${{ matrix.environment }} for Backstage deployment controls."

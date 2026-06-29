@@ -75,23 +75,3 @@ jobs:
 
       - name: Validate Backstage contracts
         run: python3 scripts/backstage/validate_backstage.py
-
-  environment-reference:
-    name: Environment protection reference
-    if: github.event_name == 'workflow_dispatch'
-    needs:
-      - app
-      - helm
-      - contract
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment:
-          - dev
-          - nonprod
-          - prod
-    environment: ${{ matrix.environment }}
-    steps:
-      - name: Reference protected environment
-        run: |
-          echo "Referenced ${{ matrix.environment }} for Backstage deployment controls."
