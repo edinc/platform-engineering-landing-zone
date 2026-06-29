@@ -26,7 +26,7 @@ permissions:
 jobs:
   publish-platform-docs:
     name: Publish platform System TechDocs
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.PLATFORM_ONLINE == 'true'
     permissions:
       contents: read
       id-token: write
