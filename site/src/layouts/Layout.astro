@@ -66,6 +66,14 @@ const fullTitle = path === "/" ? title : `${title} · Platform Engineering Landi
         } catch (e) {}
       })();
     </script>
+
+    <!-- Cloudflare Web Analytics (privacy-first, cookieless) -->
+    <script
+      is:inline
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "a3f2916f79024625b4d2c3cc33d18e4a"}'></script>
+    <!-- End Cloudflare Web Analytics -->
   </head>
   <body>
     <Nav />

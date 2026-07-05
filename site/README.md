@@ -59,6 +59,16 @@ Concept and architecture content is distilled from the repository docs
 concept links back to the place that proves it. Cost and walkthrough figures are
 clearly-labelled **representative data** — no live endpoints, tenant IDs or secrets.
 
+## Analytics
+
+Traffic is measured with **Cloudflare Web Analytics** — a privacy-first,
+cookieless beacon that sets no cookies, collects no personal data and needs no
+consent banner. The beacon `<script>` lives in `src/layouts/Layout.astro` and
+loads on every page; the site token it carries is public by design (it ships in
+the page HTML). Hits are attributed to the registered hostname
+(`edinc.github.io`), so filter by the `/platform-engineering-landing-zone/` path
+in the Cloudflare dashboard to isolate this site.
+
 ## Accessibility
 
 WCAG 2.1 AA: verified contrast, full keyboard operability for every interactive,
